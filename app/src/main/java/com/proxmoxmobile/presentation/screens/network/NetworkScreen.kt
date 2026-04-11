@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +42,17 @@ fun NetworkScreen(
     // Get cached nodes to determine which node to query
     val cachedNodes = viewModel.getCachedNodes()
 
+    val errAuthFailed = stringResource(R.string.network_error_auth_failed)
+    val errNotAuthenticated = stringResource(R.string.network_error_not_authenticated)
+    val errNoNodes = stringResource(R.string.network_error_no_nodes)
+    val errConnectPrefix = stringResource(R.string.network_error_connect_prefix)
+    val errAuthRequired = stringResource(R.string.network_error_auth_required)
+    val errAccessForbidden = stringResource(R.string.network_error_access_forbidden)
+    val errServerError = stringResource(R.string.network_error_server)
+    val errHttpPrefix = stringResource(R.string.network_error_http_prefix)
+    val errLoadFailedPrefix = stringResource(R.string.network_error_load_failed_prefix)
+    val errUnexpected = stringResource(R.string.network_error_unexpected)
+
     // Fetch network interfaces when screen loads
     LaunchedEffect(Unit) {
         try {
@@ -55,20 +68,20 @@ fun NetworkScreen(
                         viewModel.getApiService()
                     } catch (e: Exception) {
                         Log.e("NetworkScreen", "Failed to get API service", e)
-                        errorMessage = "Authentication failed - please login again"
+                        errorMessage = errAuthFailed
                         return@launch
                     }
-                    
+
                     if (apiService == null) {
                         Log.e("NetworkScreen", "API service is null")
-                        errorMessage = "Not authenticated - please login again"
+                        errorMessage = errNotAuthenticated
                         return@launch
                     }
-                    
+
                     // Use the first available node, or show error if no nodes
                     val nodes = cachedNodes ?: emptyList()
                     if (nodes.isEmpty()) {
-                        errorMessage = "No nodes available - please check dashboard first"
+                        errorMessage = errNoNodes
                         return@launch
                     }
                     
@@ -80,7 +93,7 @@ fun NetworkScreen(
                         apiService.getNetworkInterfaces(selectedNode!!)
                     } catch (e: Exception) {
                         Log.e("NetworkScreen", "API call failed", e)
-                        errorMessage = "Failed to connect to server: ${e.message}"
+                        errorMessage = "$errConnectPrefix ${e.message}"
                         return@launch
                     }
                     
@@ -105,21 +118,21 @@ fun NetworkScreen(
                 } catch (e: retrofit2.HttpException) {
                     Log.e("NetworkScreen", "HTTP error loading network interfaces: ${e.code()}", e)
                     when (e.code()) {
-                        401 -> errorMessage = "Authentication required - please login again"
-                        403 -> errorMessage = "Access forbidden - check permissions"
-                        500 -> errorMessage = "Server error - please try again"
-                        else -> errorMessage = "Failed to load network interfaces: HTTP ${e.code()}"
+                        401 -> errorMessage = errAuthRequired
+                        403 -> errorMessage = errAccessForbidden
+                        500 -> errorMessage = errServerError
+                        else -> errorMessage = "$errHttpPrefix ${e.code()}"
                     }
                 } catch (e: Exception) {
                     Log.e("NetworkScreen", "Failed to load network interfaces", e)
-                    errorMessage = "Failed to load network interfaces: ${e.message}"
+                    errorMessage = "$errLoadFailedPrefix ${e.message}"
                 } finally {
                     isLoading = false
                 }
             }
         } catch (e: Exception) {
             Log.e("NetworkScreen", "Critical error in LaunchedEffect", e)
-            errorMessage = "An unexpected error occurred"
+            errorMessage = errUnexpected
             isLoading = false
         }
     }
@@ -127,22 +140,22 @@ fun NetworkScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Network Interfaces",
+                        stringResource(R.string.network_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.network_back))
                     }
                 },
                 actions = {
                     if (selectedNode != null) {
                         Text(
-                            text = "Node: $selectedNode",
+                            text = stringResource(R.string.network_node_label, selectedNode ?: ""),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(end = 16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -174,7 +187,7 @@ fun NetworkScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Loading network interfaces...",
+                            text = stringResource(R.string.network_loading),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -199,7 +212,7 @@ fun NetworkScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Error",
+                            text = stringResource(R.string.network_error_title),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -226,7 +239,7 @@ fun NetworkScreen(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Retry")
+                            Text(stringResource(R.string.network_retry))
                         }
                     }
                 }
@@ -249,12 +262,12 @@ fun NetworkScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Network Interfaces",
+                            text = stringResource(R.string.network_empty_title),
                             style = MaterialTheme.typography.headlineMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No network interfaces found on this node",
+                            text = stringResource(R.string.network_empty_message),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -271,7 +284,7 @@ fun NetworkScreen(
                 ) {
                     item {
                         Text(
-                            text = "Network Interfaces (${networkInterfaces.size})",
+                            text = stringResource(R.string.network_interfaces_count, networkInterfaces.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -335,7 +348,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                             )
                     )
                     Text(
-                        text = if (iface.active) "Active" else "Inactive",
+                        text = if (iface.active) stringResource(R.string.network_status_active) else stringResource(R.string.network_status_inactive),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (iface.active) Color.Green else Color.Red
                     )
@@ -354,7 +367,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Method:",
+                            text = stringResource(R.string.network_field_method),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -372,7 +385,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Address:",
+                            text = stringResource(R.string.network_field_address),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -390,7 +403,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Netmask:",
+                            text = stringResource(R.string.network_field_netmask),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -408,7 +421,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Gateway:",
+                            text = stringResource(R.string.network_field_gateway),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -426,7 +439,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Families:",
+                            text = stringResource(R.string.network_field_families),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -443,12 +456,12 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Autostart:",
+                        text = stringResource(R.string.network_field_autostart),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = if (iface.autostart) "Yes" else "No",
+                        text = if (iface.autostart) stringResource(R.string.network_yes) else stringResource(R.string.network_no),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = if (iface.autostart) Color.Green else Color.Red

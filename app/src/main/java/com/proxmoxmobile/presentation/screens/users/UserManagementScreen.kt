@@ -10,7 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.proxmoxmobile.R
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -116,21 +118,21 @@ fun UserManagementScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "User Management",
+                        stringResource(R.string.users_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.users_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add User")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.users_add_user))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -158,7 +160,7 @@ fun UserManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Loading users...",
+                            text = stringResource(R.string.users_loading),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -183,7 +185,7 @@ fun UserManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Error",
+                            text = stringResource(R.string.users_error),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -210,7 +212,7 @@ fun UserManagementScreen(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Retry")
+                            Text(stringResource(R.string.users_retry))
                         }
                     }
                 }
@@ -233,12 +235,12 @@ fun UserManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Users Found",
+                            text = stringResource(R.string.users_no_users_found),
                             style = MaterialTheme.typography.headlineMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No users are currently configured on this system",
+                            text = stringResource(R.string.users_no_users_message),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -249,7 +251,7 @@ fun UserManagementScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Add First User")
+                            Text(stringResource(R.string.users_add_first_user))
                         }
                     }
                 }
@@ -263,7 +265,7 @@ fun UserManagementScreen(
                 ) {
                     item {
                         Text(
-                            text = "Users (${users.size})",
+                            text = stringResource(R.string.users_count, users.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -329,7 +331,7 @@ fun UserCard(user: User) {
                             )
                     )
                     Text(
-                        text = if (user.enable) "Enabled" else "Disabled",
+                        text = if (user.enable) stringResource(R.string.users_enabled) else stringResource(R.string.users_disabled),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (user.enable) Color.Green else Color.Red
                     )
@@ -348,7 +350,7 @@ fun UserCard(user: User) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Email:",
+                            text = stringResource(R.string.users_email_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -366,7 +368,7 @@ fun UserCard(user: User) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Comment:",
+                            text = stringResource(R.string.users_comment_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -386,7 +388,7 @@ fun UserCard(user: User) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Expires:",
+                            text = stringResource(R.string.users_expires_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -412,7 +414,7 @@ fun UserCard(user: User) {
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Edit")
+                    Text(stringResource(R.string.users_edit))
                 }
                 
                 OutlinedButton(
@@ -424,7 +426,7 @@ fun UserCard(user: User) {
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.users_delete))
                 }
             }
         }

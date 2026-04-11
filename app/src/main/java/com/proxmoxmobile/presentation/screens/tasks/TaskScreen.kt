@@ -12,6 +12,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,6 +48,13 @@ fun TaskScreen(
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val authFailedMsg = stringResource(R.string.task_error_auth_failed)
+    val notAuthenticatedMsg = stringResource(R.string.task_error_not_authenticated)
+    val noNodesMsg = stringResource(R.string.task_error_no_nodes)
+    val unexpectedErrorMsg = stringResource(R.string.task_error_unexpected)
+    val deleteSuccessMsg = stringResource(R.string.task_delete_success)
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     // Get cached nodes to determine which node to query
     val cachedNodes = viewModel.getCachedNodes()
@@ -97,20 +106,20 @@ fun TaskScreen(
                         viewModel.getApiService()
                     } catch (e: Exception) {
                         Log.e("TaskScreen", "Failed to get API service", e)
-                        errorMessage = "Authentication failed - please login again"
+                        errorMessage = authFailedMsg
                         return@launch
                     }
-                    
+
                     if (apiService == null) {
                         Log.e("TaskScreen", "API service is null")
-                        errorMessage = "Not authenticated - please login again"
+                        errorMessage = notAuthenticatedMsg
                         return@launch
                     }
-                    
+
                     // Use the first available node, or show error if no nodes
                     val nodes = cachedNodes ?: emptyList()
                     if (nodes.isEmpty()) {
-                        errorMessage = "No nodes available - please check dashboard first"
+                        errorMessage = noNodesMsg
                         return@launch
                     }
                     
@@ -122,7 +131,7 @@ fun TaskScreen(
                     
                 } catch (e: Exception) {
                     Log.e("TaskScreen", "Critical error in LaunchedEffect", e)
-                    errorMessage = "An unexpected error occurred"
+                    errorMessage = unexpectedErrorMsg
                 } finally {
                     isLoading = false
                 }
@@ -137,29 +146,29 @@ fun TaskScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Task Monitor",
+                        stringResource(R.string.task_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.task_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* TODO: Settings */ }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.task_settings))
                     }
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         viewModel.logout()
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.task_logout))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -187,7 +196,7 @@ fun TaskScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: ${formatTimeAgo(lastRefreshTime)}",
+                        text = stringResource(R.string.task_last_updated, formatTimeAgo(lastRefreshTime)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -208,12 +217,12 @@ fun TaskScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text(
-                                text = "Selected Node: ${selectedNode ?: "None"}",
+                                text = stringResource(R.string.task_selected_node, selectedNode ?: stringResource(R.string.task_none)),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Monitoring tasks on this node",
+                                text = stringResource(R.string.task_monitoring_description),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -270,7 +279,7 @@ fun TaskScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Loading tasks...",
+                                text = stringResource(R.string.task_loading),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -296,13 +305,13 @@ fun TaskScreen(
                         viewModel.deleteTask(selectedNode!!, task.id,
                             onSuccess = {
                                 actionInProgress = null
-                                snackbarMessage = "✅ Task deleted successfully"
+                                snackbarMessage = deleteSuccessMsg
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                 loadTasks() // Refresh the list
                             },
                             onError = { error ->
                                 actionInProgress = null
-                                snackbarMessage = "❌ Failed to delete task: $error"
+                                snackbarMessage = context.getString(R.string.task_delete_failed, error)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                             }
                         )
@@ -370,7 +379,7 @@ fun TaskCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Status: ${task.status.uppercase()}",
+                        text = stringResource(R.string.task_status_label, task.status.uppercase()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -402,7 +411,7 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Node:",
+                        text = stringResource(R.string.task_node_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -418,7 +427,7 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "User:",
+                        text = stringResource(R.string.task_user_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -434,7 +443,7 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "PID:",
+                        text = stringResource(R.string.task_pid_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -450,7 +459,7 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Started:",
+                        text = stringResource(R.string.task_started_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -467,7 +476,7 @@ fun TaskCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Ended:",
+                            text = stringResource(R.string.task_ended_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -485,7 +494,7 @@ fun TaskCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Exit Status:",
+                            text = stringResource(R.string.task_exit_status_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -503,12 +512,12 @@ fun TaskCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Saved:",
+                        text = stringResource(R.string.task_saved_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = if (task.saved) "Yes" else "No",
+                        text = if (task.saved) stringResource(R.string.task_yes) else stringResource(R.string.task_no),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = if (task.saved) Color.Green else Color.Gray
@@ -535,10 +544,10 @@ fun TaskCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.task_delete))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.task_delete))
                 }
             }
         }
@@ -561,7 +570,7 @@ fun TaskStatisticsCard(tasks: List<Task>) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Task Statistics",
+                text = stringResource(R.string.task_statistics),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -572,17 +581,17 @@ fun TaskStatisticsCard(tasks: List<Task>) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 TaskStatItem(
-                    label = "Running",
+                    label = stringResource(R.string.task_stat_running),
                     value = runningTasks.toString(),
                     color = Color.Green
                 )
                 TaskStatItem(
-                    label = "Finished",
+                    label = stringResource(R.string.task_stat_finished),
                     value = finishedTasks.toString(),
                     color = Color.Blue
                 )
                 TaskStatItem(
-                    label = "Stopped",
+                    label = stringResource(R.string.task_stat_stopped),
                     value = stoppedTasks.toString(),
                     color = Color.Red
                 )

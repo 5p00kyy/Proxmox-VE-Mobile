@@ -44,6 +44,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.ConcurrentHashMap
 import com.proxmoxmobile.data.api.ProxmoxApiService
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 
 
 fun Double.format(digits: Int) = String.format(Locale.US, "%.${digits}f", this)
@@ -116,6 +118,15 @@ fun ContainerListScreen(
     
     val scope = rememberCoroutineScope()
     val apiService = viewModel.getApiService()
+    val invalidNodeMsg = stringResource(R.string.container_invalid_node)
+    val startSuccessTemplate = stringResource(R.string.container_start_success)
+    val startErrorTemplate = stringResource(R.string.container_start_error)
+    val stopSuccessTemplate = stringResource(R.string.container_stop_success)
+    val stopErrorTemplate = stringResource(R.string.container_stop_error)
+    val deleteSuccessTemplate = stringResource(R.string.container_delete_success)
+    val deleteErrorTemplate = stringResource(R.string.container_delete_error)
+    val deleteTitle = stringResource(R.string.container_delete_title)
+    val deleteMessageTemplate = stringResource(R.string.container_delete_message)
 
     // Real-time data refresh
     LaunchedEffect(nodeName) {
@@ -154,36 +165,36 @@ fun ContainerListScreen(
         if (apiService != null && !nodeName.isNullOrBlank()) {
             loadContainers()
         } else {
-            errorMessage = "Invalid node name or API service not available"
+            errorMessage = invalidNodeMsg
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "LXC Containers",
+                        stringResource(R.string.container_title_lxc),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.container_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* TODO: Settings */ }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.container_settings))
                     }
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         viewModel.logout()
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.container_logout))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -211,7 +222,7 @@ fun ContainerListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: ${formatTimeAgo(lastRefreshTime)}",
+                        text = stringResource(R.string.container_last_updated, formatTimeAgo(lastRefreshTime)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -267,7 +278,7 @@ fun ContainerListScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Loading containers...",
+                                text = stringResource(R.string.container_loading),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -285,13 +296,13 @@ fun ContainerListScreen(
                         viewModel.startContainer(nodeName!!, container.vmid,
                             onSuccess = {
                                 actionInProgress = null
-                                snackbarMessage = "✅ Container ${container.name} started successfully"
+                                snackbarMessage = String.format(startSuccessTemplate, container.name)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                 loadContainers() // Refresh the list
                             },
                             onError = { error ->
                                 actionInProgress = null
-                                snackbarMessage = "❌ Failed to start container: $error"
+                                snackbarMessage = String.format(startErrorTemplate, error)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                             }
                         )
@@ -301,13 +312,13 @@ fun ContainerListScreen(
                         viewModel.stopContainer(nodeName!!, container.vmid,
                             onSuccess = {
                                 actionInProgress = null
-                                snackbarMessage = "✅ Container ${container.name} stopped successfully"
+                                snackbarMessage = String.format(stopSuccessTemplate, container.name)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                 loadContainers() // Refresh the list
                             },
                             onError = { error ->
                                 actionInProgress = null
-                                snackbarMessage = "❌ Failed to stop container: $error"
+                                snackbarMessage = String.format(stopErrorTemplate, error)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                             }
                         )
@@ -315,21 +326,21 @@ fun ContainerListScreen(
                     onDelete = {
                         viewModel.showConfirmationDialog(
                             MainViewModel.ConfirmationDialog(
-                                title = "Delete Container",
-                                message = "Are you sure you want to delete container '${container.name}' (ID: ${container.vmid})? This action cannot be undone.",
+                                title = deleteTitle,
+                                message = String.format(deleteMessageTemplate, container.name, container.vmid),
                                 onConfirm = {
                                     viewModel.hideConfirmationDialog()
                                     actionInProgress = "delete" to container.vmid
                                     viewModel.deleteContainer(nodeName!!, container.vmid,
                                         onSuccess = {
                                             actionInProgress = null
-                                            snackbarMessage = "✅ Container ${container.name} deleted successfully"
+                                            snackbarMessage = String.format(deleteSuccessTemplate, container.name)
                                             scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                             loadContainers() // Refresh the list
                                         },
                                         onError = { error ->
                                             actionInProgress = null
-                                            snackbarMessage = "❌ Failed to delete container: $error"
+                                            snackbarMessage = String.format(deleteErrorTemplate, error)
                                             scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                         }
                                     )
@@ -391,7 +402,7 @@ fun ContainerCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "ID: ${container.vmid} | Status: ${container.status.uppercase()}",
+                        text = stringResource(R.string.container_id_status, container.vmid, container.status.uppercase()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -419,17 +430,17 @@ fun ContainerCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 ContainerDetailItem(
-                    label = "CPU",
-                    value = "${String.format("%.1f", container.cpu)}%",
+                    label = stringResource(R.string.container_cpu),
+                    value = stringResource(R.string.container_cpu_value, container.cpu),
                     color = MaterialTheme.colorScheme.primary
                 )
                 ContainerDetailItem(
-                    label = "Memory",
-                    value = "${String.format("%.1f", container.mem / 1024.0 / 1024.0 / 1024.0)} GB",
+                    label = stringResource(R.string.container_memory),
+                    value = stringResource(R.string.container_memory_value, container.mem / 1024.0 / 1024.0 / 1024.0),
                     color = MaterialTheme.colorScheme.secondary
                 )
                 ContainerDetailItem(
-                    label = "Uptime",
+                    label = stringResource(R.string.container_uptime),
                     value = formatUptime(container.uptime),
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -453,10 +464,10 @@ fun ContainerCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = "Start")
+                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.container_start))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Start")
+                    Text(stringResource(R.string.container_start))
                 }
                 
                 Button(
@@ -471,12 +482,12 @@ fun ContainerCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.Stop, contentDescription = "Stop")
+                        Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.container_stop))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Stop")
+                    Text(stringResource(R.string.container_stop))
                 }
-                
+
                 OutlinedButton(
                     onClick = onDelete,
                     modifier = Modifier.weight(1f),
@@ -484,9 +495,9 @@ fun ContainerCard(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.container_delete))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.container_delete))
                 }
             }
         }
@@ -571,6 +582,17 @@ fun ContainerDetailScreen(
     var tempCpuCores by remember { mutableStateOf(1) }
     var tempRamAllocation by remember { mutableStateOf(512L) }
     val scope = rememberCoroutineScope()
+    val notAuthenticatedMsg = stringResource(R.string.container_not_authenticated)
+    val containerNotFoundMsg = stringResource(R.string.container_not_found)
+    val failedToLoadTemplate = stringResource(R.string.container_failed_to_load)
+    val loadingTimeoutMsg = stringResource(R.string.container_loading_timeout)
+    val failedToUpdateTemplate = stringResource(R.string.container_failed_to_update)
+    val resourceApiNotImplMsg = stringResource(R.string.container_resource_api_not_implemented)
+    val startNotImplMsg = stringResource(R.string.container_start_not_implemented)
+    val stopNotImplMsg = stringResource(R.string.container_stop_not_implemented)
+    val consoleNotImplMsg = stringResource(R.string.container_console_not_implemented)
+    val cpuApiNotImplMsg = stringResource(R.string.container_cpu_api_not_implemented)
+    val ramApiNotImplMsg = stringResource(R.string.container_ram_api_not_implemented)
 
     LaunchedEffect(vmid) {
         scope.launch {
@@ -583,7 +605,7 @@ fun ContainerDetailScreen(
                     // Get the API service
                     val apiService = viewModel.getApiService()
                     if (apiService == null) {
-                        errorMessage = "Not authenticated"
+                        errorMessage = notAuthenticatedMsg
                         isLoading = false
                         return@withTimeout
                     }
@@ -634,15 +656,15 @@ fun ContainerDetailScreen(
                         tempRamAllocation = foundContainer.maxmem
                         Log.d("ContainerDetailScreen", "Successfully loaded container ${foundContainer.name}")
                     } else {
-                        errorMessage = "Container not found"
+                        errorMessage = containerNotFoundMsg
                         Log.e("ContainerDetailScreen", "Container $vmid not found in any node")
                     }
                 }
             } catch (e: Exception) {
-                errorMessage = "Failed to load container: ${e.message}"
+                errorMessage = String.format(failedToLoadTemplate, e.message ?: "")
                 Log.e("ContainerDetailScreen", "Error loading container", e)
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                errorMessage = "Loading timeout - please try again"
+                errorMessage = loadingTimeoutMsg
                 Log.e("ContainerDetailScreen", "Loading timeout for container $vmid")
             } finally {
                 isLoading = false
@@ -653,10 +675,10 @@ fun ContainerDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Container Details: $vmid") },
+                title = { Text(stringResource(R.string.container_details_title, vmid)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.container_back))
                     }
                 },
                 actions = {
@@ -671,7 +693,7 @@ fun ContainerDetailScreen(
                                     
                                     val apiService = viewModel.getApiService()
                                     if (apiService == null) {
-                                        errorMessage = "Not authenticated"
+                                        errorMessage = notAuthenticatedMsg
                                         isLoading = false
                                         return@launch
                                     }
@@ -703,17 +725,17 @@ fun ContainerDetailScreen(
                                         maxCpu = containerData.maxcpu
                                         maxRam = containerData.maxmem
                                     } else {
-                                        errorMessage = "Container not found"
+                                        errorMessage = containerNotFoundMsg
                                     }
                                 } catch (e: Exception) {
-                                    errorMessage = "Failed to load container: ${e.message}"
+                                    errorMessage = String.format(failedToLoadTemplate, e.message ?: "")
                                 } finally {
                                     isLoading = false
                                 }
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.container_refresh))
                     }
                 }
             )
@@ -747,21 +769,21 @@ fun ContainerDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Container Information",
+                                text = stringResource(R.string.container_information),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text("Name: ${container!!.name}")
-                            Text("ID: ${container!!.vmid}")
+                            Text(stringResource(R.string.container_name_label, container!!.name))
+                            Text(stringResource(R.string.container_id_label, container!!.vmid))
                             Text(
-                                text = "Status: ${container!!.status}",
+                                text = stringResource(R.string.container_status_label, container!!.status),
                                 color = when (container!!.status) {
                                     "running" -> Color.Green
                                     "stopped" -> Color.Red
                                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                                 }
                             )
-                            Text("Uptime: ${(container!!.uptime / 3600).toInt()}h")
+                            Text(stringResource(R.string.container_uptime_hours, (container!!.uptime / 3600).toInt()))
                         }
                     }
                 }
@@ -777,14 +799,14 @@ fun ContainerDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "Current Resource Usage",
+                                text = stringResource(R.string.container_current_resource_usage),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text("CPU Usage: ${(cpu * 100).format(1)}%")
-                            Text("CPU Cores: ${container!!.cpus} cores")
-                            Text("RAM Usage: ${formatBytes(ram)}")
-                            Text("RAM Allocated: ${formatBytes(maxRam)}")
+                            Text(stringResource(R.string.container_cpu_usage, (cpu * 100).format(1)))
+                            Text(stringResource(R.string.container_cpu_cores_count, container!!.cpus))
+                            Text(stringResource(R.string.container_ram_usage, formatBytes(ram)))
+                            Text(stringResource(R.string.container_ram_allocated, formatBytes(maxRam)))
                         }
                     }
                 }
@@ -800,25 +822,25 @@ fun ContainerDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "Resource Management",
+                                text = stringResource(R.string.container_resource_management),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
-                            
+
                             // CPU Configuration Card
                             ResourceCard(
-                                title = "CPU Cores",
-                                currentValue = "${container!!.cpus} cores allocated",
+                                title = stringResource(R.string.container_cpu_cores),
+                                currentValue = stringResource(R.string.container_cores_allocated, container!!.cpus),
                                 icon = Icons.Filled.Memory,
                                 onClick = {
                                     showCpuConfigDialog = true
                                 }
                             )
-                            
+
                             // RAM Configuration Card
                             ResourceCard(
-                                title = "RAM Allocation",
-                                currentValue = "${formatBytes(maxRam)} allocated",
+                                title = stringResource(R.string.container_ram_allocation),
+                                currentValue = stringResource(R.string.container_bytes_allocated, formatBytes(maxRam)),
                                 icon = Icons.Filled.Storage,
                                 onClick = {
                                     showRamConfigDialog = true
@@ -833,9 +855,9 @@ fun ContainerDetailScreen(
                                         try {
                                             // TODO: Implement API call to update container resources
                                             // This would require additional API endpoints for resource management
-                                            errorMessage = "Resource management API not yet implemented"
+                                            errorMessage = resourceApiNotImplMsg
                                         } catch (e: Exception) {
-                                            errorMessage = "Failed to update resources: ${e.message}"
+                                            errorMessage = String.format(failedToUpdateTemplate, e.message ?: "")
                                         } finally {
                                             isUpdatingResources = false
                                         }
@@ -853,7 +875,7 @@ fun ContainerDetailScreen(
                                     Icon(Icons.Filled.Save, contentDescription = null)
                                 }
                                 Spacer(Modifier.width(8.dp))
-                                Text("Apply Resource Changes")
+                                Text(stringResource(R.string.container_apply_resource_changes))
                             }
                         }
                     }
@@ -870,7 +892,7 @@ fun ContainerDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Container Actions",
+                                text = stringResource(R.string.container_actions),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -882,7 +904,7 @@ fun ContainerDetailScreen(
                                     onClick = {
                                         scope.launch {
                                             // TODO: Implement start container action
-                                            errorMessage = "Start action not yet implemented"
+                                            errorMessage = startNotImplMsg
                                         }
                                     },
                                     enabled = container!!.status != "running",
@@ -890,14 +912,14 @@ fun ContainerDetailScreen(
                                 ) {
                                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
                                     Spacer(Modifier.width(4.dp))
-                                    Text("Start")
+                                    Text(stringResource(R.string.container_start))
                                 }
                                 
                                 Button(
                                     onClick = {
                                         scope.launch {
                                             // TODO: Implement stop container action
-                                            errorMessage = "Stop action not yet implemented"
+                                            errorMessage = stopNotImplMsg
                                         }
                                     },
                                     enabled = container!!.status == "running",
@@ -905,20 +927,20 @@ fun ContainerDetailScreen(
                                 ) {
                                     Icon(Icons.Filled.Stop, contentDescription = null)
                                     Spacer(Modifier.width(4.dp))
-                                    Text("Stop")
+                                    Text(stringResource(R.string.container_stop))
                                 }
                             }
                             
                             OutlinedButton(
                                 onClick = {
                                     // TODO: Implement console access
-                                    errorMessage = "Console access not yet implemented"
+                                    errorMessage = consoleNotImplMsg
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.Filled.Terminal, contentDescription = null)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Open Console")
+                                Text(stringResource(R.string.container_open_console))
                             }
                         }
                     }
@@ -966,7 +988,7 @@ fun ContainerDetailScreen(
                         textAlign = TextAlign.Center
                     )
                     Button(onClick = { navController.navigateUp() }) {
-                        Text("Go Back")
+                        Text(stringResource(R.string.container_go_back))
                     }
                 }
             }
@@ -977,23 +999,23 @@ fun ContainerDetailScreen(
     if (showCpuConfigDialog) {
         AlertDialog(
             onDismissRequest = { showCpuConfigDialog = false },
-            title = { Text("Configure CPU Cores") },
+            title = { Text(stringResource(R.string.container_configure_cpu_cores)) },
             text = {
                 Column {
-                    Text("Current allocation: ${container?.cpus ?: 0} cores")
+                    Text(stringResource(R.string.container_current_allocation_cores, container?.cpus ?: 0))
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Enter number of CPU cores (1-32):")
+                    Text(stringResource(R.string.container_enter_cpu_cores))
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = tempCpuCores.toString(),
-                        onValueChange = { 
+                        onValueChange = {
                             val value = it.toIntOrNull() ?: 1
                             tempCpuCores = value.coerceIn(1, 32)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        placeholder = { Text("1-32") }
+                        placeholder = { Text(stringResource(R.string.container_cpu_cores_placeholder)) }
                     )
                 }
             },
@@ -1002,15 +1024,15 @@ fun ContainerDetailScreen(
                     onClick = {
                         showCpuConfigDialog = false
                         // TODO: Implement API call to update CPU cores
-                        errorMessage = "CPU configuration API not yet implemented"
+                        errorMessage = cpuApiNotImplMsg
                     }
                 ) {
-                    Text("Apply")
+                    Text(stringResource(R.string.container_apply))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCpuConfigDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.container_cancel))
                 }
             }
         )
@@ -1020,12 +1042,12 @@ fun ContainerDetailScreen(
     if (showRamConfigDialog) {
         AlertDialog(
             onDismissRequest = { showRamConfigDialog = false },
-            title = { Text("Configure RAM Allocation") },
+            title = { Text(stringResource(R.string.container_configure_ram_allocation)) },
             text = {
                 Column {
-                    Text("Current allocation: ${formatBytes(container?.maxmem ?: 0)}")
+                    Text(stringResource(R.string.container_current_allocation_bytes, formatBytes(container?.maxmem ?: 0)))
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Enter RAM allocation in MB (128-65536):")
+                    Text(stringResource(R.string.container_enter_ram_mb))
                     Spacer(modifier = Modifier.height(8.dp))
                     var ramInputText by remember { mutableStateOf((tempRamAllocation / 1024 / 1024).toString()) }
                     
@@ -1046,7 +1068,7 @@ fun ContainerDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        placeholder = { Text("512") }
+                        placeholder = { Text(stringResource(R.string.container_ram_placeholder)) }
                     )
                     Text("${formatBytes(tempRamAllocation)}", style = MaterialTheme.typography.bodySmall)
                 }
@@ -1056,15 +1078,15 @@ fun ContainerDetailScreen(
                     onClick = {
                         showRamConfigDialog = false
                         // TODO: Implement API call to update RAM allocation
-                        errorMessage = "RAM configuration API not yet implemented"
+                        errorMessage = ramApiNotImplMsg
                     }
                 ) {
-                    Text("Apply")
+                    Text(stringResource(R.string.container_apply))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRamConfigDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.container_cancel))
                 }
             }
         )
@@ -1217,7 +1239,7 @@ fun ResourceCard(
             // Edit indicator
             Icon(
                 imageVector = Icons.Filled.Edit,
-                contentDescription = "Edit",
+                contentDescription = stringResource(R.string.container_edit),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(18.dp)
             )

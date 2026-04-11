@@ -11,12 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.proxmoxmobile.R
 import com.proxmoxmobile.data.model.ServerConfig
 import com.proxmoxmobile.presentation.navigation.Screen
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
@@ -88,14 +90,14 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = "Proxmox VE",
+                text = stringResource(R.string.login_app_title),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            
+
             Text(
-                text = "Mobile Management",
+                text = stringResource(R.string.login_app_subtitle),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -117,7 +119,7 @@ fun LoginScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Server Configuration",
+                        text = stringResource(R.string.login_server_configuration),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -131,7 +133,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = host,
                             onValueChange = { host = it },
-                            label = { Text("Host") },
+                            label = { Text(stringResource(R.string.login_host)) },
                             modifier = Modifier.weight(2f),
                             enabled = !isLoading,
                             singleLine = true,
@@ -148,7 +150,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = port,
                             onValueChange = { port = it },
-                            label = { Text("Port") },
+                            label = { Text(stringResource(R.string.login_port)) },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading,
                             singleLine = true,
@@ -171,7 +173,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = username,
                             onValueChange = { username = it },
-                            label = { Text("Username") },
+                            label = { Text(stringResource(R.string.login_username)) },
                             modifier = Modifier.weight(2f),
                             enabled = !isLoading,
                             singleLine = true,
@@ -188,7 +190,7 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = realm,
                             onValueChange = { realm = it },
-                            label = { Text("Realm") },
+                            label = { Text(stringResource(R.string.login_realm)) },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading,
                             singleLine = true,
@@ -207,7 +209,7 @@ fun LoginScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Password") },
+                        label = { Text(stringResource(R.string.login_password)) },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isLoading,
                         singleLine = true,
@@ -235,7 +237,7 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Use HTTPS",
+                            text = stringResource(R.string.login_use_https),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -259,7 +261,7 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Save login details (encrypted)",
+                            text = stringResource(R.string.login_save_credentials),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -324,11 +326,11 @@ fun LoginScreen(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(12.dp))
-                            Text("Connecting...")
+                            Text(stringResource(R.string.login_connecting))
                         } else {
                             Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Connect to Proxmox")
+                            Text(stringResource(R.string.login_connect_button))
                         }
                     }
                 }
@@ -338,7 +340,7 @@ fun LoginScreen(
             
             // Footer
             Text(
-                text = "Secure Proxmox VE Management",
+                text = stringResource(R.string.login_footer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
