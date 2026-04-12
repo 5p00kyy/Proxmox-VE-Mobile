@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SnackbarHostState
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +34,14 @@ fun VMListScreen(
     viewModel: MainViewModel,
     nodeName: String? = null
 ) {
+    val startSuccessTemplate = stringResource(R.string.vm_start_success)
+    val startFailedTemplate = stringResource(R.string.vm_start_failed)
+    val stopSuccessTemplate = stringResource(R.string.vm_stop_success)
+    val stopFailedTemplate = stringResource(R.string.vm_stop_failed)
+    val deleteSuccessTemplate = stringResource(R.string.vm_delete_success)
+    val deleteFailedTemplate = stringResource(R.string.vm_delete_failed)
+    val deleteDialogTitle = stringResource(R.string.vm_delete_dialog_title)
+    val deleteDialogMessageTemplate = stringResource(R.string.vm_delete_dialog_message)
     var vms by remember { mutableStateOf<List<VirtualMachine>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -87,29 +97,29 @@ fun VMListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Virtual Machines",
+                        stringResource(R.string.vm_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.vm_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* TODO: Settings */ }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.vm_settings))
                     }
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         viewModel.logout()
                         navController.navigate("login") {
                             popUpTo(0) { inclusive = true }
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.vm_logout))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -137,7 +147,7 @@ fun VMListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: ${formatTimeAgo(lastRefreshTime)}",
+                        text = stringResource(R.string.vm_last_updated, formatTimeAgo(lastRefreshTime)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -193,7 +203,7 @@ fun VMListScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Loading virtual machines...",
+                                text = stringResource(R.string.vm_loading),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -212,13 +222,13 @@ fun VMListScreen(
                         viewModel.startVM(nodeName!!, vm.vmid,
                             onSuccess = {
                                 actionInProgress = null
-                                snackbarMessage = "✅ VM ${vm.name} started successfully"
+                                snackbarMessage = String.format(startSuccessTemplate, vm.name)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                 loadVMs() // Refresh the list
                             },
                             onError = { error ->
                                 actionInProgress = null
-                                snackbarMessage = "❌ Failed to start VM: $error"
+                                snackbarMessage = String.format(startFailedTemplate, error)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                             }
                         )
@@ -228,13 +238,13 @@ fun VMListScreen(
                         viewModel.stopVM(nodeName!!, vm.vmid,
                             onSuccess = {
                                 actionInProgress = null
-                                snackbarMessage = "✅ VM ${vm.name} stopped successfully"
+                                snackbarMessage = String.format(stopSuccessTemplate, vm.name)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                 loadVMs() // Refresh the list
                             },
                             onError = { error ->
                                 actionInProgress = null
-                                snackbarMessage = "❌ Failed to stop VM: $error"
+                                snackbarMessage = String.format(stopFailedTemplate, error)
                                 scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                             }
                         )
@@ -242,21 +252,21 @@ fun VMListScreen(
                     onDelete = {
                         viewModel.showConfirmationDialog(
                             MainViewModel.ConfirmationDialog(
-                                title = "Delete VM",
-                                message = "Are you sure you want to delete VM '${vm.name}' (ID: ${vm.vmid})? This action cannot be undone.",
+                                title = deleteDialogTitle,
+                                message = String.format(deleteDialogMessageTemplate, vm.name, vm.vmid),
                                 onConfirm = {
                                     viewModel.hideConfirmationDialog()
                                     actionInProgress = "delete" to vm.vmid
                                     viewModel.deleteVM(nodeName!!, vm.vmid,
                                         onSuccess = {
                                             actionInProgress = null
-                                            snackbarMessage = "✅ VM ${vm.name} deleted successfully"
+                                            snackbarMessage = String.format(deleteSuccessTemplate, vm.name)
                                             scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                             loadVMs() // Refresh the list
                                         },
                                         onError = { error ->
                                             actionInProgress = null
-                                            snackbarMessage = "❌ Failed to delete VM: $error"
+                                            snackbarMessage = String.format(deleteFailedTemplate, error)
                                             scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
                                         }
                                     )
@@ -313,7 +323,7 @@ fun VMCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "ID: ${vm.vmid} | Status: ${vm.status.uppercase()}",
+                        text = stringResource(R.string.vm_id_status, vm.vmid, vm.status.uppercase()),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -342,17 +352,17 @@ fun VMCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                                     VMDetailItem(
-                        label = "CPU",
-                        value = "${String.format("%.1f", vm.cpu)}%",
+                        label = stringResource(R.string.vm_cpu),
+                        value = stringResource(R.string.vm_cpu_value, vm.cpu),
                         color = MaterialTheme.colorScheme.primary
                     )
                     VMDetailItem(
-                        label = "Memory",
-                        value = "${String.format("%.1f", vm.mem / 1024.0 / 1024.0 / 1024.0)} GB",
+                        label = stringResource(R.string.vm_memory),
+                        value = stringResource(R.string.vm_memory_value, vm.mem / 1024.0 / 1024.0 / 1024.0),
                         color = MaterialTheme.colorScheme.secondary
                     )
                 VMDetailItem(
-                    label = "Uptime",
+                    label = stringResource(R.string.vm_uptime),
                     value = formatUptime(vm.uptime),
                     color = MaterialTheme.colorScheme.tertiary
                 )
@@ -376,10 +386,10 @@ fun VMCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = "Start")
+                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.vm_start))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Start")
+                    Text(stringResource(R.string.vm_start))
                 }
                 
                 Button(
@@ -394,10 +404,10 @@ fun VMCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.Stop, contentDescription = "Stop")
+                        Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.vm_stop))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Stop")
+                    Text(stringResource(R.string.vm_stop))
                 }
                 
                 OutlinedButton(
@@ -407,9 +417,9 @@ fun VMCard(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.vm_delete))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.vm_delete))
                 }
             }
         }

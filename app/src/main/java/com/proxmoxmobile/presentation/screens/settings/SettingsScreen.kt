@@ -9,8 +9,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.proxmoxmobile.R
 import com.proxmoxmobile.presentation.navigation.Screen
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import androidx.compose.foundation.clickable
@@ -35,16 +37,16 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Settings",
+                        stringResource(R.string.settings_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.settings_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -82,18 +84,18 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Proxmox VE Mobile",
+                            text = stringResource(R.string.settings_app_name),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = "Version 1.0.0",
+                            text = stringResource(R.string.settings_app_version),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
                         Text(
-                            text = "Modern Android client for Proxmox VE",
+                            text = stringResource(R.string.settings_app_tagline),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
@@ -103,11 +105,11 @@ fun SettingsScreen(
 
             // Display Settings Section
             item {
-                SettingsSection(title = "Display") {
+                SettingsSection(title = stringResource(R.string.settings_section_display)) {
                     SettingsSwitchItem(
                         icon = Icons.Default.DarkMode,
-                        title = "Dark Mode",
-                        subtitle = "Use dark theme",
+                        title = stringResource(R.string.settings_dark_mode_title),
+                        subtitle = stringResource(R.string.settings_dark_mode_subtitle),
                         checked = enableDarkMode,
                         onCheckedChange = { enableDarkMode = it }
                     )
@@ -116,11 +118,11 @@ fun SettingsScreen(
 
             // Auto-refresh Settings Section
             item {
-                SettingsSection(title = "Auto-refresh") {
+                SettingsSection(title = stringResource(R.string.settings_section_auto_refresh)) {
                     SettingsSliderItem(
                         icon = Icons.Default.Refresh,
-                        title = "Refresh Interval",
-                        subtitle = "Update data every ${autoRefreshInterval} seconds",
+                        title = stringResource(R.string.settings_refresh_interval_title),
+                        subtitle = stringResource(R.string.settings_refresh_interval_subtitle, autoRefreshInterval),
                         value = autoRefreshInterval.toFloat(),
                         onValueChange = { autoRefreshInterval = it.toInt() },
                         valueRange = 10f..60f,
@@ -131,27 +133,27 @@ fun SettingsScreen(
 
             // Security Settings Section
             item {
-                SettingsSection(title = "Security") {
+                SettingsSection(title = stringResource(R.string.settings_section_security)) {
                     SettingsSwitchItem(
                         icon = Icons.Default.Security,
-                        title = "Biometric Authentication",
-                        subtitle = "Use fingerprint or face unlock",
+                        title = stringResource(R.string.settings_biometric_title),
+                        subtitle = stringResource(R.string.settings_biometric_subtitle),
                         checked = enableBiometric,
                         onCheckedChange = { enableBiometric = it }
                     )
-                    
+
                     SettingsSwitchItem(
                         icon = Icons.Default.Login,
-                        title = "Auto-login",
-                        subtitle = "Automatically login with saved credentials",
+                        title = stringResource(R.string.settings_auto_login_title),
+                        subtitle = stringResource(R.string.settings_auto_login_subtitle),
                         checked = enableAutoLogin,
                         onCheckedChange = { enableAutoLogin = it }
                     )
-                    
+
                     SettingsButtonItem(
                         icon = Icons.Default.Delete,
-                        title = "Clear Saved Credentials",
-                        subtitle = "Remove encrypted login details",
+                        title = stringResource(R.string.settings_clear_credentials_title),
+                        subtitle = stringResource(R.string.settings_clear_credentials_subtitle),
                         onClick = { showClearCredentialsDialog = true }
                     )
                 }
@@ -159,11 +161,11 @@ fun SettingsScreen(
 
             // Notification Settings Section
             item {
-                SettingsSection(title = "Notifications") {
+                SettingsSection(title = stringResource(R.string.settings_section_notifications)) {
                     SettingsSwitchItem(
                         icon = Icons.Default.Notifications,
-                        title = "Enable Notifications",
-                        subtitle = "Show system status alerts",
+                        title = stringResource(R.string.settings_enable_notifications_title),
+                        subtitle = stringResource(R.string.settings_enable_notifications_subtitle),
                         checked = enableNotifications,
                         onCheckedChange = { enableNotifications = it }
                     )
@@ -172,18 +174,18 @@ fun SettingsScreen(
 
             // About Section
             item {
-                SettingsSection(title = "About") {
+                SettingsSection(title = stringResource(R.string.settings_section_about)) {
                     SettingsButtonItem(
                         icon = Icons.Default.Info,
-                        title = "About",
-                        subtitle = "App information and credits",
+                        title = stringResource(R.string.settings_about_title),
+                        subtitle = stringResource(R.string.settings_about_subtitle),
                         onClick = { showAboutDialog = true }
                     )
-                    
+
                     SettingsButtonItem(
                         icon = Icons.Default.BugReport,
-                        title = "Report Bug",
-                        subtitle = "Send feedback or report issues",
+                        title = stringResource(R.string.settings_report_bug_title),
+                        subtitle = stringResource(R.string.settings_report_bug_subtitle),
                         onClick = { /* TODO: Implement bug reporting */ }
                     )
                 }
@@ -191,11 +193,11 @@ fun SettingsScreen(
 
             // Logout Section
             item {
-                SettingsSection(title = "Account") {
+                SettingsSection(title = stringResource(R.string.settings_section_account)) {
                     SettingsButtonItem(
                         icon = Icons.AutoMirrored.Filled.Logout,
-                        title = "Logout",
-                        subtitle = "Sign out of current session",
+                        title = stringResource(R.string.settings_logout_title),
+                        subtitle = stringResource(R.string.settings_logout_subtitle),
                         onClick = {
                             viewModel.logout()
                             navController.navigate(Screen.Login.route) {
@@ -213,8 +215,8 @@ fun SettingsScreen(
     if (showClearCredentialsDialog) {
         AlertDialog(
             onDismissRequest = { showClearCredentialsDialog = false },
-            title = { Text("Clear Saved Credentials") },
-            text = { Text("Are you sure you want to clear all saved login credentials? You'll need to enter them again next time.") },
+            title = { Text(stringResource(R.string.settings_clear_credentials_dialog_title)) },
+            text = { Text(stringResource(R.string.settings_clear_credentials_dialog_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -223,12 +225,12 @@ fun SettingsScreen(
                         showClearCredentialsDialog = false
                     }
                 ) {
-                    Text("Clear", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.settings_clear_button), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearCredentialsDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.settings_cancel_button))
                 }
             }
         )
@@ -238,31 +240,31 @@ fun SettingsScreen(
     if (showAboutDialog) {
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
-            title = { Text("About Proxmox VE Mobile") },
-            text = { 
+            title = { Text(stringResource(R.string.settings_about_dialog_title)) },
+            text = {
                 Column {
-                    Text("Version: 1.0.0")
-                    Text("Build: 2024.1.0")
+                    Text(stringResource(R.string.settings_about_version))
+                    Text(stringResource(R.string.settings_about_build))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("A modern Android client for managing Proxmox Virtual Environment servers.")
+                    Text(stringResource(R.string.settings_about_description))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Features:")
-                    Text("• Secure authentication with encrypted storage")
-                    Text("• Real-time monitoring and management")
-                    Text("• LXC container and VM management")
-                    Text("• Storage and network monitoring")
-                    Text("• User and task management")
+                    Text(stringResource(R.string.settings_about_features_header))
+                    Text(stringResource(R.string.settings_about_feature_auth))
+                    Text(stringResource(R.string.settings_about_feature_monitoring))
+                    Text(stringResource(R.string.settings_about_feature_lxc_vm))
+                    Text(stringResource(R.string.settings_about_feature_storage_network))
+                    Text(stringResource(R.string.settings_about_feature_user_task))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Built with:")
-                    Text("• Jetpack Compose")
-                    Text("• Material Design 3")
-                    Text("• Kotlin Coroutines")
-                    Text("• Retrofit for API communication")
+                    Text(stringResource(R.string.settings_about_built_with_header))
+                    Text(stringResource(R.string.settings_about_built_compose))
+                    Text(stringResource(R.string.settings_about_built_material))
+                    Text(stringResource(R.string.settings_about_built_coroutines))
+                    Text(stringResource(R.string.settings_about_built_retrofit))
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showAboutDialog = false }) {
-                    Text("OK")
+                    Text(stringResource(R.string.settings_ok_button))
                 }
             }
         )

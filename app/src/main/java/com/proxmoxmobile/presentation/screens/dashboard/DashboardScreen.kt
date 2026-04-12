@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -94,29 +96,29 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Proxmox VE",
+                        stringResource(R.string.dashboard_app_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.dashboard_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* TODO: Settings */ }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.dashboard_settings))
                     }
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         viewModel.logout()
                         navController.navigate(Screen.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = stringResource(R.string.dashboard_logout))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -143,7 +145,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Last updated: ${formatTimeAgo(lastRefreshTime)}",
+                        text = stringResource(R.string.dashboard_last_updated, formatTimeAgo(lastRefreshTime)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -178,14 +180,14 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "Dashboard Ready",
+                                text = stringResource(R.string.dashboard_ready),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Data loading temporarily disabled for stability",
+                                text = stringResource(R.string.dashboard_data_loading_disabled),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
@@ -207,14 +209,14 @@ fun DashboardScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "Welcome to Proxmox VE",
+                            text = stringResource(R.string.dashboard_welcome_title),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Manage your virtual machines and containers",
+                            text = stringResource(R.string.dashboard_welcome_subtitle),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
@@ -256,7 +258,7 @@ fun DashboardScreen(
             if (nodes.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Nodes (${nodes.size})",
+                        text = stringResource(R.string.dashboard_nodes_count, nodes.size),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -280,7 +282,7 @@ fun DashboardScreen(
             // Quick Actions
             item {
                 Text(
-                    text = "Quick Actions",
+                    text = stringResource(R.string.dashboard_quick_actions),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -294,8 +296,8 @@ fun DashboardScreen(
                 ) {
                     // LXC Containers
                     QuickActionCard(
-                        title = "LXC",
-                        subtitle = "Containers",
+                        title = stringResource(R.string.dashboard_lxc),
+                        subtitle = stringResource(R.string.dashboard_containers),
                         icon = Icons.Default.Storage,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -313,8 +315,8 @@ fun DashboardScreen(
                     
                     // Virtual Machines
                     QuickActionCard(
-                        title = "VM",
-                        subtitle = "Machines",
+                        title = stringResource(R.string.dashboard_vm),
+                        subtitle = stringResource(R.string.dashboard_machines),
                         icon = Icons.Default.Computer,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -339,8 +341,8 @@ fun DashboardScreen(
                 ) {
                     // Storage
                     QuickActionCard(
-                        title = "Storage",
-                        subtitle = "Pools",
+                        title = stringResource(R.string.dashboard_storage),
+                        subtitle = stringResource(R.string.dashboard_pools),
                         icon = Icons.Default.Folder,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -358,8 +360,8 @@ fun DashboardScreen(
                     
                     // Network
                     QuickActionCard(
-                        title = "Network",
-                        subtitle = "Interfaces",
+                        title = stringResource(R.string.dashboard_network),
+                        subtitle = stringResource(R.string.dashboard_interfaces),
                         icon = Icons.Default.Wifi,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -379,8 +381,8 @@ fun DashboardScreen(
                 ) {
                     // Users
                     QuickActionCard(
-                        title = "Users",
-                        subtitle = "Management",
+                        title = stringResource(R.string.dashboard_users),
+                        subtitle = stringResource(R.string.dashboard_management),
                         icon = Icons.Default.People,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -393,8 +395,8 @@ fun DashboardScreen(
                     
                     // Tasks
                     QuickActionCard(
-                        title = "Tasks",
-                        subtitle = "Monitoring",
+                        title = stringResource(R.string.dashboard_tasks),
+                        subtitle = stringResource(R.string.dashboard_monitoring),
                         icon = Icons.AutoMirrored.Filled.List,
                         modifier = Modifier.weight(1f)
                     ) {
@@ -444,7 +446,7 @@ fun SystemStatusCard(node: Node) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = "System Status",
+                    text = stringResource(R.string.dashboard_system_status),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -457,21 +459,21 @@ fun SystemStatusCard(node: Node) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatusItem(
-                    label = "CPU",
+                    label = stringResource(R.string.dashboard_cpu),
                     value = "${String.format("%.1f", node.cpu * 100)}%",
                     icon = Icons.Default.Memory,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 StatusItem(
-                    label = "Memory",
+                    label = stringResource(R.string.dashboard_memory),
                     value = if (node.mem >= 1024 * 1024 * 1024) "${String.format("%.1f", node.mem.toDouble() / 1024 / 1024 / 1024)}GB" else "${String.format("%.1f", node.mem.toDouble() / 1024 / 1024)}MB",
                     icon = Icons.Default.Storage,
                     color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f)
                 )
                 StatusItem(
-                    label = "Uptime",
+                    label = stringResource(R.string.dashboard_uptime),
                     value = "${(node.uptime / 3600).toInt()}h",
                     icon = Icons.Default.Schedule,
                     color = MaterialTheme.colorScheme.tertiary,
@@ -546,7 +548,7 @@ fun NodeCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Status: ${node.status}",
+                        text = stringResource(R.string.dashboard_status, node.status),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

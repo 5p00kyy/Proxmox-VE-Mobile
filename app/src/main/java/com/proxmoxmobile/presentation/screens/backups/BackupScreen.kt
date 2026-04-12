@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -145,29 +147,29 @@ fun BackupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        "Backup Management",
+                        stringResource(R.string.backup_management_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.backup_back))
                     }
                 },
                 actions = {
                     if (selectedNode != null) {
                         Text(
-                            text = "Node: $selectedNode",
+                            text = stringResource(R.string.backup_node_label, selectedNode ?: ""),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(end = 16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = { showCreateDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Create Backup")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.backup_create_backup))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -195,7 +197,7 @@ fun BackupScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Loading backups...",
+                            text = stringResource(R.string.backup_loading),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -220,7 +222,7 @@ fun BackupScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Error",
+                            text = stringResource(R.string.backup_error),
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -248,7 +250,7 @@ fun BackupScreen(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Retry")
+                            Text(stringResource(R.string.backup_retry))
                         }
                     }
                 }
@@ -271,12 +273,12 @@ fun BackupScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Backups Found",
+                            text = stringResource(R.string.backup_none_found_title),
                             style = MaterialTheme.typography.headlineMedium
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No backups are currently available on this system",
+                            text = stringResource(R.string.backup_none_available_message),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -287,7 +289,7 @@ fun BackupScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Create First Backup")
+                            Text(stringResource(R.string.backup_create_first))
                         }
                     }
                 }
@@ -301,7 +303,7 @@ fun BackupScreen(
                 ) {
                     item {
                         Text(
-                            text = "Backups (${backups.size})",
+                            text = stringResource(R.string.backup_list_header, backups.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -396,12 +398,12 @@ fun BackupCard(backup: Backup) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Size:",
+                        text = stringResource(R.string.backup_size_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${sizeInMB} MB",
+                        text = stringResource(R.string.backup_size_mb, sizeInMB),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium
                     )
@@ -412,7 +414,7 @@ fun BackupCard(backup: Backup) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Created:",
+                        text = stringResource(R.string.backup_created_label),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -429,7 +431,7 @@ fun BackupCard(backup: Backup) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Notes:",
+                            text = stringResource(R.string.backup_notes_label),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -454,7 +456,7 @@ fun BackupCard(backup: Backup) {
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Download")
+                    Text(stringResource(R.string.backup_download))
                 }
                 
                 OutlinedButton(
@@ -463,7 +465,7 @@ fun BackupCard(backup: Backup) {
                 ) {
                     Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Restore")
+                    Text(stringResource(R.string.backup_restore))
                 }
                 
                 OutlinedButton(
@@ -475,7 +477,7 @@ fun BackupCard(backup: Backup) {
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Delete")
+                    Text(stringResource(R.string.backup_delete))
                 }
             }
         }

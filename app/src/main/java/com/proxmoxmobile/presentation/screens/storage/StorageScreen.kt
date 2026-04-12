@@ -10,9 +10,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.proxmoxmobile.R
 import com.proxmoxmobile.data.model.Storage
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
@@ -27,9 +29,12 @@ fun StorageScreen(
     var storages by remember { mutableStateOf<List<Storage>>(emptyList()) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     val scope = rememberCoroutineScope()
     val apiService = viewModel.getApiService()
+
+    val failedToLoadStorage = stringResource(R.string.storage_failed_to_load)
+    val invalidNodeName = stringResource(R.string.storage_invalid_node)
 
     // Load storages when the screen is first displayed
     LaunchedEffect(apiService, nodeName) {
@@ -41,23 +46,23 @@ fun StorageScreen(
                     val response = apiService.getStorages(nodeName)
                     storages = response.data ?: emptyList()
                 } catch (e: Exception) {
-                    errorMessage = "Failed to load storage: ${e.message}"
+                    errorMessage = "$failedToLoadStorage: ${e.message}"
                 } finally {
                     isLoading = false
                 }
             }
         } else {
-            errorMessage = "Invalid node name or API service not available"
+            errorMessage = invalidNodeName
         }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Storage - ${nodeName ?: "Unknown"}") },
+                title = { Text(stringResource(R.string.storage_title, nodeName ?: stringResource(R.string.storage_unknown))) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.storage_back))
                     }
                 }
             )
@@ -109,12 +114,12 @@ fun StorageScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Storage Found",
+                            text = stringResource(R.string.storage_no_storage_found),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "This node doesn't have any storage configured",
+                            text = stringResource(R.string.storage_no_storage_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -128,7 +133,7 @@ fun StorageScreen(
                 ) {
                     item {
                         Text(
-                            text = "Storage (${storages.size})",
+                            text = stringResource(R.string.storage_header, storages.size),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 16.dp)
@@ -194,44 +199,44 @@ fun StorageCard(storage: Storage) {
             ) {
                 Column {
                     Text(
-                        text = "Content",
+                        text = stringResource(R.string.storage_content),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = storage.content?.joinToString(", ") ?: "None",
+                        text = storage.content?.joinToString(", ") ?: stringResource(R.string.storage_none),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                
+
                 Column {
                     Text(
-                        text = "Available",
+                        text = stringResource(R.string.storage_available),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${(storage.available / 1024 / 1024 / 1024).toInt()}GB",
+                        text = stringResource(R.string.storage_size_gb, (storage.available / 1024 / 1024 / 1024).toInt()),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
-                
+
                 Column {
                     Text(
-                        text = "Used",
+                        text = stringResource(R.string.storage_used),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "${(storage.used / 1024 / 1024 / 1024).toInt()}GB",
+                        text = stringResource(R.string.storage_size_gb, (storage.used / 1024 / 1024 / 1024).toInt()),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Total: ${(storage.total / 1024 / 1024 / 1024).toInt()}GB",
+                text = stringResource(R.string.storage_total, (storage.total / 1024 / 1024 / 1024).toInt()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
