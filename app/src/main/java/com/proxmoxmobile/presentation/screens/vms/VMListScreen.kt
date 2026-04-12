@@ -36,7 +36,6 @@ fun VMListScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    var showSnackbar by remember { mutableStateOf(false) }
     var lastRefreshTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var actionInProgress by remember { mutableStateOf<Pair<String, Int>?>(null) } // action, vmid
     val snackbarHostState = remember { SnackbarHostState() }
@@ -450,10 +449,9 @@ suspend fun refreshVMs(
     try {
         Log.d("VMListScreen", "Refreshing VMs for node: $nodeName")
         val response = apiService.getVirtualMachines(nodeName)
-        Log.d("VMListScreen", "API response received: ${response.data?.size ?: 0} VMs")
+        Log.d("VMListScreen", "API response received: ${response.data.size} VMs")
         
-        // Safely handle the response data
-        val vmList = response.data ?: emptyList()
+        val vmList = response.data
         Log.d("VMListScreen", "Processed ${vmList.size} VMs")
         
         // Validate each VM before adding to the list

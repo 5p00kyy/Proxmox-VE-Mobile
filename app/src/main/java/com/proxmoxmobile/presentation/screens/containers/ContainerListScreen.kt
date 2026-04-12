@@ -109,7 +109,6 @@ fun ContainerListScreen(
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    var showSnackbar by remember { mutableStateOf(false) }
     var lastRefreshTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var actionInProgress by remember { mutableStateOf<Pair<String, Int>?>(null) } // action, vmid
     val snackbarHostState = remember { SnackbarHostState() }

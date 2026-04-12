@@ -112,3 +112,5 @@ This repository was cleaned up on a machine without a configured Android SDK, so
 3. Add at least a small unit test suite around authentication, model parsing, and view-model behavior.
 4. Decide which unfinished screens are in scope, then either complete them or reduce the navigation surface.
 5. Introduce a clearer data layer if the app is going to grow beyond direct view-model API calls.
+
+For a concrete staged roadmap, see [`docs/revival-plan.md`](docs/revival-plan.md).

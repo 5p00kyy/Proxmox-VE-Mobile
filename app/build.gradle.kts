@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.splash.screen)
-    implementation(libs.androidx.window)
 
     // Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -65,8 +64,6 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.animation.core)
 
-    // Material Design and AppCompat
-    implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
 
     // Networking
