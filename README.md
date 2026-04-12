@@ -4,6 +4,16 @@
 
 The current codebase is a single-module Kotlin/Jetpack Compose app with direct Retrofit calls to the Proxmox API. It includes login, a dashboard, and management screens for nodes, VMs, containers, storage, network, users, tasks, backups, cluster status, and settings. Some of those surfaces are functional, some are read-only, and several contain unfinished actions or placeholder UI. This README describes the repository as it exists today rather than the intended end state.
 
+## Localization
+
+The app ships string resources for these locales:
+
+- Default (`values`): English
+- `values-de`: German
+- `values-es`: Spanish
+
+Localization is resource-based through Android `strings.xml` files. New locale additions should preserve string names, placeholders, format specifiers, and escaping so translations remain behaviorally identical to the default resources.
+
 ## Current Status
 
 What appears to work from code inspection:
