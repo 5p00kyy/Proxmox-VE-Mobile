@@ -90,8 +90,6 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 
-ksp = { id = "com.google.devtools.ksp", version = "1.9.21-1.0.15" }
-
 [bundles]
 compose = [
     "androidx-compose-ui",
@@ -106,4 +104,4 @@ compose-debug = [
 ]
 compose-test = [
     "androidx-compose-ui-test-junit4"
-] 
+]

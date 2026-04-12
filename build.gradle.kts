@@ -2,7 +2,6 @@
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.kotlinAndroid) apply false
-    alias(libs.plugins.ksp) apply false
 }
 
 // Global JDK image transformation disable
@@ -15,4 +14,3 @@ allprojects {
 tasks.register("clean", Delete::class) {
     delete(layout.projectDirectory.dir("build"))
 }
-

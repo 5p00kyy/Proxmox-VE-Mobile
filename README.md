@@ -1,177 +1,114 @@
 # Proxmox VE Mobile
 
-A modern Android app for managing Proxmox VE servers with a clean, intuitive interface.
+`Proxmox VE Mobile` is an Android client for browsing and operating a Proxmox VE environment from a phone or tablet.
 
-## ✨ **Latest Features (Real-time & Clean UI)**
+The current codebase is a single-module Kotlin/Jetpack Compose app with direct Retrofit calls to the Proxmox API. It includes login, a dashboard, and management screens for nodes, VMs, containers, storage, network, users, tasks, backups, cluster status, and settings. Some of those surfaces are functional, some are read-only, and several contain unfinished actions or placeholder UI. This README describes the repository as it exists today rather than the intended end state.
 
-### 🔄 **Real-time Data Updates**
-- **Automatic Data Refresh**: All screens now update automatically without manual refresh buttons
-- **Dashboard**: Real-time system status with live CPU, Memory, and Uptime data
-- **VM Management**: Auto-refresh every 15 seconds with clean action buttons
-- **Container Management**: Real-time LXC container monitoring with improved UI
-- **Task Monitoring**: Live task statistics and status updates every 10 seconds
+## Current Status
 
-### 🎨 **Clean & Modern UI**
-- **Removed Auto-refresh Buttons**: Cleaner interface without cluttered refresh controls
-- **Improved Login Screen**: Better scaling and responsive design
-- **Enhanced Container Cards**: Modern design with proper spacing and action buttons
-- **Real-time Status Indicators**: Live data display with proper formatting
-- **Streamlined Navigation**: Simplified top bar with essential actions only
+What appears to work from code inspection:
 
-### 🔧 **Technical Improvements**
-- **Real-time Monitoring**: Continuous data updates without user intervention
-- **Better Error Handling**: Improved error messages and recovery
-- **Optimized Performance**: Reduced UI complexity for better responsiveness
-- **Clean Code**: Removed unused parameters and simplified function signatures
+- Manual login against a user-supplied Proxmox host and port.
+- Optional encrypted credential storage with auto-fill on next launch.
+- Dashboard node listing and basic status display.
+- VM list loading plus start, stop, and delete actions.
+- Container list loading plus start, stop, and delete actions.
+- Storage, network, users, tasks, backups, and cluster screens that fetch and display data.
 
-## 🚀 **Working Features**
+What is clearly incomplete or only partially implemented:
 
-### ✅ **Core Functionality**
-- **Authentication**: Secure login with credential storage
-- **Real-time Dashboard**: Live system status and node monitoring
-- **VM Management**: Start, stop, delete virtual machines with real-time updates
-- **LXC Container Management**: Full container lifecycle management with clean UI
-- **Task Monitoring**: Real-time task statistics and management
-- **Settings**: Comprehensive configuration options
-- **Navigation**: Smooth navigation between all screens
+- Several screens expose settings or action buttons with `TODO` handlers.
+- Some settings are local UI state only and are not persisted or wired into runtime behavior.
+- Advanced actions such as backup restore/download, user edit/delete UI flows, and some container resource operations are unfinished.
+- Networking currently trusts all TLS certificates and hostnames, which is acceptable for local experimentation but not production-grade security.
+- There are no committed unit tests or instrumentation tests.
 
-### ✅ **Real-time Updates**
-- **Dashboard**: Auto-refresh every 30 seconds with live system metrics
-- **VM List**: Real-time updates every 15 seconds with action progress indicators
-- **Container List**: Live monitoring every 15 seconds with improved card design
-- **Task Screen**: Continuous updates every 10 seconds with statistics
-- **System Status**: Live CPU, Memory, and Uptime display
+## Tech Stack
 
-## 🛠 **Tech Stack**
+- Kotlin
+- Jetpack Compose
+- Material 3
+- AndroidX Navigation Compose
+- Retrofit with Gson
+- OkHttp
+- Kotlin Coroutines
+- `EncryptedSharedPreferences` for saved credentials
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose with Material Design 3
-- **Architecture**: MVVM with Clean Architecture
-- **Networking**: Retrofit + OkHttp with SSL/TLS support
-- **Security**: Android Keystore + EncryptedSharedPreferences
-- **Dependency Injection**: Manual DI
-- **Build System**: Gradle
-- **Target API**: Android 8.0+ (API 26+)
+## Architecture
 
-## 📁 **Project Structure**
+The project is currently lightweight rather than strongly layered:
 
-```
-app/src/main/java/com/proxmoxmobile/
-├── data/
-│   ├── api/           # API interfaces and clients
-│   ├── model/         # Data models
-│   └── security/      # Secure storage
-├── di/                # Dependency injection
-├── presentation/
-│   ├── screens/       # UI screens
-│   │   ├── auth/      # Login screen
-│   │   ├── dashboard/ # Main dashboard
-│   │   ├── vms/       # VM management
-│   │   ├── containers/# LXC management
-│   │   ├── tasks/     # Task monitoring
-│   │   └── settings/  # Configuration
-│   ├── navigation/    # Navigation components
-│   ├── theme/         # UI theming
-│   └── viewmodel/     # ViewModels
-└── ProxmoxApplication.kt
+- `presentation/`: Compose screens, navigation, and `MainViewModel`
+- `data/api/`: Retrofit API definitions plus authentication/client setup
+- `data/model/`: API models
+- `data/security/`: encrypted credential storage
+
+The app does not currently use a robust repository/domain layer. Most screens call `MainViewModel`, which in turn constructs API services directly.
+
+## Repository Layout
+
+```text
+.
+├── app/
+│   ├── build.gradle.kts
+│   └── src/main/
+│       ├── AndroidManifest.xml
+│       ├── java/com/proxmoxmobile/
+│       │   ├── data/
+│       │   └── presentation/
+│       └── res/
+├── gradle/
+│   ├── libs.versions.toml
+│   └── wrapper/
+├── build.gradle.kts
+├── gradle.properties
+└── settings.gradle.kts
 ```
 
-## ⚙️ **Configuration**
+## Setup
 
-1. **Build the Project**:
-   ```bash
-   ./gradlew assembleDebug
-   ```
+Prerequisites:
 
-2. **Install on Device**:
-   ```bash
-   adb install app/build/outputs/apk/debug/app-debug.apk
-   ```
+- JDK 17
+- Android Studio or a local Android SDK installation
 
-3. **Connect to Proxmox**:
-   - Launch the app
-   - Enter your Proxmox server details
-   - Navigate the dashboard with real-time updates
+Local setup:
 
-## 🔧 **Recent Improvements**
+```bash
+./gradlew tasks
+```
 
-### **Real-time Monitoring & Auto-refresh**
-- ✅ Automatic data updates across all screens
-- ✅ Live system status with real CPU/Memory data
-- ✅ Continuous monitoring without manual intervention
-- ✅ Optimized refresh intervals for different data types
+If you want to build locally, create your own `local.properties` or configure the Android SDK through Android Studio. That file is intentionally not tracked.
 
-### **Enhanced User Experience**
-- ✅ Clean interface without cluttered refresh buttons
-- ✅ Improved login screen scaling and responsiveness
-- ✅ Modern container card design with better spacing
-- ✅ Streamlined navigation with essential actions only
+## Build And Verification
 
-### **Improved Settings & Configuration**
-- ✅ Comprehensive settings screen with various options
-- ✅ Better credential management and security
-- ✅ Enhanced configuration options for different use cases
+Typical commands in a real Android environment:
 
-### **Enhanced Task Management**
-- ✅ Real-time task monitoring with statistics
-- ✅ Live task status updates and management
-- ✅ Improved task card design and functionality
+```bash
+./gradlew assembleDebug
+./gradlew test
+./gradlew lint
+```
 
-### **Better Visual Design**
-- ✅ Modern Material Design 3 implementation
-- ✅ Consistent theming across all screens
-- ✅ Improved typography and spacing
-- ✅ Better color scheme and visual hierarchy
+This repository was cleaned up on a machine without a configured Android SDK, so Android builds, lint, emulator runs, and instrumentation tests could not be verified here.
 
-## 🐛 **Troubleshooting**
+## Security Notes
 
-### **Common Issues**
-- **Connection Failed**: Check server URL, port, and credentials
-- **Authentication Error**: Verify username, password, and realm
-- **No Data**: Ensure Proxmox server is running and accessible
-- **Real-time Updates**: Data refreshes automatically - no manual refresh needed
+- Credentials can be stored in encrypted shared preferences.
+- The current networking layer disables certificate and hostname verification to simplify connections. That is a major hardening gap and should be fixed before treating the app as production-ready.
+- `android:usesCleartextTraffic="true"` is enabled in the manifest, so plain HTTP is allowed.
 
-### **Performance**
-- **Slow Loading**: Check network connection and server response time
-- **High Battery Usage**: Real-time updates are optimized for efficiency
-- **Memory Usage**: App uses efficient caching and data management
+## Known Gaps
 
-## 📋 **Roadmap**
+- No automated tests are present.
+- No CI configuration is present.
+- Several dependencies and parts of the UI suggest abandoned or unfinished feature work.
+- The settings screen overstates what is actually configurable.
 
-### **Phase 1: Core Features** ✅
-- [x] Authentication and secure credential storage
-- [x] Dashboard with real-time system status
-- [x] VM management (start, stop, delete)
-- [x] LXC container management
-- [x] Task monitoring and statistics
-- [x] Real-time monitoring and auto-refresh
+## Recommended Next Steps
 
-### **Phase 2: Advanced Management** ✅
-- [x] Enhanced task monitoring with statistics
-- [x] Improved settings and configuration
-- [x] Better error handling and user feedback
-- [x] Clean UI design and real-time updates
-
-### **Phase 3: Enhanced Features** 🚧
-- [ ] Console access for VMs and containers
-- [ ] Backup management and scheduling
-- [ ] Storage management and monitoring
-- [ ] Network interface management
-- [ ] User management and permissions
-- [ ] Cluster management features
-
-### **Phase 4: Enterprise Features** 📋
-- [ ] Multi-server management
-- [ ] Advanced monitoring and alerts
-- [ ] Backup and restore operations
-- [ ] Performance analytics
-- [ ] Custom dashboard widgets
-- [ ] API rate limiting and optimization
-
-## 🤝 **Contributing**
-
-This project is actively developed. Contributions are welcome!
-
-## 📄 **License**
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+1. Verify the app on a real Android SDK/emulator and record which screens/actions actually succeed against a Proxmox instance.
+2. Harden networking by removing trust-all TLS behavior and documenting certificate requirements.
+3. Add at least a small unit test suite around authentication, model parsing, and view-model behavior.
+4. Decide which unfinished screens are in scope, then either complete them or reduce the navigation surface.
+5. Introduce a clearer data layer if the app is going to grow beyond direct view-model API calls.

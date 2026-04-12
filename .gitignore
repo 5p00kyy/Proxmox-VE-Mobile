@@ -1,0 +1,20 @@
+# Gradle and Android build output
+.gradle/
+build/
+*/build/
+.kotlin/
+captures/
+
+# Local SDK and machine-specific configuration
+local.properties
+
+# IDE state
+.idea/
+*.iml
+
+# OS/editor clutter
+.DS_Store
+Thumbs.db
+
+# Tooling scratch files
+.codex
