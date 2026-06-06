@@ -45,7 +45,7 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 | Navigation smoke | Yes | Dashboard, node detail, VM, LXC, storage, network, users, backups, tasks, cluster, settings do not crash during normal navigation |
 | Known limitations | Yes | README and release notes clearly identify read-only and planned areas |
 | Release notes | Yes | `CHANGELOG.md` has a `v0.1.0-beta.1` section before tagging |
-| Release artifact | Yes | APK attached to GitHub release |
+| Release artifact | Yes | Signed APK attached to GitHub release with release notes and install guidance |
 
 ## Release Packaging Workflow
 
@@ -163,7 +163,7 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 5. Add release screenshots or short screen recordings to the README/release notes.
 6. Promote `CHANGELOG.md` from `Unreleased` to `v0.1.0-beta.1`.
 7. Configure release signing secrets and run the beta APK release workflow on the beta tag.
-8. Confirm the signed APK is attached to the GitHub release.
+8. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
 9. Keep a post-beta issue list for deferred parity work.
 
 ## Estimated Timeline

@@ -21,6 +21,18 @@ Supported environment targets for the first beta:
 - Standalone nodes and small clusters are in scope.
 - Proxmox Backup Server management is not in scope for the first beta.
 
+### Installing A Beta APK
+
+When `v0.1.0-beta.1` is published:
+
+1. Open the GitHub Release for the beta tag.
+2. Download the attached `proxmox-ve-mobile-v0.1.0-beta.1-release.apk`.
+3. Confirm the release notes identify the APK as a signed beta build.
+4. On Android, allow installation from the browser or file manager you used to download the APK.
+5. Open the APK and follow the Android install prompt.
+
+Only install APKs attached to this repository's GitHub Releases. Debug APKs and unsigned workflow artifacts are for project validation only and should not be treated as public beta downloads.
+
 ## Screenshots
 
 Screenshots and short screen recordings should be added before tagging `v0.1.0-beta.1`. At minimum, capture login/TLS, dashboard, VM list/detail, LXC list/detail, task detail/logs, and one read-only admin slice.

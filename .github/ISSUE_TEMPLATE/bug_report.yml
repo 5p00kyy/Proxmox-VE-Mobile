@@ -109,12 +109,12 @@ body:
     id: logs
     attributes:
       label: Logs or screenshots
-      description: Attach sanitized logs, screenshots, or screen recordings. Do not paste passwords, API tokens, tickets, cookies, or private keys.
+      description: Attach sanitized logs, screenshots, or screen recordings. Do not paste passwords, API tokens, tickets, cookies, private keys, private hostnames, private IPs, or usernames.
       render: text
   - type: checkboxes
     id: safety
     attributes:
       label: Safety check
       options:
-        - label: I removed passwords, API tokens, cookies, tickets, private keys, and public IP details that should not be shared.
+        - label: I removed passwords, API tokens, cookies, tickets, private keys, private hostnames, private IPs, usernames, and public IP details that should not be shared.
           required: true
