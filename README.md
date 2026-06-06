@@ -171,12 +171,19 @@ Typical commands in a real Android environment:
 ./gradlew assembleRelease
 ./gradlew test
 ./gradlew lint
+./gradlew compileDebugAndroidTestKotlin
 ```
 
 For beta release candidates, run the consolidated gate:
 
 ```bash
 ./scripts/beta-gate.sh v0.1.0-beta.1
+```
+
+For the final pre-tag check, require completed smoke evidence in the same gate:
+
+```bash
+REQUIRE_BETA_QA_COMPLETE=true ./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
 To summarize manual beta smoke evidence while QA is in progress:

@@ -21,11 +21,11 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 ```text
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
-Automated release gate       [##################..] 88%
+Automated release gate       [##################..] 90%
 Real Proxmox smoke QA        [#############.......] 65%
 UX/copy release polish       [###############.....] 75%
-Release packaging            [################....] 78%
-Official beta readiness      [################....] 81%
+Release packaging            [#################...] 82%
+Official beta readiness      [################....] 82%
 ```
 
 ## Release Gates
@@ -78,7 +78,7 @@ Before tagging, use the same checker as a hard completion gate:
 ./scripts/beta-qa-status.sh --require-complete
 ```
 
-The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, calls `scripts/public-hygiene-check.sh`, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. The hygiene check scans tracked public docs/workflows/scripts and application source for local environment details, inline secret-looking values, and optional locally supplied deny-list patterns through `EXTRA_PUBLIC_HYGIENE_PATTERN`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
+The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, calls `scripts/public-hygiene-check.sh`, optionally requires completed smoke evidence when `REQUIRE_BETA_QA_COMPLETE=true`, then runs `test`, `lint`, `assembleDebug`, `assembleRelease`, and `compileDebugAndroidTestKotlin`. The hygiene check scans tracked public docs/workflows/scripts and application source for local environment details, inline secret-looking values, and optional locally supplied deny-list patterns through `EXTRA_PUBLIC_HYGIENE_PATTERN`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
 
 Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag runs must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
 
@@ -89,7 +89,7 @@ Manual dry runs upload the produced release APK as a GitHub Actions artifact. Ta
 
 `ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
 
-Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. If a release already exists for the tag, the workflow refuses to upload unless it is still a draft prerelease. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Enable the `require_smoke_qa` input for the final pre-tag dry run so the workflow also fails while `docs/beta-smoke-qa.md` still contains pending, failed, or blocked release evidence. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs require completed smoke evidence automatically, create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. If a release already exists for the tag, the workflow refuses to upload unless it is still a draft prerelease. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
 
 GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the repository default branch. While the beta baseline is still only on the draft PR branch, the release workflow can be linted and reviewed, but the manual dry run cannot be triggered from GitHub until the workflow is merged or otherwise present on the default branch.
 
@@ -211,10 +211,10 @@ The latest UX polish pass tightened repeated VM/LXC resource cards, paired detai
 
 ### Automation Plan For Remaining Blockers
 
-The route registry and unit tests prove beta route patterns, route encoding, lifecycle ViewModel behavior, and task-detail route generation, but they do not prove Activity recreation, background resume, Compose layout, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
+The route registry, unit tests, and first instrumentation smoke prove beta route patterns, route encoding, lifecycle ViewModel behavior, task-detail route generation, login UI rendering, API-token mode controls, SHA-256 fingerprint validation, and saveable login UI state after Activity recreation. They do not prove background resume, broad Compose layout coverage, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
 
 - Add Compose instrumentation smoke for every registered beta route using fake session data and fake repositories.
-- Add Activity recreation coverage for login non-secret drafts and task filter drafts.
+- Add Activity recreation coverage for task filter drafts and post-login route state.
 - Add fake-API UI coverage for VM/LXC task notices opening task detail routes.
 - Leave API-token login, TLS/fingerprint behavior, disposable lifecycle actions, and task-log handoff as lab-backed smoke until a disposable Proxmox fixture can be provisioned in CI.
 

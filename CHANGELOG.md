@@ -35,6 +35,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
 - Public release media manifest and GitHub Release note draft template for `v0.1.0-beta.1` preparation.
 - Reusable beta QA status script for summarizing pending, passed, failed, and blocked smoke evidence.
+- Optional strict beta gate mode for requiring completed smoke QA evidence during final pre-tag dry runs.
+- Compose instrumentation smoke for login rendering, local API-token mode controls, SHA-256 fingerprint validation, and Activity recreation of non-secret login draft state.
 - Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
@@ -156,6 +158,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Beta release gate now delegates public hygiene scanning to a reusable script with an optional local deny-list pattern.
 - Signed beta release workflow artifacts no longer include the staged unsigned APK copy.
 - Signed beta release workflow refuses to mutate an existing release unless it is still a draft prerelease.
+- Beta tag release workflow now requires completed smoke QA evidence before packaging or signing.
+- Android CI and beta gate now compile instrumentation tests so checked-in emulator smoke sources cannot silently break.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
 - Failed VM/LXC lifecycle actions now clear stale last-task notices instead of leaving an old task handoff card visible.
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.

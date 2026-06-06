@@ -91,6 +91,38 @@ Emulator smoke evidence:
 - Forced landscape could not be counted as verified because the emulator returned to portrait after relaunch.
 - Login screen was manually forced into landscape during a later emulator pass; the form remained scrollable and the submit button was reachable. This is partial login-screen coverage only, not a full route-matrix landscape pass.
 
+## 2026-06-07 Focused Emulator And Instrumentation Pass
+
+Environment:
+
+- Pixel 8 API 36 emulator.
+- Debug APK built from `revival-2026-baseline`.
+- Private user-supplied Proxmox VE environment used only for already-authenticated route resume smoke.
+- No private screenshots, hostnames, guest names, task IDs, fingerprints, or endpoint details recorded.
+
+Automated checks:
+
+```bash
+./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
+```
+
+Result: passed.
+
+Observed pass:
+
+- Login screen instrumentation renders the real `MainActivity` without saved credentials.
+- Local API-token mode can be enabled from the login UI without contacting a Proxmox host.
+- An invalid SHA-256 fingerprint shows validation copy and keeps the connect action disabled.
+- A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
+- Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
+- LXC detail route resumed from Home/launcher on the emulator with top app bar, loaded data, scroll position, read-only snapshot copy, and read-only resource copy still visible.
+- Focused post-resume logcat scan found no fatal app crash entries.
+
+Not counted as complete:
+
+- Forced landscape route evidence was not counted because the emulator returned to the launcher during the attempt.
+- The instrumentation pass does not prove live API-token authentication, live TLS/fingerprint connection success, or disposable lifecycle task handoff.
+
 Still requires emulator/manual smoke:
 
 - Rotate while logged in on dashboard and verify the app stays authenticated, the dashboard remains on screen, and refresh still works.
@@ -161,7 +193,7 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 | VM list | Pending | Pending | Include action labels and task notice behavior |
 | VM detail | Pending | Pending | Include read-only config/snapshot areas |
 | LXC list | Pending | Pending | Include action labels and task notice behavior |
-| LXC detail | Pending | Pending | Include read-only snapshot/resource areas |
+| LXC detail | Pending | Pass | Portrait route resumed from Home/launcher with read-only snapshot/resource areas visible; no fatal crash entries after resume |
 | Storage list | Pending | Pending | Include long content labels and capacity fields |
 | Storage content browser | Pending | Pending | Include read-only content browsing |
 | Network list | Pending | Pending | Include global and node-scoped entry paths |
@@ -174,10 +206,10 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is mostly manual because there is no checked-in instrumentation test suite yet. The narrowest automatable next steps are:
+The current beta blocker evidence is still mostly manual, but the first checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, and Activity recreation for non-secret login draft state. The narrowest next automatable steps are:
 
 - Add `app/src/androidTest` Compose navigation smoke tests that boot the app with fake session data and assert every `Screen.betaRegisteredRoutes` destination can render without crashing.
-- Add an instrumentation rotation/resume test for login draft state and task-filter draft state, preserving only non-secret fields across Activity recreation.
+- Add an instrumentation rotation/resume test for task-filter draft state and post-login route state, preserving only non-secret fields across Activity recreation.
 - Add fake-API Compose tests for VM/LXC list task notice navigation so returned UPIDs open task detail without relying on a live Proxmox target.
 - Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.
 

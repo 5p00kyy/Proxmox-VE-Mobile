@@ -6,6 +6,7 @@ cd "$ROOT_DIR"
 
 BETA_TAG="${1:-${BETA_TAG:-v0.1.0-beta.1}}"
 GRADLE_ARGS="${GRADLE_ARGS:---stacktrace --no-daemon}"
+REQUIRE_BETA_QA_COMPLETE="${REQUIRE_BETA_QA_COMPLETE:-false}"
 
 if [[ ! "$BETA_TAG" =~ ^v[0-9]+[.][0-9]+[.][0-9]+-beta[.][0-9]+$ ]]; then
   echo "Beta tag must look like v0.1.0-beta.1; got '$BETA_TAG'."
@@ -31,4 +32,16 @@ git diff --check
 
 ./scripts/public-hygiene-check.sh
 
-./gradlew test lint assembleDebug assembleRelease $GRADLE_ARGS
+case "${REQUIRE_BETA_QA_COMPLETE,,}" in
+  true|1|yes)
+    ./scripts/beta-qa-status.sh --require-complete
+    ;;
+  false|0|no|"")
+    ;;
+  *)
+    echo "REQUIRE_BETA_QA_COMPLETE must be true or false; got '$REQUIRE_BETA_QA_COMPLETE'."
+    exit 1
+    ;;
+esac
+
+./gradlew test lint assembleDebug assembleRelease compileDebugAndroidTestKotlin $GRADLE_ARGS
