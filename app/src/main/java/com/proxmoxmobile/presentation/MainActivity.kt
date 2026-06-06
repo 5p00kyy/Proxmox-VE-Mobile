@@ -15,6 +15,7 @@ import com.proxmoxmobile.presentation.navigation.ProxmoxNavHost
 import com.proxmoxmobile.presentation.theme.ProxmoxTheme
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.security.CredentialAuthMethod
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,9 +40,20 @@ class MainActivity : ComponentActivity() {
                         host = savedCredentials.host,
                         port = savedCredentials.port,
                         username = savedCredentials.username,
-                        password = savedCredentials.password,
+                        password = if (savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN) {
+                            null
+                        } else {
+                            savedCredentials.password
+                        },
+                        apiToken = if (savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN) {
+                            "${savedCredentials.username}@${savedCredentials.realm}!${savedCredentials.apiTokenId}=${savedCredentials.apiTokenSecret}"
+                        } else {
+                            null
+                        },
                         realm = savedCredentials.realm,
-                        useHttps = savedCredentials.useHttps
+                        useHttps = savedCredentials.useHttps,
+                        verifySsl = savedCredentials.verifySsl,
+                        certificateFingerprint = savedCredentials.certificateFingerprint.takeIf { it.isNotBlank() }
                     )
                     viewModel.setCurrentServer(serverConfig)
                 }
@@ -60,4 +72,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-} 
+}

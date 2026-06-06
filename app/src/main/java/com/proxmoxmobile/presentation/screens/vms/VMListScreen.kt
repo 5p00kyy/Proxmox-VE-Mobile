@@ -6,7 +6,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,11 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import androidx.navigation.NavController
+import com.proxmoxmobile.data.vm.ProxmoxVmApi
+import com.proxmoxmobile.data.vm.VmPowerAction
+import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.data.model.VirtualMachine
+import com.proxmoxmobile.presentation.navigation.Screen
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.SnackbarHostState
@@ -36,61 +43,152 @@ fun VMListScreen(
 ) {
     val startSuccessTemplate = stringResource(R.string.vm_start_success)
     val startFailedTemplate = stringResource(R.string.vm_start_failed)
+    val shutdownSuccessTemplate = stringResource(R.string.vm_shutdown_success)
+    val shutdownFailedTemplate = stringResource(R.string.vm_shutdown_failed)
     val stopSuccessTemplate = stringResource(R.string.vm_stop_success)
     val stopFailedTemplate = stringResource(R.string.vm_stop_failed)
+    val rebootSuccessTemplate = stringResource(R.string.vm_reboot_success)
+    val rebootFailedTemplate = stringResource(R.string.vm_reboot_failed)
     val deleteSuccessTemplate = stringResource(R.string.vm_delete_success)
     val deleteFailedTemplate = stringResource(R.string.vm_delete_failed)
+    val shutdownDialogTitle = stringResource(R.string.vm_shutdown_dialog_title)
+    val shutdownDialogMessageTemplate = stringResource(R.string.vm_shutdown_dialog_message)
+    val stopDialogTitle = stringResource(R.string.vm_stop_dialog_title)
+    val stopDialogMessageTemplate = stringResource(R.string.vm_stop_dialog_message)
+    val rebootDialogTitle = stringResource(R.string.vm_reboot_dialog_title)
+    val rebootDialogMessageTemplate = stringResource(R.string.vm_reboot_dialog_message)
     val deleteDialogTitle = stringResource(R.string.vm_delete_dialog_title)
     val deleteDialogMessageTemplate = stringResource(R.string.vm_delete_dialog_message)
-    var vms by remember { mutableStateOf<List<VirtualMachine>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var snackbarMessage by remember { mutableStateOf<String?>(null) }
-    var lastRefreshTime by remember { mutableStateOf(System.currentTimeMillis()) }
-    var actionInProgress by remember { mutableStateOf<Pair<String, Int>?>(null) } // action, vmid
-    val snackbarHostState = remember { SnackbarHostState() }
-    
-    val scope = rememberCoroutineScope()
-    val apiService = viewModel.getApiService()
-
-    // Real-time data refresh
-    LaunchedEffect(nodeName) {
-        while (!nodeName.isNullOrBlank()) {
-            delay(15000) // Refresh every 15 seconds for VMs
-            if (viewModel.isAuthenticated.value && apiService != null) {
-                scope.launch {
-                    refreshVMs(apiService, nodeName, { newVMs ->
-                        vms = newVMs
-                        lastRefreshTime = System.currentTimeMillis()
-                    }, { error ->
-                        errorMessage = error
-                    })
+    val taskIdLabel = stringResource(R.string.vm_task_id_label)
+    val viewTaskLabel = stringResource(R.string.vm_view_task)
+    val vmRepository = remember(viewModel) {
+        VmRepository(ProxmoxVmApi { viewModel.getApiService() })
+    }
+    val vmListViewModel: VmListViewModel = composeViewModel(
+        key = "vm-list-${nodeName.orEmpty()}",
+        factory = remember(nodeName, vmRepository) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(VmListViewModel::class.java)) {
+                        return VmListViewModel(nodeName, vmRepository) as T
+                    }
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
             }
         }
-    }
+    )
+    val uiState by vmListViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    // Load VMs function
-    fun loadVMs() {
-        if (apiService != null && !nodeName.isNullOrBlank()) {
-            scope.launch {
-                refreshVMs(apiService, nodeName, { newVMs ->
-                    vms = newVMs
-                    lastRefreshTime = System.currentTimeMillis()
-                    errorMessage = null
-                }, { error ->
-                    errorMessage = error
-                })
-            }
+    LaunchedEffect(nodeName, vmListViewModel) {
+        vmListViewModel.loadVirtualMachines()
+        while (!nodeName.isNullOrBlank()) {
+            delay(15000) // Refresh every 15 seconds for VMs
+            vmListViewModel.loadVirtualMachines(showLoading = false)
         }
     }
 
-    // Load VMs when the screen is first displayed
-    LaunchedEffect(apiService, nodeName) {
-        if (apiService != null && !nodeName.isNullOrBlank()) {
-            loadVMs()
-        } else {
-            errorMessage = "Invalid node name or API service not available"
+    LaunchedEffect(uiState.pendingActionNotice) {
+        val notice = uiState.pendingActionNotice ?: return@LaunchedEffect
+        val message = buildVmActionMessage(
+            notice = notice,
+            startSuccessTemplate = startSuccessTemplate,
+            startFailedTemplate = startFailedTemplate,
+            shutdownSuccessTemplate = shutdownSuccessTemplate,
+            shutdownFailedTemplate = shutdownFailedTemplate,
+            stopSuccessTemplate = stopSuccessTemplate,
+            stopFailedTemplate = stopFailedTemplate,
+            rebootSuccessTemplate = rebootSuccessTemplate,
+            rebootFailedTemplate = rebootFailedTemplate,
+            deleteSuccessTemplate = deleteSuccessTemplate,
+            deleteFailedTemplate = deleteFailedTemplate,
+            taskIdLabel = taskIdLabel
+        )
+        val taskId = notice.taskId
+        val taskNode = nodeName?.takeIf { it.isNotBlank() }
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = viewTaskLabel.takeIf { taskId != null && taskNode != null }
+        )
+        if (result == SnackbarResult.ActionPerformed && taskId != null && taskNode != null) {
+            navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+        }
+        vmListViewModel.consumeActionNotice()
+    }
+
+    fun actionInProgressFor(vmid: Int): VmPowerAction? {
+        return uiState.actionInProgress?.takeIf { it.vmid == vmid }?.action
+    }
+
+    fun showShutdownConfirmation(vm: VirtualMachine) {
+        viewModel.showConfirmationDialog(
+            MainViewModel.ConfirmationDialog(
+                title = shutdownDialogTitle,
+                message = String.format(shutdownDialogMessageTemplate, vm.name, vm.vmid),
+                onConfirm = {
+                    viewModel.hideConfirmationDialog()
+                    vmListViewModel.shutdownVirtualMachine(vm)
+                },
+                onDismiss = {
+                    viewModel.hideConfirmationDialog()
+                }
+            )
+        )
+    }
+
+    fun showStopConfirmation(vm: VirtualMachine) {
+        viewModel.showConfirmationDialog(
+            MainViewModel.ConfirmationDialog(
+                title = stopDialogTitle,
+                message = String.format(stopDialogMessageTemplate, vm.name, vm.vmid),
+                onConfirm = {
+                    viewModel.hideConfirmationDialog()
+                    vmListViewModel.stopVirtualMachine(vm)
+                },
+                onDismiss = {
+                    viewModel.hideConfirmationDialog()
+                }
+            )
+        )
+    }
+
+    fun showRebootConfirmation(vm: VirtualMachine) {
+        viewModel.showConfirmationDialog(
+            MainViewModel.ConfirmationDialog(
+                title = rebootDialogTitle,
+                message = String.format(rebootDialogMessageTemplate, vm.name, vm.vmid),
+                onConfirm = {
+                    viewModel.hideConfirmationDialog()
+                    vmListViewModel.rebootVirtualMachine(vm)
+                },
+                onDismiss = {
+                    viewModel.hideConfirmationDialog()
+                }
+            )
+        )
+    }
+
+    fun showDeleteConfirmation(vm: VirtualMachine) {
+        viewModel.showConfirmationDialog(
+            MainViewModel.ConfirmationDialog(
+                title = deleteDialogTitle,
+                message = String.format(deleteDialogMessageTemplate, vm.name, vm.vmid),
+                onConfirm = {
+                    viewModel.hideConfirmationDialog()
+                    vmListViewModel.deleteVirtualMachine(vm)
+                },
+                onDismiss = {
+                    viewModel.hideConfirmationDialog()
+                }
+            )
+        )
+    }
+
+    fun refreshNow() {
+        scope.launch {
+            vmListViewModel.loadVirtualMachines(showLoading = false)
         }
     }
 
@@ -110,7 +208,7 @@ fun VMListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Settings */ }) {
+                    IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.vm_settings))
                     }
                     IconButton(onClick = {
@@ -119,7 +217,7 @@ fun VMListScreen(
                             popUpTo(0) { inclusive = true }
                         }
                     }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = stringResource(R.string.vm_logout))
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = stringResource(R.string.vm_logout))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -147,16 +245,63 @@ fun VMListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.vm_last_updated, formatTimeAgo(lastRefreshTime)),
+                        text = stringResource(R.string.vm_last_updated, formatTimeAgo(uiState.lastRefreshTimeMillis)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    IconButton(onClick = { refreshNow() }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Refresh,
+                            contentDescription = stringResource(R.string.vm_refresh)
+                        )
+                    }
+                }
+            }
 
+            uiState.lastTaskNotice?.let { taskNotice ->
+                val taskId = taskNotice.taskId ?: return@let
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(
+                                    R.string.vm_last_task_action,
+                                    taskNotice.action.toDisplayLabel(),
+                                    taskNotice.vmName,
+                                    taskNotice.vmid
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            Text(
+                                text = stringResource(R.string.vm_last_task_id, taskId),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            nodeName?.takeIf { it.isNotBlank() }?.let { taskNode ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TextButton(
+                                    onClick = {
+                                        navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+                                    }
+                                ) {
+                                    Icon(Icons.Default.Info, contentDescription = stringResource(R.string.vm_view_task))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(stringResource(R.string.vm_view_task))
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
             // Error message
-            if (!errorMessage.isNullOrBlank()) {
+            if (!uiState.errorMessage.isNullOrBlank()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -175,7 +320,7 @@ fun VMListScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = errorMessage!!,
+                                text = uiState.errorMessage!!,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -185,7 +330,7 @@ fun VMListScreen(
             }
 
             // Loading indicator
-            if (isLoading) {
+            if (uiState.isLoading) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -213,69 +358,26 @@ fun VMListScreen(
             }
 
             // VM list
-            items(vms) { vm ->
+            items(uiState.vms) { vm ->
                 VMCard(
                     vm = vm,
-                    actionInProgress = actionInProgress?.second == vm.vmid,
-                    onStart = {
-                        actionInProgress = "start" to vm.vmid
-                        viewModel.startVM(nodeName!!, vm.vmid,
-                            onSuccess = {
-                                actionInProgress = null
-                                snackbarMessage = String.format(startSuccessTemplate, vm.name)
-                                scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                                loadVMs() // Refresh the list
-                            },
-                            onError = { error ->
-                                actionInProgress = null
-                                snackbarMessage = String.format(startFailedTemplate, error)
-                                scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                            }
-                        )
+                    actionInProgress = actionInProgressFor(vm.vmid),
+                    onStart = { vmListViewModel.startVirtualMachine(vm) },
+                    onShutdown = { showShutdownConfirmation(vm) },
+                    onStop = { showStopConfirmation(vm) },
+                    onReboot = { showRebootConfirmation(vm) },
+                    onDelete = { showDeleteConfirmation(vm) },
+                    detailEnabled = !nodeName.isNullOrBlank(),
+                    onDetails = {
+                        nodeName?.takeIf { it.isNotBlank() }?.let { node ->
+                            navController.navigate(Screen.VMDetailWithNode.createRoute(node, vm.vmid))
+                        }
                     },
-                    onStop = {
-                        actionInProgress = "stop" to vm.vmid
-                        viewModel.stopVM(nodeName!!, vm.vmid,
-                            onSuccess = {
-                                actionInProgress = null
-                                snackbarMessage = String.format(stopSuccessTemplate, vm.name)
-                                scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                                loadVMs() // Refresh the list
-                            },
-                            onError = { error ->
-                                actionInProgress = null
-                                snackbarMessage = String.format(stopFailedTemplate, error)
-                                scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                            }
-                        )
-                    },
-                    onDelete = {
-                        viewModel.showConfirmationDialog(
-                            MainViewModel.ConfirmationDialog(
-                                title = deleteDialogTitle,
-                                message = String.format(deleteDialogMessageTemplate, vm.name, vm.vmid),
-                                onConfirm = {
-                                    viewModel.hideConfirmationDialog()
-                                    actionInProgress = "delete" to vm.vmid
-                                    viewModel.deleteVM(nodeName!!, vm.vmid,
-                                        onSuccess = {
-                                            actionInProgress = null
-                                            snackbarMessage = String.format(deleteSuccessTemplate, vm.name)
-                                            scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                                            loadVMs() // Refresh the list
-                                        },
-                                        onError = { error ->
-                                            actionInProgress = null
-                                            snackbarMessage = String.format(deleteFailedTemplate, error)
-                                            scope.launch { snackbarHostState.showSnackbar(snackbarMessage!!) }
-                                        }
-                                    )
-                                },
-                                onDismiss = {
-                                    viewModel.hideConfirmationDialog()
-                                }
-                            )
-                        )
+                    taskHistoryEnabled = !nodeName.isNullOrBlank(),
+                    onTasks = {
+                        nodeName?.takeIf { it.isNotBlank() }?.let { node ->
+                            navController.navigate(Screen.ResourceTasks.createRoute(node, vm.vmid))
+                        }
                     }
                 )
             }
@@ -287,11 +389,18 @@ fun VMListScreen(
 @Composable
 fun VMCard(
     vm: VirtualMachine,
-    actionInProgress: Boolean = false,
+    actionInProgress: VmPowerAction? = null,
     onStart: () -> Unit = {},
+    onShutdown: () -> Unit = {},
     onStop: () -> Unit = {},
-    onDelete: () -> Unit = {}
+    onReboot: () -> Unit = {},
+    onDelete: () -> Unit = {},
+    detailEnabled: Boolean = true,
+    onDetails: () -> Unit = {},
+    taskHistoryEnabled: Boolean = true,
+    onTasks: () -> Unit = {}
 ) {
+    val hasActionInProgress = actionInProgress != null
 
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -376,11 +485,11 @@ fun VMCard(
             ) {
                 Button(
                     onClick = onStart,
-                    enabled = vm.status != "running" && !actionInProgress,
+                    enabled = vm.status != "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {
-                    if (actionInProgress) {
+                    if (actionInProgress == VmPowerAction.Start) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
@@ -393,34 +502,100 @@ fun VMCard(
                 }
                 
                 Button(
-                    onClick = onStop,
-                    enabled = vm.status == "running" && !actionInProgress,
+                    onClick = onShutdown,
+                    enabled = vm.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
-                    if (actionInProgress) {
+                    if (actionInProgress == VmPowerAction.Shutdown) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.vm_stop))
+                        Icon(Icons.Filled.PowerSettingsNew, contentDescription = stringResource(R.string.vm_shutdown))
                     }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.vm_stop))
+                    Text(stringResource(R.string.vm_shutdown))
                 }
-                
+
                 OutlinedButton(
-                    onClick = onDelete,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
+                    onClick = onReboot,
+                    enabled = vm.status == "running" && !hasActionInProgress,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.vm_delete))
+                    if (actionInProgress == VmPowerAction.Reboot) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.vm_reboot))
+                    }
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.vm_delete))
+                    Text(stringResource(R.string.vm_reboot))
                 }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onStop,
+                enabled = vm.status == "running" && !hasActionInProgress,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (actionInProgress == VmPowerAction.Stop) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.vm_stop))
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.vm_stop))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onDelete,
+                enabled = !hasActionInProgress,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                if (actionInProgress == VmPowerAction.Delete) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.vm_delete))
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.vm_delete))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onDetails,
+                enabled = !hasActionInProgress && detailEnabled,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Info, contentDescription = stringResource(R.string.vm_view_details))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.vm_view_details))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onTasks,
+                enabled = !hasActionInProgress && taskHistoryEnabled,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.vm_view_tasks))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(stringResource(R.string.vm_view_tasks))
             }
         }
     }
@@ -449,52 +624,49 @@ fun VMDetailItem(
     }
 }
 
-// Helper function to refresh VMs
-suspend fun refreshVMs(
-    apiService: com.proxmoxmobile.data.api.ProxmoxApiService,
-    nodeName: String,
-    onSuccess: (List<VirtualMachine>) -> Unit,
-    onError: (String) -> Unit
-) {
-    try {
-        Log.d("VMListScreen", "Refreshing VMs for node: $nodeName")
-        val response = apiService.getVirtualMachines(nodeName)
-        Log.d("VMListScreen", "API response received: ${response.data.size} VMs")
-        
-        val vmList = response.data
-        Log.d("VMListScreen", "Processed ${vmList.size} VMs")
-        
-        // Validate each VM before adding to the list
-        val validVMs = vmList.filter { vm ->
-            try {
-                vm.vmid > 0 && 
-                vm.name.isNotBlank() && 
-                vm.status.isNotBlank() &&
-                vm.cpu >= 0 &&
-                vm.mem >= 0 &&
-                vm.maxmem >= 0 &&
-                vm.uptime >= 0
-            } catch (e: Exception) {
-                Log.w("VMListScreen", "Invalid VM data: ${e.message}")
-                false
-            }
+private fun buildVmActionMessage(
+    notice: VmActionNotice,
+    startSuccessTemplate: String,
+    startFailedTemplate: String,
+    shutdownSuccessTemplate: String,
+    shutdownFailedTemplate: String,
+    stopSuccessTemplate: String,
+    stopFailedTemplate: String,
+    rebootSuccessTemplate: String,
+    rebootFailedTemplate: String,
+    deleteSuccessTemplate: String,
+    deleteFailedTemplate: String,
+    taskIdLabel: String
+): String {
+    val baseMessage = if (notice.errorMessage == null) {
+        when (notice.action) {
+            VmPowerAction.Start -> String.format(startSuccessTemplate, notice.vmName)
+            VmPowerAction.Shutdown -> String.format(shutdownSuccessTemplate, notice.vmName)
+            VmPowerAction.Stop -> String.format(stopSuccessTemplate, notice.vmName)
+            VmPowerAction.Reboot -> String.format(rebootSuccessTemplate, notice.vmName)
+            VmPowerAction.Delete -> String.format(deleteSuccessTemplate, notice.vmName)
         }
-        
-        onSuccess(validVMs)
-        Log.d("VMListScreen", "Successfully refreshed ${validVMs.size} valid VMs")
-        
-    } catch (e: retrofit2.HttpException) {
-        Log.e("VMListScreen", "HTTP error refreshing VMs: ${e.code()}", e)
-        when (e.code()) {
-            401 -> onError("Authentication required - please login again")
-            403 -> onError("Access forbidden - check permissions")
-            404 -> onError("Node not found: $nodeName")
-            500 -> onError("Server error - please try again")
-            else -> onError("Failed to refresh VMs: HTTP ${e.code()}")
+    } else {
+        when (notice.action) {
+            VmPowerAction.Start -> String.format(startFailedTemplate, notice.errorMessage)
+            VmPowerAction.Shutdown -> String.format(shutdownFailedTemplate, notice.errorMessage)
+            VmPowerAction.Stop -> String.format(stopFailedTemplate, notice.errorMessage)
+            VmPowerAction.Reboot -> String.format(rebootFailedTemplate, notice.errorMessage)
+            VmPowerAction.Delete -> String.format(deleteFailedTemplate, notice.errorMessage)
         }
-    } catch (e: Exception) {
-        Log.e("VMListScreen", "Failed to refresh VMs", e)
-        onError("Failed to refresh VMs: ${e.message}")
+    }
+
+    return notice.taskId?.let { "$baseMessage\n$taskIdLabel: $it" } ?: baseMessage
+}
+
+@Composable
+private fun VmPowerAction.toDisplayLabel(): String {
+    return when (this) {
+        VmPowerAction.Start -> stringResource(R.string.vm_start)
+        VmPowerAction.Shutdown -> stringResource(R.string.vm_shutdown)
+        VmPowerAction.Stop -> stringResource(R.string.vm_stop)
+        VmPowerAction.Reboot -> stringResource(R.string.vm_reboot)
+        VmPowerAction.Delete -> stringResource(R.string.vm_delete)
     }
 }
 

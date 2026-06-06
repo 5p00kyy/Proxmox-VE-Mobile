@@ -2,17 +2,10 @@ package com.proxmoxmobile.data.security
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import java.security.KeyStore
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
-class SecureStorage(private val context: Context) {
+class SecureStorage(private val context: Context) : CredentialStore {
     
     companion object {
         private const val MASTER_KEY_ALIAS = "proxmox_master_key"
@@ -23,7 +16,12 @@ class SecureStorage(private val context: Context) {
         private const val KEY_PASSWORD = "password"
         private const val KEY_REALM = "realm"
         private const val KEY_USE_HTTPS = "use_https"
+        private const val KEY_VERIFY_SSL = "verify_ssl"
+        private const val KEY_CERTIFICATE_FINGERPRINT = "certificate_fingerprint"
         private const val KEY_SAVE_CREDENTIALS = "save_credentials"
+        private const val KEY_AUTH_METHOD = "auth_method"
+        private const val KEY_API_TOKEN_ID = "api_token_id"
+        private const val KEY_API_TOKEN_SECRET = "api_token_secret"
     }
     
     private val masterKey: MasterKey by lazy {
@@ -43,28 +41,26 @@ class SecureStorage(private val context: Context) {
         )
     }
     
-    fun saveCredentials(
-        host: String,
-        port: Int,
-        username: String,
-        password: String,
-        realm: String,
-        useHttps: Boolean,
-        saveCredentials: Boolean
-    ) {
+    override fun saveCredentials(request: CredentialSaveRequest) {
+        val serverConfig = request.serverConfig
         encryptedPrefs.edit().apply {
-            putString(KEY_HOST, host)
-            putInt(KEY_PORT, port)
-            putString(KEY_USERNAME, username)
-            putString(KEY_PASSWORD, password) // This is now encrypted
-            putString(KEY_REALM, realm)
-            putBoolean(KEY_USE_HTTPS, useHttps)
-            putBoolean(KEY_SAVE_CREDENTIALS, saveCredentials)
+            putString(KEY_HOST, serverConfig.host)
+            putInt(KEY_PORT, serverConfig.port)
+            putString(KEY_USERNAME, serverConfig.username)
+            putString(KEY_PASSWORD, request.password.orEmpty())
+            putString(KEY_REALM, serverConfig.realm)
+            putBoolean(KEY_USE_HTTPS, serverConfig.useHttps)
+            putBoolean(KEY_VERIFY_SSL, serverConfig.verifySsl)
+            putString(KEY_CERTIFICATE_FINGERPRINT, serverConfig.certificateFingerprint.orEmpty())
+            putBoolean(KEY_SAVE_CREDENTIALS, request.saveCredentials)
+            putString(KEY_AUTH_METHOD, request.authMethod)
+            putString(KEY_API_TOKEN_ID, request.apiTokenId.orEmpty())
+            putString(KEY_API_TOKEN_SECRET, request.apiTokenSecret.orEmpty())
             apply()
         }
     }
     
-    fun loadSavedCredentials(): SavedCredentials? {
+    override fun loadSavedCredentials(): SavedCredentials? {
         val saveCredentials = encryptedPrefs.getBoolean(KEY_SAVE_CREDENTIALS, false)
         if (!saveCredentials) return null
         
@@ -74,34 +70,41 @@ class SecureStorage(private val context: Context) {
         val password = encryptedPrefs.getString(KEY_PASSWORD, "")
         val realm = encryptedPrefs.getString(KEY_REALM, "pam")
         val useHttps = encryptedPrefs.getBoolean(KEY_USE_HTTPS, true)
+        val verifySsl = encryptedPrefs.getBoolean(KEY_VERIFY_SSL, true)
+        val certificateFingerprint = encryptedPrefs.getString(KEY_CERTIFICATE_FINGERPRINT, "")
+        val authMethod = encryptedPrefs.getString(KEY_AUTH_METHOD, CredentialAuthMethod.PASSWORD)
+            ?: CredentialAuthMethod.PASSWORD
+        val apiTokenId = encryptedPrefs.getString(KEY_API_TOKEN_ID, "")
+        val apiTokenSecret = encryptedPrefs.getString(KEY_API_TOKEN_SECRET, "")
         
-        if (host?.isNotBlank() == true && username?.isNotBlank() == true && password?.isNotBlank() == true) {
+        val hasPasswordCredentials = authMethod == CredentialAuthMethod.PASSWORD && password?.isNotBlank() == true
+        val hasApiTokenCredentials = authMethod == CredentialAuthMethod.API_TOKEN &&
+            apiTokenId?.isNotBlank() == true &&
+            apiTokenSecret?.isNotBlank() == true
+
+        if (host?.isNotBlank() == true && username?.isNotBlank() == true && (hasPasswordCredentials || hasApiTokenCredentials)) {
             return SavedCredentials(
                 host = host,
                 port = port,
                 username = username,
-                password = password,
+                password = password.orEmpty(),
                 realm = realm ?: "pam",
-                useHttps = useHttps
+                useHttps = useHttps,
+                verifySsl = verifySsl,
+                certificateFingerprint = certificateFingerprint.orEmpty(),
+                authMethod = authMethod,
+                apiTokenId = apiTokenId.orEmpty(),
+                apiTokenSecret = apiTokenSecret.orEmpty()
             )
         }
         return null
     }
     
-    fun clearSavedCredentials() {
+    override fun clearSavedCredentials() {
         encryptedPrefs.edit().clear().apply()
     }
     
-    fun hasSavedCredentials(): Boolean {
+    override fun hasSavedCredentials(): Boolean {
         return encryptedPrefs.getBoolean(KEY_SAVE_CREDENTIALS, false)
     }
-    
-    data class SavedCredentials(
-        val host: String,
-        val port: Int,
-        val username: String,
-        val password: String,
-        val realm: String,
-        val useHttps: Boolean
-    )
-} 
+}

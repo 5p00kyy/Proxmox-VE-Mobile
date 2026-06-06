@@ -36,6 +36,12 @@ interface ProxmoxApiService {
         @Path("vmid") vmid: Int
     ): ApiResponse<VirtualMachine>
 
+    @GET("api2/json/nodes/{node}/qemu/{vmid}/config")
+    suspend fun getVMConfig(
+        @Path("node") node: String,
+        @Path("vmid") vmid: Int
+    ): ApiResponse<Map<String, Any?>>
+
     @POST("api2/json/nodes/{node}/qemu")
     suspend fun createVM(
         @Path("node") node: String,
@@ -47,13 +53,13 @@ interface ProxmoxApiService {
         @Path("node") node: String,
         @Path("vmid") vmid: Int,
         @Path("action") action: String
-    ): ApiResponse<Map<String, String>>
+    ): ApiResponse<String>
 
     @DELETE("api2/json/nodes/{node}/qemu/{vmid}")
     suspend fun deleteVM(
         @Path("node") node: String,
         @Path("vmid") vmid: Int
-    ): ApiResponse<Map<String, String>>
+    ): ApiResponse<String>
 
     @GET("api2/json/nodes/{node}/qemu/{vmid}/rrd")
     suspend fun getVMRRD(
@@ -83,13 +89,13 @@ interface ProxmoxApiService {
         @Path("node") node: String,
         @Path("vmid") vmid: Int,
         @Path("action") action: String
-    ): ApiResponse<Map<String, String>>
+    ): ApiResponse<String>
 
     @DELETE("api2/json/nodes/{node}/lxc/{vmid}")
     suspend fun deleteContainer(
         @Path("node") node: String,
         @Path("vmid") vmid: Int
-    ): ApiResponse<Map<String, String>>
+    ): ApiResponse<String>
 
     @GET("api2/json/nodes/{node}/lxc/{vmid}/rrd")
     suspend fun getContainerRRD(
@@ -97,6 +103,12 @@ interface ProxmoxApiService {
         @Path("vmid") vmid: Int,
         @Query("timeframe") timeframe: String = "hour"
     ): ApiResponse<Map<String, Any>>
+
+    @GET("api2/json/nodes/{node}/lxc/{vmid}/snapshot")
+    suspend fun getLXCSnapshots(
+        @Path("node") node: String,
+        @Path("vmid") vmid: Int
+    ): ApiResponse<List<LxcSnapshot>>
 
     // Storage
     @GET("api2/json/nodes/{node}/storage")
@@ -106,7 +118,7 @@ interface ProxmoxApiService {
     suspend fun getStorageContent(
         @Path("node") node: String,
         @Path("storage") storage: String
-    ): ApiResponse<List<Backup>>
+    ): ApiResponse<List<StorageContent>>
 
     @GET("api2/json/nodes/{node}/storage/{storage}/rrd")
     suspend fun getStorageRRD(
@@ -146,7 +158,10 @@ interface ProxmoxApiService {
     suspend fun getTasks(
         @Path("node") node: String,
         @Query("limit") limit: Int = 50,
-        @Query("start") start: Int = 0
+        @Query("start") start: Int = 0,
+        @Query("statusfilter") statusFilter: String? = null,
+        @Query("typefilter") typeFilter: String? = null,
+        @Query("vmid") vmid: Int? = null
     ): ApiResponse<List<Task>>
 
     @GET("api2/json/nodes/{node}/tasks/{upid}/status")
@@ -154,6 +169,14 @@ interface ProxmoxApiService {
         @Path("node") node: String,
         @Path("upid") upid: String
     ): ApiResponse<Task>
+
+    @GET("api2/json/nodes/{node}/tasks/{upid}/log")
+    suspend fun getTaskLog(
+        @Path("node") node: String,
+        @Path("upid") upid: String,
+        @Query("start") start: Int = 0,
+        @Query("limit") limit: Int = 500
+    ): ApiResponse<List<TaskLogEntry>>
 
     @DELETE("api2/json/nodes/{node}/tasks/{upid}")
     suspend fun deleteTask(
@@ -178,7 +201,7 @@ interface ProxmoxApiService {
 
     // Cluster
     @GET("api2/json/cluster/status")
-    suspend fun getClusterStatus(): ApiResponse<List<ClusterNode>>
+    suspend fun getClusterStatus(): ApiResponse<List<ClusterStatusEntry>>
 
     @GET("api2/json/cluster/resources")
     suspend fun getClusterResources(): ApiResponse<List<Map<String, Any>>>
@@ -216,7 +239,7 @@ interface ProxmoxApiService {
     suspend fun getVMSnapshots(
         @Path("node") node: String,
         @Path("vmid") vmid: Int
-    ): ApiResponse<List<Map<String, Any>>>
+    ): ApiResponse<List<VmSnapshot>>
 
     @POST("api2/json/nodes/{node}/qemu/{vmid}/snapshot")
     suspend fun createVMSnapshot(
@@ -248,4 +271,4 @@ interface ProxmoxApiService {
         @Path("storage") storage: String,
         @Query("path") path: String = "/"
     ): ApiResponse<List<Map<String, Any>>>
-} 
+}

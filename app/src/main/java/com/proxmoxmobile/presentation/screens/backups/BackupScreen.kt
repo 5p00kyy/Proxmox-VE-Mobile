@@ -13,14 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import androidx.navigation.NavController
+import com.proxmoxmobile.data.backup.BackupRepository
+import com.proxmoxmobile.data.backup.ProxmoxBackupApi
 import com.proxmoxmobile.data.model.Backup
-import com.proxmoxmobile.data.model.Storage
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
-import android.util.Log
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,113 +36,38 @@ fun BackupScreen(
     navController: NavController,
     viewModel: MainViewModel
 ) {
-    var backups by remember { mutableStateOf<List<Backup>>(emptyList()) }
-    var storages by remember { mutableStateOf<List<Storage>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var selectedNode by remember { mutableStateOf<String?>(null) }
-    var selectedStorage by remember { mutableStateOf<String?>(null) }
-    var showCreateDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
-    // Get cached nodes to determine which node to query
-    val cachedNodes = viewModel.getCachedNodes()
-
-    // Fetch backups when screen loads
-    LaunchedEffect(Unit) {
-        try {
-            scope.launch {
-                try {
-                    isLoading = true
-                    errorMessage = null
-                    
-                    Log.d("BackupScreen", "Starting to load backups")
-                    
-                    // Check if we have a valid API service
-                    val apiService = try {
-                        viewModel.getApiService()
-                    } catch (e: Exception) {
-                        Log.e("BackupScreen", "Failed to get API service", e)
-                        errorMessage = "Authentication failed - please login again"
-                        return@launch
+    val availableNodes = viewModel.getCachedNodes()
+        ?.map { it.node }
+        ?.filter { it.isNotBlank() }
+        .orEmpty()
+    val noNodesMessage = stringResource(R.string.backup_error_no_nodes)
+    val backupRepository = remember(viewModel) {
+        BackupRepository(ProxmoxBackupApi { viewModel.getApiService() })
+    }
+    val backupListViewModel: BackupListViewModel = composeViewModel(
+        key = "backup-list-${availableNodes.joinToString("|")}",
+        factory = remember(availableNodes, backupRepository, noNodesMessage) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(BackupListViewModel::class.java)) {
+                        return BackupListViewModel(
+                            availableNodes = availableNodes,
+                            repository = backupRepository,
+                            noNodesMessage = noNodesMessage
+                        ) as T
                     }
-                    
-                    if (apiService == null) {
-                        Log.e("BackupScreen", "API service is null")
-                        errorMessage = "Not authenticated - please login again"
-                        return@launch
-                    }
-                    
-                    // Use the first available node, or show error if no nodes
-                    val nodes = cachedNodes ?: emptyList()
-                    if (nodes.isEmpty()) {
-                        errorMessage = "No nodes available - please check dashboard first"
-                        return@launch
-                    }
-                    
-                    selectedNode = nodes.first().node
-                    Log.d("BackupScreen", "Using node: $selectedNode")
-                    
-                    // First, fetch storages to get backup locations
-                    val storageResponse = try {
-                        apiService.getStorages(selectedNode!!)
-                    } catch (e: Exception) {
-                        Log.e("BackupScreen", "Failed to fetch storages", e)
-                        errorMessage = "Failed to fetch storage information: ${e.message}"
-                        return@launch
-                    }
-                    
-                    val storageList = storageResponse.data ?: emptyList()
-                    storages = storageList.filter { it.content.contains("backup") || it.content.contains("vzdump") }
-                    Log.d("BackupScreen", "Found ${storages.size} backup-capable storages")
-                    
-                    // Fetch backups from each storage
-                    val allBackups = mutableListOf<Backup>()
-                    for (storage in storages) {
-                        try {
-                            val backupResponse = apiService.getStorageContent(selectedNode!!, storage.storage)
-                            val storageBackups = backupResponse.data ?: emptyList()
-                            allBackups.addAll(storageBackups)
-                            Log.d("BackupScreen", "Found ${storageBackups.size} backups in storage ${storage.storage}")
-                        } catch (e: Exception) {
-                            Log.w("BackupScreen", "Failed to fetch backups from storage ${storage.storage}", e)
-                        }
-                    }
-                    
-                    Log.d("BackupScreen", "Total backups found: ${allBackups.size}")
-                    
-                    // Validate each backup before adding to the list
-                    val validBackups = allBackups.filter { backup ->
-                        try {
-                            backup.volid.isNotBlank() && 
-                            backup.content.isNotBlank()
-                        } catch (e: Exception) {
-                            Log.w("BackupScreen", "Invalid backup data: ${e.message}")
-                            false
-                        }
-                    }
-                    backups = validBackups
-                    Log.d("BackupScreen", "Successfully loaded ${backups.size} valid backups")
-                } catch (e: retrofit2.HttpException) {
-                    Log.e("BackupScreen", "HTTP error loading backups: ${e.code()}", e)
-                    when (e.code()) {
-                        401 -> errorMessage = "Authentication required - please login again"
-                        403 -> errorMessage = "Access forbidden - check permissions"
-                        500 -> errorMessage = "Server error - please try again"
-                        else -> errorMessage = "Failed to load backups: HTTP ${e.code()}"
-                    }
-                } catch (e: Exception) {
-                    Log.e("BackupScreen", "Failed to load backups", e)
-                    errorMessage = "Failed to load backups: ${e.message}"
-                } finally {
-                    isLoading = false
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
             }
-        } catch (e: Exception) {
-            Log.e("BackupScreen", "Critical error in LaunchedEffect", e)
-            errorMessage = "An unexpected error occurred"
-            isLoading = false
         }
+    )
+    val uiState by backupListViewModel.uiState.collectAsState()
+    var nodeMenuExpanded by remember { mutableStateOf(false) }
+    var storageMenuExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(backupListViewModel) {
+        backupListViewModel.loadBackups()
     }
 
     Scaffold(
@@ -160,15 +86,47 @@ fun BackupScreen(
                     }
                 },
                 actions = {
-                    if (selectedNode != null) {
-                        Text(
-                            text = stringResource(R.string.backup_node_label, selectedNode ?: ""),
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(end = 16.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    uiState.selectedNodeName?.let { selectedNode ->
+                        Box {
+                            TextButton(
+                                onClick = { nodeMenuExpanded = true },
+                                enabled = uiState.availableNodes.size > 1
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.backup_node_label, selectedNode),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1
+                                )
+                                if (uiState.availableNodes.size > 1) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                }
+                            }
+                            DropdownMenu(
+                                expanded = nodeMenuExpanded,
+                                onDismissRequest = { nodeMenuExpanded = false }
+                            ) {
+                                uiState.availableNodes.forEach { nodeName ->
+                                    DropdownMenuItem(
+                                        text = { Text(nodeName) },
+                                        onClick = {
+                                            nodeMenuExpanded = false
+                                            backupListViewModel.selectNode(nodeName)
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
-                    IconButton(onClick = { showCreateDialog = true }) {
+                    IconButton(
+                        onClick = { backupListViewModel.loadBackups(showLoading = false) },
+                        enabled = !uiState.isLoading && !uiState.isRefreshing
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.backup_retry))
+                    }
+                    IconButton(
+                        onClick = {},
+                        enabled = false
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.backup_create_backup))
                     }
                 },
@@ -182,7 +140,7 @@ fun BackupScreen(
         }
     ) { paddingValues ->
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -204,7 +162,7 @@ fun BackupScreen(
                     }
                 }
             }
-            errorMessage != null -> {
+            uiState.errorMessage != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -228,7 +186,7 @@ fun BackupScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = errorMessage!!,
+                            text = uiState.errorMessage ?: "",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -236,17 +194,7 @@ fun BackupScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = {
-                                // Retry loading
-                                scope.launch {
-                                    // Reset state and retry
-                                    backups = emptyList()
-                                    storages = emptyList()
-                                    errorMessage = null
-                                    isLoading = true
-                                    // This will trigger LaunchedEffect again
-                                }
-                            }
+                            onClick = { backupListViewModel.loadBackups() }
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -255,7 +203,7 @@ fun BackupScreen(
                     }
                 }
             }
-            backups.isEmpty() -> {
+            uiState.visibleBackupEntries.isEmpty() -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -284,8 +232,25 @@ fun BackupScreen(
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+                        BackupStorageFilter(
+                            uiState = uiState,
+                            expanded = storageMenuExpanded,
+                            onExpandedChange = { storageMenuExpanded = it },
+                            onStorageSelected = backupListViewModel::selectStorage
+                        )
+                        BackupStorageWarning(uiState = uiState)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.backup_actions_planned),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { showCreateDialog = true }
+                            onClick = {},
+                            enabled = false
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -298,24 +263,106 @@ fun BackupScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(paddingValues)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
+                        BackupStorageFilter(
+                            uiState = uiState,
+                            expanded = storageMenuExpanded,
+                            onExpandedChange = { storageMenuExpanded = it },
+                            onStorageSelected = backupListViewModel::selectStorage
+                        )
+                        BackupStorageWarning(uiState = uiState)
+                    }
+
+                    item {
                         Text(
-                            text = stringResource(R.string.backup_list_header, backups.size),
+                            text = stringResource(R.string.backup_list_header, uiState.visibleBackupEntries.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    
-                    items(backups) { backup ->
-                        BackupCard(backup = backup)
+
+                    items(uiState.visibleBackupEntries) { entry ->
+                        BackupCard(backup = entry.backup)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BackupStorageFilter(
+    uiState: BackupListUiState,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onStorageSelected: (String?) -> Unit
+) {
+    if (uiState.backupStorages.isEmpty()) return
+
+    val selectedStorage = uiState.selectedStorageName
+        ?: stringResource(R.string.backup_storage_all)
+
+    Box {
+        OutlinedButton(
+            onClick = { onExpandedChange(true) },
+            enabled = uiState.backupStorages.isNotEmpty()
+        ) {
+            Text(
+                text = stringResource(R.string.backup_storage_label, selectedStorage),
+                maxLines = 1
+            )
+            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) }
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.backup_storage_all)) },
+                onClick = {
+                    onExpandedChange(false)
+                    onStorageSelected(null)
+                }
+            )
+            uiState.backupStorages.forEach { storage ->
+                DropdownMenuItem(
+                    text = { Text(storage.storage) },
+                    onClick = {
+                        onExpandedChange(false)
+                        onStorageSelected(storage.storage)
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BackupStorageWarning(uiState: BackupListUiState) {
+    if (uiState.storageErrors.isEmpty()) return
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
+    ) {
+        Text(
+            text = stringResource(
+                R.string.backup_storage_partial_error,
+                uiState.storageErrors.joinToString { it.storageName }
+            ),
+            modifier = Modifier.padding(12.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onErrorContainer
+        )
     }
 }
 
@@ -324,7 +371,7 @@ fun BackupScreen(
 fun BackupCard(backup: Backup) {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     val sizeInMB = backup.size / (1024 * 1024)
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -355,7 +402,7 @@ fun BackupCard(backup: Backup) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // Format indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -386,9 +433,9 @@ fun BackupCard(backup: Backup) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Backup details
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -408,7 +455,7 @@ fun BackupCard(backup: Backup) {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -424,7 +471,7 @@ fun BackupCard(backup: Backup) {
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 if (!backup.notes.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -443,33 +490,42 @@ fun BackupCard(backup: Backup) {
                     }
                 }
             }
-            
+
             // Action buttons
             Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.backup_actions_planned),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: Download backup */ },
+                    onClick = {},
+                    enabled = false,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.backup_download))
                 }
-                
+
                 OutlinedButton(
-                    onClick = { /* TODO: Restore backup */ },
+                    onClick = {},
+                    enabled = false,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.backup_restore))
                 }
-                
+
                 OutlinedButton(
-                    onClick = { /* TODO: Delete backup */ },
+                    onClick = {},
+                    enabled = false,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -482,4 +538,4 @@ fun BackupCard(backup: Backup) {
             }
         }
     }
-} 
+}

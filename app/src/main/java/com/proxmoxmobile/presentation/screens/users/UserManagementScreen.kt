@@ -13,13 +13,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.proxmoxmobile.R
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import androidx.navigation.NavController
 import com.proxmoxmobile.data.model.User
+import com.proxmoxmobile.data.user.ProxmoxUserApi
+import com.proxmoxmobile.data.user.UserRepository
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
-import android.util.Log
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,85 +36,26 @@ fun UserManagementScreen(
     navController: NavController,
     viewModel: MainViewModel
 ) {
-    var users by remember { mutableStateOf<List<User>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var showCreateDialog by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
-    // Fetch users when screen loads
-    LaunchedEffect(Unit) {
-        try {
-            scope.launch {
-                try {
-                    isLoading = true
-                    errorMessage = null
-                    
-                    Log.d("UserManagementScreen", "Starting to load users")
-                    
-                    // Check if we have a valid API service
-                    val apiService = try {
-                        viewModel.getApiService()
-                    } catch (e: Exception) {
-                        Log.e("UserManagementScreen", "Failed to get API service", e)
-                        errorMessage = "Authentication failed - please login again"
-                        return@launch
+    val userRepository = remember(viewModel) {
+        UserRepository(ProxmoxUserApi { viewModel.getApiService() })
+    }
+    val userManagementViewModel: UserManagementViewModel = composeViewModel(
+        factory = remember(userRepository) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(UserManagementViewModel::class.java)) {
+                        return UserManagementViewModel(userRepository) as T
                     }
-                    
-                    if (apiService == null) {
-                        Log.e("UserManagementScreen", "API service is null")
-                        errorMessage = "Not authenticated - please login again"
-                        return@launch
-                    }
-                    
-                    Log.d("UserManagementScreen", "API service available, fetching users")
-                    
-                    // Fetch users
-                    val response = try {
-                        apiService.getUsers()
-                    } catch (e: Exception) {
-                        Log.e("UserManagementScreen", "API call failed", e)
-                        errorMessage = "Failed to connect to server: ${e.message}"
-                        return@launch
-                    }
-                    
-                    Log.d("UserManagementScreen", "Users response received: ${response.data?.size ?: 0} users")
-                    
-                    // Safely handle the response data
-                    val userList = response.data ?: emptyList()
-                    Log.d("UserManagementScreen", "Processed ${userList.size} users")
-                    
-                    // Validate each user before adding to the list
-                    val validUsers = userList.filter { user ->
-                        try {
-                            user.userid.isNotBlank()
-                        } catch (e: Exception) {
-                            Log.w("UserManagementScreen", "Invalid user data: ${e.message}")
-                            false
-                        }
-                    }
-                    users = validUsers
-                    Log.d("UserManagementScreen", "Successfully loaded ${users.size} valid users")
-                } catch (e: retrofit2.HttpException) {
-                    Log.e("UserManagementScreen", "HTTP error loading users: ${e.code()}", e)
-                    when (e.code()) {
-                        401 -> errorMessage = "Authentication required - please login again"
-                        403 -> errorMessage = "Access forbidden - check permissions"
-                        500 -> errorMessage = "Server error - please try again"
-                        else -> errorMessage = "Failed to load users: HTTP ${e.code()}"
-                    }
-                } catch (e: Exception) {
-                    Log.e("UserManagementScreen", "Failed to load users", e)
-                    errorMessage = "Failed to load users: ${e.message}"
-                } finally {
-                    isLoading = false
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
             }
-        } catch (e: Exception) {
-            Log.e("UserManagementScreen", "Critical error in LaunchedEffect", e)
-            errorMessage = "An unexpected error occurred"
-            isLoading = false
         }
+    )
+    val uiState by userManagementViewModel.uiState.collectAsState()
+
+    LaunchedEffect(userManagementViewModel) {
+        userManagementViewModel.loadUsers()
     }
 
     Scaffold(
@@ -131,8 +74,17 @@ fun UserManagementScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showCreateDialog = true }) {
+                    IconButton(
+                        onClick = {},
+                        enabled = false
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.users_add_user))
+                    }
+                    IconButton(
+                        onClick = { userManagementViewModel.loadUsers(showLoading = false) },
+                        enabled = !uiState.isLoading && !uiState.isRefreshing
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.users_retry))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -145,7 +97,7 @@ fun UserManagementScreen(
         }
     ) { paddingValues ->
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -167,7 +119,7 @@ fun UserManagementScreen(
                     }
                 }
             }
-            errorMessage != null -> {
+            uiState.errorMessage != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -191,7 +143,7 @@ fun UserManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = errorMessage!!,
+                            text = uiState.errorMessage ?: "",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -199,16 +151,7 @@ fun UserManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = {
-                                // Retry loading
-                                scope.launch {
-                                    // Reset state and retry
-                                    users = emptyList()
-                                    errorMessage = null
-                                    isLoading = true
-                                    // This will trigger LaunchedEffect again
-                                }
-                            }
+                            onClick = { userManagementViewModel.loadUsers() }
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -217,7 +160,7 @@ fun UserManagementScreen(
                     }
                 }
             }
-            users.isEmpty() -> {
+            uiState.users.isEmpty() -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -246,8 +189,17 @@ fun UserManagementScreen(
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.users_actions_planned),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = { showCreateDialog = true }
+                            onClick = {},
+                            enabled = false
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -265,14 +217,14 @@ fun UserManagementScreen(
                 ) {
                     item {
                         Text(
-                            text = stringResource(R.string.users_count, users.size),
+                            text = stringResource(R.string.users_count, uiState.users.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    
-                    items(users) { user ->
+
+                    items(uiState.users) { user ->
                         UserCard(user = user)
                     }
                 }
@@ -316,7 +268,7 @@ fun UserCard(user: User) {
                         )
                     }
                 }
-                
+
                 // Status indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -337,9 +289,9 @@ fun UserCard(user: User) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // User details
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -361,7 +313,7 @@ fun UserCard(user: User) {
                         )
                     }
                 }
-                
+
                 if (!user.comment.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -379,7 +331,7 @@ fun UserCard(user: User) {
                         )
                     }
                 }
-                
+
                 if (user.expire != null && user.expire > 0) {
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                     val expireDate = Date(user.expire * 1000) // Convert from Unix timestamp
@@ -401,24 +353,32 @@ fun UserCard(user: User) {
                     }
                 }
             }
-            
+
             // Action buttons
             Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.users_actions_planned),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { /* TODO: Edit user */ },
+                    onClick = {},
+                    enabled = false,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.users_edit))
                 }
-                
+
                 OutlinedButton(
-                    onClick = { /* TODO: Delete user */ },
+                    onClick = {},
+                    enabled = false,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -431,4 +391,4 @@ fun UserCard(user: User) {
             }
         }
     }
-} 
+}

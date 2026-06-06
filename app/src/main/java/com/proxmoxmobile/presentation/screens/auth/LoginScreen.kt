@@ -15,12 +15,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.proxmoxmobile.R
 import com.proxmoxmobile.data.model.ServerConfig
-import com.proxmoxmobile.presentation.navigation.Screen
+import com.proxmoxmobile.data.security.CertificateFingerprint
+import com.proxmoxmobile.data.security.CredentialAuthMethod
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
@@ -37,7 +36,12 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var realm by remember { mutableStateOf("pam") }
     var useHttps by remember { mutableStateOf(true) }
+    var verifySsl by remember { mutableStateOf(true) }
+    var certificateFingerprint by remember { mutableStateOf("") }
     var saveCredentials by remember { mutableStateOf(false) }
+    var useApiToken by remember { mutableStateOf(false) }
+    var apiTokenId by remember { mutableStateOf("") }
+    var apiTokenSecret by remember { mutableStateOf("") }
     
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -53,9 +57,27 @@ fun LoginScreen(
             password = savedCredentials.password
             realm = savedCredentials.realm
             useHttps = savedCredentials.useHttps
+            verifySsl = savedCredentials.verifySsl
+            certificateFingerprint = savedCredentials.certificateFingerprint
             saveCredentials = true
+            useApiToken = savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN
+            apiTokenId = savedCredentials.apiTokenId
+            apiTokenSecret = savedCredentials.apiTokenSecret
         }
     }
+
+    val normalizedCertificateFingerprint = CertificateFingerprint.normalize(certificateFingerprint)
+    val hasInvalidCertificateFingerprint = certificateFingerprint.isNotBlank() && normalizedCertificateFingerprint == null
+
+    val canSubmit = host.isNotBlank() &&
+        username.isNotBlank() &&
+        realm.isNotBlank() &&
+        !hasInvalidCertificateFingerprint &&
+        if (useApiToken) {
+            apiTokenId.isNotBlank() && apiTokenSecret.isNotBlank()
+        } else {
+            password.isNotBlank()
+        }
     
     // Navigate to dashboard when authenticated
     LaunchedEffect(isAuthenticated) {
@@ -205,25 +227,6 @@ fun LoginScreen(
                         )
                     }
                     
-                    // Password Field
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text(stringResource(R.string.login_password)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isLoading,
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-                    
                     // HTTPS Toggle
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -246,6 +249,147 @@ fun LoginScreen(
                             checked = useHttps,
                             onCheckedChange = { useHttps = it },
                             enabled = !isLoading
+                        )
+                    }
+
+                    if (useHttps) {
+                        OutlinedTextField(
+                            value = certificateFingerprint,
+                            onValueChange = { certificateFingerprint = it },
+                            label = { Text(stringResource(R.string.login_certificate_fingerprint)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            singleLine = true,
+                            isError = hasInvalidCertificateFingerprint,
+                            supportingText = {
+                                Text(
+                                    text = if (hasInvalidCertificateFingerprint) {
+                                        stringResource(R.string.login_certificate_fingerprint_invalid)
+                                    } else {
+                                        stringResource(R.string.login_certificate_fingerprint_help)
+                                    }
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VerifiedUser,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.login_verify_ssl),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (!verifySsl) {
+                                    Text(
+                                        text = stringResource(R.string.login_verify_ssl_warning),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                            Switch(
+                                checked = verifySsl,
+                                onCheckedChange = { verifySsl = it },
+                                enabled = !isLoading
+                            )
+                        }
+                    }
+
+                    // Authentication Method Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VpnKey,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.login_use_api_token),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(
+                            checked = useApiToken,
+                            onCheckedChange = { useApiToken = it },
+                            enabled = !isLoading
+                        )
+                    }
+
+                    if (useApiToken) {
+                        OutlinedTextField(
+                            value = apiTokenId,
+                            onValueChange = { apiTokenId = it },
+                            label = { Text(stringResource(R.string.login_api_token_id)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = apiTokenSecret,
+                            onValueChange = { apiTokenSecret = it },
+                            label = { Text(stringResource(R.string.login_api_token_secret)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
+                        )
+                    } else {
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text(stringResource(R.string.login_password)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isLoading,
+                            singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
                         )
                     }
                     
@@ -297,19 +441,37 @@ fun LoginScreen(
                     // Login Button
                     Button(
                         onClick = {
-                            if (host.isNotBlank() && username.isNotBlank() && password.isNotBlank()) {
+                            if (canSubmit) {
+                                val apiToken = if (useApiToken) {
+                                    "$username@$realm!$apiTokenId=$apiTokenSecret"
+                                } else {
+                                    null
+                                }
                                 val serverConfig = ServerConfig(
                                     host = host,
                                     port = port.toIntOrNull() ?: 8006,
                                     username = username,
-                                    password = password,
+                                    password = if (useApiToken) null else password,
+                                    apiToken = apiToken,
                                     realm = realm,
-                                    useHttps = useHttps
+                                    useHttps = useHttps,
+                                    verifySsl = if (useHttps) verifySsl else false,
+                                    certificateFingerprint = if (useHttps) normalizedCertificateFingerprint else null
                                 )
                                 
-                                // Save credentials if checkbox is checked (including password)
                                 if (saveCredentials) {
-                                    viewModel.saveCredentials(serverConfig, password, true)
+                                    viewModel.saveCredentials(
+                                        serverConfig = serverConfig,
+                                        password = if (useApiToken) null else password,
+                                        saveCredentials = true,
+                                        authMethod = if (useApiToken) {
+                                            CredentialAuthMethod.API_TOKEN
+                                        } else {
+                                            CredentialAuthMethod.PASSWORD
+                                        },
+                                        apiTokenId = if (useApiToken) apiTokenId else null,
+                                        apiTokenSecret = if (useApiToken) apiTokenSecret else null
+                                    )
                                 }
                                 
                                 viewModel.authenticate(serverConfig)
@@ -318,7 +480,7 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp),
-                        enabled = host.isNotBlank() && username.isNotBlank() && password.isNotBlank() && !isLoading
+                        enabled = canSubmit && !isLoading
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
