@@ -23,9 +23,9 @@ Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [#################...] 85%
 Real Proxmox smoke QA        [#############.......] 65%
-UX/copy release polish       [##############......] 70%
+UX/copy release polish       [###############.....] 75%
 Release packaging            [###############.....] 75%
-Official beta readiness      [################....] 78%
+Official beta readiness      [################....] 80%
 ```
 
 ## Release Gates
@@ -191,11 +191,11 @@ These route helpers exist but are not registered beta destinations and should no
 
 The source route registry and unit tests keep registered beta route patterns, planned route helpers, and duplicate route patterns explicit while the app moves toward broader navigation coverage.
 
-VM and LXC lifecycle ViewModel tests now cover start, shutdown, force stop, reboot, delete guard behavior, blank returned task IDs, failed action cleanup, and task-detail route generation. This does not replace disposable guest smoke, but it reduces the chance of shipping a broken task handoff path into manual QA.
+VM and LXC lifecycle ViewModel tests now cover start, shutdown, force stop, reboot, delete guard behavior, duplicate action suppression, blank/invalid returned task IDs, failed action cleanup, stale task handoff cleanup, and task-detail route generation. This does not replace disposable guest smoke, but it reduces the chance of shipping a broken task handoff path into manual QA.
 
 Pixel-class Android emulator smoke now covers password login, dashboard load, node detail navigation, VM list/detail routing, and LXC list routing against live Proxmox data. That smoke found and verified fixes for node status endpoint payload normalization, including missing list-style status fields and nested CPU/memory metrics. It does not replace API-token, TLS/fingerprint, disposable guest lifecycle, task follow-up, rotation, resume, or public-media smoke.
 
-The next UX polish pass should tighten repeated VM/LXC resource cards, remove or restyle raw "planned but not implemented" copy, and keep disabled/planned controls visually clear without implying full feature coverage.
+The latest UX polish pass tightened repeated VM/LXC resource cards, paired detail/task controls, and moved disabled surfaces toward read-only beta copy instead of raw implementation-status language. The next polish pass should verify the full route matrix on-device and capture public-safe media only from a disposable or redacted environment.
 
 ## Development Work Remaining
 

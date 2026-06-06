@@ -28,6 +28,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Navigation route registry tests for registered beta destinations, planned detail helpers, and duplicate route patterns.
 - Beta-safe Settings About copy that avoids implying full administrative coverage.
 - VM/LXC lifecycle ViewModel coverage for shutdown, force stop, reboot, blank task IDs, failed action cleanup, and task-detail route handoff.
+- VM/LXC lifecycle coverage for duplicate action suppression, delete guard status handling, stale task handoff cleanup, and valid Proxmox UPID task IDs.
 - Emulator smoke coverage for dashboard, node detail, VM list/detail, and LXC list routing on a Pixel-class Android emulator.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
@@ -86,6 +87,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Unit tests for LXC snapshot filtering, sorting, validation errors, and missing-session errors.
 - Unit tests for VM config sorting, sensitive-value redaction, validation errors, and missing-session errors.
 - Unit tests for VM/LXC shutdown and reboot action API value mapping.
+- Unit tests for VM/LXC lifecycle duplicate action suppression, delete guard status edges, stale task notice clearing, and task ID normalization.
 - Unit tests for `SessionManager` password sessions, API-token sessions, secret stripping, API service creation, validation failures, and logout.
 - Unit tests for auth session UI state success, failure cleanup, API-service access, and logout reset.
 - Unit tests for VM detail preferred-node lookup, cached-node fallback, not-found handling, missing-node validation, and missing-session errors.
@@ -114,14 +116,18 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - VM and LXC cards now expose task history entry points that open the task center filtered by node and VMID.
 - VM detail no longer exists only as an unused route placeholder; it now loads QEMU status through the feature repository path.
 - Dashboard, VM list, and LXC list settings icons now navigate to the settings screen instead of using placeholder handlers.
-- Backup create/download/restore/delete controls are disabled and labeled as planned instead of appearing functional.
-- User create/edit/delete controls are disabled and labeled as planned instead of appearing functional.
-- Settings controls that are not wired to runtime behavior are disabled until implemented.
-- LXC detail resource, start/stop, and console placeholder controls are disabled until implemented.
+- Backup create/download/restore/delete controls are disabled and labeled as read-only beta scope instead of appearing functional.
+- User create/edit/delete controls are disabled and labeled as read-only beta scope instead of appearing functional.
+- Settings controls that are not wired to runtime behavior are disabled and scoped to beta-safe copy.
+- LXC detail resource, start/stop, and console placeholder controls are disabled and scoped to beta-safe copy.
 - LXC detail no longer scans cached nodes or calls Retrofit directly from the Composable.
 - Task operations now use the Proxmox UPID field instead of the display/resource ID.
 - Node detail now accepts node status endpoint payloads that omit list-style node/status fields.
 - Node detail now maps nested node status CPU and memory payloads into the rendered resource summary.
+- VM/LXC lifecycle actions now suppress duplicate requests before queued coroutine work can race.
+- VM/LXC lifecycle task handoff now ignores blank or non-UPID task identifiers.
+- VM/LXC blocked delete attempts now clear stale task-detail handoff state.
+- VM/LXC repeated resource cards use tighter action spacing and paired detail/task controls on Pixel-class screens.
 - The task screen now labels the task stop endpoint as stopping/aborting a running task instead of deleting history.
 - Dashboard node refresh logging no longer treats non-null API response lists as nullable.
 - Network retry now performs a real reload instead of only resetting local UI state.

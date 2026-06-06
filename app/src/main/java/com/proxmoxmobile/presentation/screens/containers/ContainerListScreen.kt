@@ -430,7 +430,7 @@ fun ContainerCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             // Header with container info
             Row(
@@ -475,7 +475,7 @@ fun ContainerCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Resource usage
             Row(
@@ -500,7 +500,7 @@ fun ContainerCard(
             }
 
             // Action buttons
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -510,7 +510,7 @@ fun ContainerCard(
                     enabled = container.status != "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Start) {
                         CircularProgressIndicator(
@@ -521,7 +521,7 @@ fun ContainerCard(
                         Icon(
                             Icons.Filled.PlayArrow,
                             contentDescription = stringResource(R.string.container_start),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -537,7 +537,7 @@ fun ContainerCard(
                     enabled = container.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Shutdown) {
                         CircularProgressIndicator(
@@ -548,7 +548,7 @@ fun ContainerCard(
                         Icon(
                             Icons.Filled.PowerSettingsNew,
                             contentDescription = stringResource(R.string.container_shutdown),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -563,7 +563,7 @@ fun ContainerCard(
                     onClick = onReboot,
                     enabled = container.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Reboot) {
                         CircularProgressIndicator(
@@ -574,7 +574,7 @@ fun ContainerCard(
                         Icon(
                             Icons.Filled.Refresh,
                             contentDescription = stringResource(R.string.container_reboot),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -590,7 +590,8 @@ fun ContainerCard(
             OutlinedButton(
                 onClick = onStop,
                 enabled = container.status == "running" && !hasActionInProgress,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 if (actionInProgress == LxcPowerAction.Stop) {
                     CircularProgressIndicator(
@@ -621,7 +622,8 @@ fun ContainerCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 if (actionInProgress == LxcPowerAction.Delete) {
                     CircularProgressIndicator(
@@ -643,21 +645,31 @@ fun ContainerCard(
                 OutlinedButton(
                     onClick = onDetails,
                     enabled = !hasActionInProgress && detailEnabled,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                 ) {
                     Icon(Icons.Default.Info, contentDescription = stringResource(R.string.container_view_details))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.container_view_details))
+                    Text(
+                        text = stringResource(R.string.container_view_details),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 OutlinedButton(
                     onClick = onTasks,
                     enabled = !hasActionInProgress && taskHistoryEnabled,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.container_view_tasks))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.container_view_tasks))
+                    Text(
+                        text = stringResource(R.string.container_view_tasks),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }

@@ -166,21 +166,21 @@
     <string name="vm_qemu_label">QEMU: %1$s</string>
     <string name="vm_actions">Acciones de VM</string>
     <string name="vm_open_console">Abrir consola</string>
-    <string name="vm_console_not_implemented">El acceso a consola está planificado, pero aún no está implementado.</string>
+    <string name="vm_console_not_implemented">El acceso a consola no forma parte de esta beta.</string>
     <string name="vm_snapshots_title">Instantáneas</string>
     <string name="vm_snapshots_refresh">Actualizar instantáneas</string>
     <string name="vm_snapshots_loading">Cargando instantáneas...</string>
     <string name="vm_snapshots_error">Instantáneas no disponibles: %1$s</string>
     <string name="vm_snapshots_empty">No se encontraron instantáneas para esta VM.</string>
     <string name="vm_snapshot_detail">Creada: %1$s • Estado de RAM: %2$s</string>
-    <string name="vm_snapshots_actions_planned">Los flujos de crear, revertir y eliminar instantáneas están planificados, pero aún no implementados.</string>
+    <string name="vm_snapshots_actions_planned">Las instantáneas son de solo lectura en esta beta.</string>
     <string name="vm_config_title">Configuración</string>
     <string name="vm_config_refresh">Actualizar configuración</string>
     <string name="vm_config_loading">Cargando configuración...</string>
     <string name="vm_config_error">Configuración no disponible: %1$s</string>
     <string name="vm_config_empty">No se encontraron valores de configuración para esta VM.</string>
     <string name="vm_config_more">%1$d valores de configuración adicionales ocultos</string>
-    <string name="vm_config_actions_planned">La edición de configuración está planificada, pero aún no implementada.</string>
+    <string name="vm_config_actions_planned">La configuración es de solo lectura en esta beta.</string>
     <string name="vm_go_back">Volver</string>
 
     <!-- ========================= CONTAINERS (LXC) ========================= -->
@@ -232,19 +232,19 @@
     <string name="container_failed_to_load">No se pudo cargar el contenedor: %1$s</string>
     <string name="container_loading_timeout">Tiempo de carga agotado; inténtalo de nuevo</string>
     <string name="container_failed_to_update">No se pudieron actualizar los recursos: %1$s</string>
-    <string name="container_resource_api_not_implemented">La API de gestión de recursos aún no está implementada</string>
-    <string name="container_start_not_implemented">La acción de inicio aún no está implementada</string>
-    <string name="container_stop_not_implemented">La acción de detención aún no está implementada</string>
-    <string name="container_console_not_implemented">El acceso a la consola aún no está implementado</string>
+    <string name="container_resource_api_not_implemented">La edición de recursos no forma parte de esta beta.</string>
+    <string name="container_start_not_implemented">El inicio desde la vista de detalles no forma parte de esta beta.</string>
+    <string name="container_stop_not_implemented">La detención desde la vista de detalles no forma parte de esta beta.</string>
+    <string name="container_console_not_implemented">El acceso a la consola no forma parte de esta beta.</string>
     <string name="container_snapshots_title">Instantáneas</string>
     <string name="container_snapshots_refresh">Actualizar instantáneas</string>
     <string name="container_snapshots_loading">Cargando instantáneas...</string>
     <string name="container_snapshots_error">Instantáneas no disponibles: %1$s</string>
     <string name="container_snapshots_empty">No se encontraron instantáneas para este contenedor.</string>
     <string name="container_snapshot_detail">Creada: %1$s • Estado de RAM: %2$s</string>
-    <string name="container_snapshots_actions_planned">Los flujos de crear, revertir y eliminar instantáneas están planificados, pero aún no implementados.</string>
-    <string name="container_cpu_api_not_implemented">La API de configuración de CPU aún no está implementada</string>
-    <string name="container_ram_api_not_implemented">La API de configuración de RAM aún no está implementada</string>
+    <string name="container_snapshots_actions_planned">Las instantáneas son de solo lectura en esta beta.</string>
+    <string name="container_cpu_api_not_implemented">La edición de CPU no forma parte de esta beta.</string>
+    <string name="container_ram_api_not_implemented">La edición de RAM no forma parte de esta beta.</string>
     <string name="container_details_title">Detalles del contenedor: %1$d</string>
     <string name="container_refresh">Actualizar</string>
     <string name="container_information">Información del contenedor</string>
@@ -299,7 +299,7 @@
     <string name="storage_content_loading">Cargando contenido...</string>
     <string name="storage_content_empty">No se encontró contenido en este almacenamiento.</string>
     <string name="storage_content_detail">%1$s • %2$s • %3$s</string>
-    <string name="storage_content_actions_planned">Las acciones de subir, descargar, eliminar y restaurar están planificadas, pero aún no implementadas.</string>
+    <string name="storage_content_actions_planned">El contenido de almacenamiento es de solo lectura en esta beta.</string>
 
     <!-- ========================= NETWORK ========================= -->
     <string name="network_error_auth_failed">La autenticación falló; vuelve a iniciar sesión</string>
@@ -342,7 +342,7 @@
     <string name="users_no_users_found">No se encontraron usuarios</string>
     <string name="users_no_users_message">No hay usuarios configurados actualmente en este sistema</string>
     <string name="users_add_first_user">Agregar el primer usuario</string>
-    <string name="users_actions_planned">Los flujos para crear, editar y eliminar usuarios están planificados, pero aún no están implementados.</string>
+    <string name="users_actions_planned">Las acciones de gestión de usuarios son de solo lectura en esta beta.</string>
     <string name="users_count">Usuarios (%1$d)</string>
     <string name="users_enabled">Habilitado</string>
     <string name="users_disabled">Deshabilitado</string>
@@ -367,7 +367,7 @@
     <string name="backup_none_found_title">No se encontraron copias de seguridad</string>
     <string name="backup_none_available_message">No hay copias de seguridad disponibles actualmente en este sistema</string>
     <string name="backup_create_first">Crear la primera copia de seguridad</string>
-    <string name="backup_actions_planned">Los flujos para crear, descargar, restaurar y eliminar copias están planificados, pero aún no están implementados.</string>
+    <string name="backup_actions_planned">Las acciones de copias de seguridad son de solo lectura en esta beta.</string>
     <string name="backup_list_header">Copias de seguridad (%1$d)</string>
     <string name="backup_size_label">Tamaño:</string>
     <string name="backup_size_mb">%1$d MB</string>

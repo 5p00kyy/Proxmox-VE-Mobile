@@ -68,7 +68,7 @@ class LxcRepository(
             LxcActionResult(
                 vmid = vmid,
                 action = action,
-                taskId = response.data.takeIf { it.isNotBlank() }
+                taskId = response.data.toProxmoxTaskIdOrNull()
             )
         }
     }
@@ -85,7 +85,7 @@ class LxcRepository(
             LxcActionResult(
                 vmid = vmid,
                 action = LxcPowerAction.Delete,
-                taskId = response.data.takeIf { it.isNotBlank() }
+                taskId = response.data.toProxmoxTaskIdOrNull()
             )
         }
     }
@@ -153,6 +153,10 @@ class LxcRepository(
             else -> message ?: "Container request failed"
         }
     }
+}
+
+private fun String.toProxmoxTaskIdOrNull(): String? {
+    return trim().takeIf { it.startsWith("UPID:") }
 }
 
 private const val CURRENT_SNAPSHOT_NAME = "current"

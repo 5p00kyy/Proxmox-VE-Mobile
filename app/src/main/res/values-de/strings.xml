@@ -166,21 +166,21 @@
     <string name="vm_qemu_label">QEMU: %1$s</string>
     <string name="vm_actions">VM-Aktionen</string>
     <string name="vm_open_console">Konsole öffnen</string>
-    <string name="vm_console_not_implemented">Konsolenzugriff ist geplant, aber noch nicht implementiert.</string>
+    <string name="vm_console_not_implemented">Konsolenzugriff ist nicht Teil dieser Beta.</string>
     <string name="vm_snapshots_title">Snapshots</string>
     <string name="vm_snapshots_refresh">Snapshots aktualisieren</string>
     <string name="vm_snapshots_loading">Snapshots werden geladen...</string>
     <string name="vm_snapshots_error">Snapshots nicht verfügbar: %1$s</string>
     <string name="vm_snapshots_empty">Für diese VM wurden keine Snapshots gefunden.</string>
     <string name="vm_snapshot_detail">Erstellt: %1$s • RAM-Zustand: %2$s</string>
-    <string name="vm_snapshots_actions_planned">Snapshot-Erstellung, Rollback und Löschen sind geplant, aber noch nicht implementiert.</string>
+    <string name="vm_snapshots_actions_planned">Snapshots sind in dieser Beta schreibgeschützt.</string>
     <string name="vm_config_title">Konfiguration</string>
     <string name="vm_config_refresh">Konfiguration aktualisieren</string>
     <string name="vm_config_loading">Konfiguration wird geladen...</string>
     <string name="vm_config_error">Konfiguration nicht verfügbar: %1$s</string>
     <string name="vm_config_empty">Für diese VM wurden keine Konfigurationswerte gefunden.</string>
     <string name="vm_config_more">%1$d weitere Konfigurationswerte ausgeblendet</string>
-    <string name="vm_config_actions_planned">Konfigurationsbearbeitung ist geplant, aber noch nicht implementiert.</string>
+    <string name="vm_config_actions_planned">Die Konfiguration ist in dieser Beta schreibgeschützt.</string>
     <string name="vm_go_back">Zurück</string>
 
     <!-- ========================= CONTAINERS (LXC) ========================= -->
@@ -232,19 +232,19 @@
     <string name="container_failed_to_load">Laden des Containers fehlgeschlagen: %1$s</string>
     <string name="container_loading_timeout">Zeitüberschreitung beim Laden - bitte erneut versuchen</string>
     <string name="container_failed_to_update">Aktualisieren der Ressourcen fehlgeschlagen: %1$s</string>
-    <string name="container_resource_api_not_implemented">Ressourcenverwaltungs-API noch nicht implementiert</string>
-    <string name="container_start_not_implemented">Startfunktion noch nicht implementiert</string>
-    <string name="container_stop_not_implemented">Stoppfunktion noch nicht implementiert</string>
-    <string name="container_console_not_implemented">Konsolenzugriff noch nicht implementiert</string>
+    <string name="container_resource_api_not_implemented">Ressourcenbearbeitung ist nicht Teil dieser Beta.</string>
+    <string name="container_start_not_implemented">Starten aus der Detailansicht ist nicht Teil dieser Beta.</string>
+    <string name="container_stop_not_implemented">Stoppen aus der Detailansicht ist nicht Teil dieser Beta.</string>
+    <string name="container_console_not_implemented">Konsolenzugriff ist nicht Teil dieser Beta.</string>
     <string name="container_snapshots_title">Snapshots</string>
     <string name="container_snapshots_refresh">Snapshots aktualisieren</string>
     <string name="container_snapshots_loading">Snapshots werden geladen...</string>
     <string name="container_snapshots_error">Snapshots nicht verfügbar: %1$s</string>
     <string name="container_snapshots_empty">Für diesen Container wurden keine Snapshots gefunden.</string>
     <string name="container_snapshot_detail">Erstellt: %1$s • RAM-Zustand: %2$s</string>
-    <string name="container_snapshots_actions_planned">Snapshot-Erstellung, Rollback und Löschen sind geplant, aber noch nicht implementiert.</string>
-    <string name="container_cpu_api_not_implemented">CPU-Konfigurations-API noch nicht implementiert</string>
-    <string name="container_ram_api_not_implemented">RAM-Konfigurations-API noch nicht implementiert</string>
+    <string name="container_snapshots_actions_planned">Snapshots sind in dieser Beta schreibgeschützt.</string>
+    <string name="container_cpu_api_not_implemented">CPU-Bearbeitung ist nicht Teil dieser Beta.</string>
+    <string name="container_ram_api_not_implemented">RAM-Bearbeitung ist nicht Teil dieser Beta.</string>
     <string name="container_details_title">Container-Details: %1$d</string>
     <string name="container_refresh">Aktualisieren</string>
     <string name="container_information">Container-Informationen</string>
@@ -299,7 +299,7 @@
     <string name="storage_content_loading">Inhalt wird geladen...</string>
     <string name="storage_content_empty">Auf diesem Speicher wurde kein Inhalt gefunden.</string>
     <string name="storage_content_detail">%1$s • %2$s • %3$s</string>
-    <string name="storage_content_actions_planned">Upload-, Download-, Lösch- und Wiederherstellungsaktionen sind geplant, aber noch nicht implementiert.</string>
+    <string name="storage_content_actions_planned">Storage-Inhalte sind in dieser Beta schreibgeschützt.</string>
 
     <!-- ========================= NETWORK ========================= -->
     <string name="network_error_auth_failed">Authentifizierung fehlgeschlagen - bitte erneut anmelden</string>
@@ -342,7 +342,7 @@
     <string name="users_no_users_found">Keine Benutzer gefunden</string>
     <string name="users_no_users_message">Auf diesem System sind derzeit keine Benutzer konfiguriert</string>
     <string name="users_add_first_user">Ersten Benutzer hinzufügen</string>
-    <string name="users_actions_planned">Benutzer erstellen, bearbeiten und löschen ist geplant, aber noch nicht implementiert.</string>
+    <string name="users_actions_planned">Benutzerverwaltungsaktionen sind in dieser Beta schreibgeschützt.</string>
     <string name="users_count">Benutzer (%1$d)</string>
     <string name="users_enabled">Aktiviert</string>
     <string name="users_disabled">Deaktiviert</string>
@@ -367,7 +367,7 @@
     <string name="backup_none_found_title">Keine Backups gefunden</string>
     <string name="backup_none_available_message">Auf diesem System sind derzeit keine Backups verfügbar</string>
     <string name="backup_create_first">Erstes Backup erstellen</string>
-    <string name="backup_actions_planned">Backup-Erstellung, Download, Wiederherstellung und Löschung sind geplant, aber noch nicht implementiert.</string>
+    <string name="backup_actions_planned">Backup-Aktionen sind in dieser Beta schreibgeschützt.</string>
     <string name="backup_list_header">Backups (%1$d)</string>
     <string name="backup_size_label">Größe:</string>
     <string name="backup_size_mb">%1$d MB</string>

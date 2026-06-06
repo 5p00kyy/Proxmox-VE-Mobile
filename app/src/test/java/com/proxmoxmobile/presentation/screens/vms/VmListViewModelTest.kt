@@ -7,7 +7,9 @@ import com.proxmoxmobile.data.vm.VmApi
 import com.proxmoxmobile.data.vm.VmPowerAction
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -75,6 +77,26 @@ class VmListViewModelTest {
     }
 
     @Test
+    fun duplicateActionWhileFirstIsInProgress_isSuppressed() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val api = FakeVmApi(actionTaskId = "UPID:lab-node:qmstart:101").apply {
+            actionGate = gate
+        }
+        val viewModel = viewModel(api)
+
+        viewModel.startVirtualMachine(vm(status = "stopped"))
+        viewModel.startVirtualMachine(vm(status = "stopped"))
+
+        assertEquals(VmPowerAction.Start, viewModel.uiState.value.actionInProgress?.action)
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("start"), api.actionRequests)
+        assertEquals(1, api.listRequests)
+        assertNull(viewModel.uiState.value.actionInProgress)
+    }
+
+    @Test
     fun failedActionClearsStaleLastTaskNotice() = runTest {
         val api = FakeVmApi(actionTaskId = "UPID:lab-node:qmstart:101")
         val viewModel = viewModel(api)
@@ -94,8 +116,10 @@ class VmListViewModelTest {
 
     @Test
     fun deleteRunningVirtualMachine_stopsBeforeRepositoryCall() = runTest {
-        val api = FakeVmApi()
+        val api = FakeVmApi(actionTaskId = "UPID:lab-node:qmstart:101")
         val viewModel = viewModel(api, deleteRequiresStoppedMessage = "Stop the VM before deletion")
+        viewModel.startVirtualMachine(vm(status = "stopped"))
+        assertEquals("UPID:lab-node:qmstart:101", viewModel.uiState.value.lastTaskNotice?.taskId)
 
         viewModel.deleteVirtualMachine(vm(status = "running"))
 
@@ -105,6 +129,30 @@ class VmListViewModelTest {
         assertEquals(VmPowerAction.Delete, state.pendingActionNotice?.action)
         assertEquals("Stop the VM before deletion", state.pendingActionNotice?.errorMessage)
         assertNull(state.lastTaskNotice)
+    }
+
+    @Test
+    fun deleteVirtualMachine_allowsOnlyStoppedStatusIgnoringCase() = runTest {
+        listOf("stopped", "STOPPED").forEach { status ->
+            val api = FakeVmApi(deleteTaskId = "UPID:lab-node:qmdestroy:101")
+            val viewModel = viewModel(api)
+
+            viewModel.deleteVirtualMachine(vm(status = status))
+
+            assertEquals("delete allowed for $status", listOf(101), api.deleteRequests)
+            assertEquals("UPID:lab-node:qmdestroy:101", viewModel.uiState.value.lastTaskNotice?.taskId)
+        }
+
+        listOf("running", "paused", "unknown", "").forEach { status ->
+            val api = FakeVmApi()
+            val viewModel = viewModel(api)
+
+            viewModel.deleteVirtualMachine(vm(status = status))
+
+            assertEquals("delete blocked for $status", emptyList<Int>(), api.deleteRequests)
+            assertEquals("Stop the VM before deletion", viewModel.uiState.value.errorMessage)
+            assertNull(viewModel.uiState.value.lastTaskNotice)
+        }
     }
 
     @Test
@@ -136,7 +184,8 @@ class VmListViewModelTest {
         private val actionTaskId: String = "UPID:lab-node:action:101",
         private val deleteTaskId: String = "UPID:lab-node:delete:101",
         var actionException: Exception? = null,
-        var deleteException: Exception? = null
+        var deleteException: Exception? = null,
+        var actionGate: CompletableDeferred<Unit>? = null
     ) : VmApi {
         val actionRequests = mutableListOf<String>()
         val deleteRequests = mutableListOf<Int>()
@@ -162,6 +211,7 @@ class VmListViewModelTest {
             action: String
         ): ApiResponse<String> {
             actionException?.let { throw it }
+            actionGate?.await()
             actionRequests += action
             return ApiResponse(actionTaskId)
         }

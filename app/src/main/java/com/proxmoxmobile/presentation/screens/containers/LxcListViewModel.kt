@@ -94,7 +94,12 @@ class LxcListViewModel(
     private fun performAction(container: Container, action: LxcPowerAction) {
         val node = nodeName
         if (node.isNullOrBlank()) {
-            _uiState.update { it.copy(errorMessage = invalidNodeMessage) }
+            _uiState.update {
+                it.copy(
+                    errorMessage = invalidNodeMessage,
+                    lastTaskNotice = null
+                )
+            }
             return
         }
 
@@ -102,6 +107,7 @@ class LxcListViewModel(
             _uiState.update {
                 it.copy(
                     errorMessage = deleteRequiresStoppedMessage,
+                    lastTaskNotice = null,
                     pendingActionNotice = LxcActionNotice(
                         vmid = container.vmid,
                         containerName = container.name,
@@ -114,16 +120,21 @@ class LxcListViewModel(
             return
         }
 
-        if (_uiState.value.actionInProgress != null) return
-
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
+        var shouldStartAction = false
+        _uiState.update { currentState ->
+            if (currentState.actionInProgress != null) {
+                currentState
+            } else {
+                shouldStartAction = true
+                currentState.copy(
                     actionInProgress = LxcActionInProgress(action = action, vmid = container.vmid),
                     errorMessage = null
                 )
             }
+        }
+        if (!shouldStartAction) return
 
+        viewModelScope.launch {
             val result = if (action == LxcPowerAction.Delete) {
                 repository.deleteContainer(node, container.vmid)
             } else {

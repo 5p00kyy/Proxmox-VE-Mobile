@@ -94,7 +94,10 @@ class VmListViewModel(
         val node = nodeName
         if (node.isNullOrBlank()) {
             _uiState.update {
-                it.copy(errorMessage = "Invalid node name or API service not available")
+                it.copy(
+                    errorMessage = "Invalid node name or API service not available",
+                    lastTaskNotice = null
+                )
             }
             return
         }
@@ -103,6 +106,7 @@ class VmListViewModel(
             _uiState.update {
                 it.copy(
                     errorMessage = deleteRequiresStoppedMessage,
+                    lastTaskNotice = null,
                     pendingActionNotice = VmActionNotice(
                         vmid = vm.vmid,
                         vmName = vm.name,
@@ -115,16 +119,21 @@ class VmListViewModel(
             return
         }
 
-        if (_uiState.value.actionInProgress != null) return
-
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
+        var shouldStartAction = false
+        _uiState.update { currentState ->
+            if (currentState.actionInProgress != null) {
+                currentState
+            } else {
+                shouldStartAction = true
+                currentState.copy(
                     actionInProgress = VmActionInProgress(action = action, vmid = vm.vmid),
                     errorMessage = null
                 )
             }
+        }
+        if (!shouldStartAction) return
 
+        viewModelScope.launch {
             val result = if (action == VmPowerAction.Delete) {
                 repository.deleteVirtualMachine(node, vm.vmid)
             } else {

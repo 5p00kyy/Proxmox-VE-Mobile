@@ -166,21 +166,21 @@
     <string name="vm_qemu_label">QEMU: %1$s</string>
     <string name="vm_actions">VM Actions</string>
     <string name="vm_open_console">Open Console</string>
-    <string name="vm_console_not_implemented">Console access is planned but not implemented yet.</string>
+    <string name="vm_console_not_implemented">Console access is not part of this beta.</string>
     <string name="vm_snapshots_title">Snapshots</string>
     <string name="vm_snapshots_refresh">Refresh snapshots</string>
     <string name="vm_snapshots_loading">Loading snapshots...</string>
     <string name="vm_snapshots_error">Snapshots unavailable: %1$s</string>
     <string name="vm_snapshots_empty">No snapshots found for this VM.</string>
     <string name="vm_snapshot_detail">Created: %1$s • RAM state: %2$s</string>
-    <string name="vm_snapshots_actions_planned">Snapshot create, rollback, and delete workflows are planned but not implemented yet.</string>
+    <string name="vm_snapshots_actions_planned">Snapshots are read-only in this beta.</string>
     <string name="vm_config_title">Configuration</string>
     <string name="vm_config_refresh">Refresh configuration</string>
     <string name="vm_config_loading">Loading configuration...</string>
     <string name="vm_config_error">Configuration unavailable: %1$s</string>
     <string name="vm_config_empty">No configuration values found for this VM.</string>
     <string name="vm_config_more">%1$d more configuration values hidden</string>
-    <string name="vm_config_actions_planned">Configuration editing is planned but not implemented yet.</string>
+    <string name="vm_config_actions_planned">Configuration is read-only in this beta.</string>
     <string name="vm_go_back">Go Back</string>
 
     <!-- ========================= CONTAINERS (LXC) ========================= -->
@@ -232,19 +232,19 @@
     <string name="container_failed_to_load">Failed to load container: %1$s</string>
     <string name="container_loading_timeout">Loading timeout - please try again</string>
     <string name="container_failed_to_update">Failed to update resources: %1$s</string>
-    <string name="container_resource_api_not_implemented">Resource management API not yet implemented</string>
-    <string name="container_start_not_implemented">Start action not yet implemented</string>
-    <string name="container_stop_not_implemented">Stop action not yet implemented</string>
-    <string name="container_console_not_implemented">Console access not yet implemented</string>
+    <string name="container_resource_api_not_implemented">Resource editing is not part of this beta.</string>
+    <string name="container_start_not_implemented">Start from the detail screen is not part of this beta.</string>
+    <string name="container_stop_not_implemented">Stop from the detail screen is not part of this beta.</string>
+    <string name="container_console_not_implemented">Console access is not part of this beta.</string>
     <string name="container_snapshots_title">Snapshots</string>
     <string name="container_snapshots_refresh">Refresh snapshots</string>
     <string name="container_snapshots_loading">Loading snapshots...</string>
     <string name="container_snapshots_error">Snapshots unavailable: %1$s</string>
     <string name="container_snapshots_empty">No snapshots found for this container.</string>
     <string name="container_snapshot_detail">Created: %1$s • RAM state: %2$s</string>
-    <string name="container_snapshots_actions_planned">Snapshot create, rollback, and delete workflows are planned but not implemented yet.</string>
-    <string name="container_cpu_api_not_implemented">CPU configuration API not yet implemented</string>
-    <string name="container_ram_api_not_implemented">RAM configuration API not yet implemented</string>
+    <string name="container_snapshots_actions_planned">Snapshots are read-only in this beta.</string>
+    <string name="container_cpu_api_not_implemented">CPU editing is not part of this beta.</string>
+    <string name="container_ram_api_not_implemented">RAM editing is not part of this beta.</string>
     <string name="container_details_title">Container Details: %1$d</string>
     <string name="container_refresh">Refresh</string>
     <string name="container_information">Container Information</string>
@@ -299,7 +299,7 @@
     <string name="storage_content_loading">Loading content...</string>
     <string name="storage_content_empty">No content found on this storage.</string>
     <string name="storage_content_detail">%1$s • %2$s • %3$s</string>
-    <string name="storage_content_actions_planned">Upload, download, delete, and restore actions are planned but not implemented yet.</string>
+    <string name="storage_content_actions_planned">Storage content actions are read-only in this beta.</string>
 
     <!-- ========================= NETWORK ========================= -->
     <string name="network_error_auth_failed">Authentication failed - please login again</string>
@@ -342,7 +342,7 @@
     <string name="users_no_users_found">No Users Found</string>
     <string name="users_no_users_message">No users are currently configured on this system</string>
     <string name="users_add_first_user">Add First User</string>
-    <string name="users_actions_planned">User create, edit, and delete workflows are planned but not implemented yet.</string>
+    <string name="users_actions_planned">User management actions are read-only in this beta.</string>
     <string name="users_count">Users (%1$d)</string>
     <string name="users_enabled">Enabled</string>
     <string name="users_disabled">Disabled</string>
@@ -367,7 +367,7 @@
     <string name="backup_none_found_title">No Backups Found</string>
     <string name="backup_none_available_message">No backups are currently available on this system</string>
     <string name="backup_create_first">Create First Backup</string>
-    <string name="backup_actions_planned">Backup create, download, restore, and delete workflows are planned but not implemented yet.</string>
+    <string name="backup_actions_planned">Backup actions are read-only in this beta.</string>
     <string name="backup_list_header">Backups (%1$d)</string>
     <string name="backup_size_label">Size:</string>
     <string name="backup_size_mb">%1$d MB</string>

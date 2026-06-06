@@ -81,8 +81,8 @@ What is clearly incomplete or only partially implemented:
 
 - Some screens remain placeholders or read-only while planned workflows are built deliberately.
 - Some settings are local UI state only and are not persisted or wired into runtime behavior.
-- Advanced actions such as node reboot/shutdown/shell, backup create/restore/download/delete, user edit/delete UI flows, VM console/configuration editing, and container detail resource/console operations are unfinished.
-- Unfinished backup, user, settings, and LXC-detail controls are disabled or marked as planned rather than presented as working.
+- Advanced actions such as node reboot/shutdown/shell, backup mutation, user mutation, VM console/configuration editing, and container detail resource/console operations are outside the first beta scope.
+- Backup, user, settings, and LXC-detail controls that are outside beta scope are disabled or labeled read-only rather than presented as working.
 - The explicit insecure TLS fallback is debug-only; SHA-256 certificate fingerprint pinning is available for self-signed servers and should be preferred.
 - Unit test coverage exists for session/auth, dashboard, node, VM, LXC, task, network, storage, user, backup, security, and localization seams, but broader unit, instrumentation, and screenshot test coverage is still missing.
 
@@ -90,12 +90,12 @@ What is clearly incomplete or only partially implemented:
 
 These limitations are expected for `v0.1.0-beta.1` and should be reflected in release notes:
 
-- Guest console access is not implemented.
-- VM and LXC configuration editing is not implemented.
-- Snapshot create, delete, and rollback are not implemented.
-- Backup create, restore, download, and delete are not implemented.
-- User create, edit, and delete flows are not implemented.
-- Node reboot, shutdown, shell, and advanced service actions are not implemented.
+- Guest console access is outside first beta scope.
+- VM and LXC configuration editing is outside first beta scope.
+- Snapshot create, delete, and rollback are outside first beta scope.
+- Backup create, restore, download, and delete are outside first beta scope.
+- User create, edit, and delete flows are outside first beta scope.
+- Node reboot, shutdown, shell, and advanced service actions are outside first beta scope.
 - Storage, network, user, backup, and cluster areas are primarily read-only.
 - TFA-specific password login handling is not complete; API token login is the preferred beta workaround where appropriate.
 - Real Proxmox smoke QA is required before the beta is tagged.

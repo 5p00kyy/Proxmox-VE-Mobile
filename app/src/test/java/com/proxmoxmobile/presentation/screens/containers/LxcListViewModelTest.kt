@@ -7,7 +7,9 @@ import com.proxmoxmobile.data.model.ApiResponse
 import com.proxmoxmobile.data.model.Container
 import com.proxmoxmobile.data.model.LxcSnapshot
 import com.proxmoxmobile.presentation.MainDispatcherRule
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -75,6 +77,26 @@ class LxcListViewModelTest {
     }
 
     @Test
+    fun duplicateActionWhileFirstIsInProgress_isSuppressed() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val api = FakeLxcApi(actionTaskId = "UPID:lab-node:vzstart:201").apply {
+            actionGate = gate
+        }
+        val viewModel = viewModel(api)
+
+        viewModel.startContainer(container(status = "stopped"))
+        viewModel.startContainer(container(status = "stopped"))
+
+        assertEquals(LxcPowerAction.Start, viewModel.uiState.value.actionInProgress?.action)
+        gate.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("start"), api.actionRequests)
+        assertEquals(1, api.listRequests)
+        assertNull(viewModel.uiState.value.actionInProgress)
+    }
+
+    @Test
     fun failedActionClearsStaleLastTaskNotice() = runTest {
         val api = FakeLxcApi(actionTaskId = "UPID:lab-node:vzstart:201")
         val viewModel = viewModel(api)
@@ -94,8 +116,10 @@ class LxcListViewModelTest {
 
     @Test
     fun deleteRunningContainer_stopsBeforeRepositoryCall() = runTest {
-        val api = FakeLxcApi()
+        val api = FakeLxcApi(actionTaskId = "UPID:lab-node:vzstart:201")
         val viewModel = viewModel(api, deleteRequiresStoppedMessage = "Stop the container before deletion")
+        viewModel.startContainer(container(status = "stopped"))
+        assertEquals("UPID:lab-node:vzstart:201", viewModel.uiState.value.lastTaskNotice?.taskId)
 
         viewModel.deleteContainer(container(status = "running"))
 
@@ -105,6 +129,30 @@ class LxcListViewModelTest {
         assertEquals(LxcPowerAction.Delete, state.pendingActionNotice?.action)
         assertEquals("Stop the container before deletion", state.pendingActionNotice?.errorMessage)
         assertNull(state.lastTaskNotice)
+    }
+
+    @Test
+    fun deleteContainer_allowsOnlyStoppedStatusIgnoringCase() = runTest {
+        listOf("stopped", "STOPPED").forEach { status ->
+            val api = FakeLxcApi(deleteTaskId = "UPID:lab-node:vzdestroy:201")
+            val viewModel = viewModel(api)
+
+            viewModel.deleteContainer(container(status = status))
+
+            assertEquals("delete allowed for $status", listOf(201), api.deleteRequests)
+            assertEquals("UPID:lab-node:vzdestroy:201", viewModel.uiState.value.lastTaskNotice?.taskId)
+        }
+
+        listOf("running", "paused", "unknown", "").forEach { status ->
+            val api = FakeLxcApi()
+            val viewModel = viewModel(api)
+
+            viewModel.deleteContainer(container(status = status))
+
+            assertEquals("delete blocked for $status", emptyList<Int>(), api.deleteRequests)
+            assertEquals("Stop the container before deletion", viewModel.uiState.value.errorMessage)
+            assertNull(viewModel.uiState.value.lastTaskNotice)
+        }
     }
 
     @Test
@@ -138,7 +186,8 @@ class LxcListViewModelTest {
         private val actionTaskId: String = "UPID:lab-node:action:201",
         private val deleteTaskId: String = "UPID:lab-node:delete:201",
         var actionException: Exception? = null,
-        var deleteException: Exception? = null
+        var deleteException: Exception? = null,
+        var actionGate: CompletableDeferred<Unit>? = null
     ) : LxcApi {
         val actionRequests = mutableListOf<String>()
         val deleteRequests = mutableListOf<Int>()
@@ -160,6 +209,7 @@ class LxcListViewModelTest {
             action: String
         ): ApiResponse<String> {
             actionException?.let { throw it }
+            actionGate?.await()
             actionRequests += action
             return ApiResponse(actionTaskId)
         }

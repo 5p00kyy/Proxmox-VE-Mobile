@@ -5,6 +5,7 @@ import com.proxmoxmobile.data.model.VirtualMachine
 import com.proxmoxmobile.data.model.VmSnapshot
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -74,6 +75,21 @@ class VmRepositoryTest {
     }
 
     @Test
+    fun performAction_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
+        val validRepository = VmRepository(FakeVmApi(actionTaskId = "  UPID:pve:123:start:100  "))
+        val invalidRepository = VmRepository(FakeVmApi(actionTaskId = "not-a-upid"))
+        val blankRepository = VmRepository(FakeVmApi(actionTaskId = "   "))
+
+        val validResult = validRepository.performAction("pve", 100, VmPowerAction.Start)
+        val invalidResult = invalidRepository.performAction("pve", 100, VmPowerAction.Start)
+        val blankResult = blankRepository.performAction("pve", 100, VmPowerAction.Start)
+
+        assertEquals("UPID:pve:123:start:100", (validResult as VmResult.Success).data.taskId)
+        assertNull((invalidResult as VmResult.Success).data.taskId)
+        assertNull((blankResult as VmResult.Success).data.taskId)
+    }
+
+    @Test
     fun deleteVirtualMachine_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
         val api = FakeVmApi(deleteTaskId = "UPID:pve:123:qmdestroy:100")
         val repository = VmRepository(api)
@@ -87,6 +103,21 @@ class VmRepositoryTest {
         assertEquals("UPID:pve:123:qmdestroy:100", action.taskId)
         assertEquals(listOf(100), api.deleteRequests)
         assertEquals(emptyList<String>(), api.actionRequests)
+    }
+
+    @Test
+    fun deleteVirtualMachine_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
+        val validRepository = VmRepository(FakeVmApi(deleteTaskId = "  UPID:pve:123:qmdestroy:100  "))
+        val invalidRepository = VmRepository(FakeVmApi(deleteTaskId = "deleted"))
+        val blankRepository = VmRepository(FakeVmApi(deleteTaskId = "   "))
+
+        val validResult = validRepository.deleteVirtualMachine("pve", 100)
+        val invalidResult = invalidRepository.deleteVirtualMachine("pve", 100)
+        val blankResult = blankRepository.deleteVirtualMachine("pve", 100)
+
+        assertEquals("UPID:pve:123:qmdestroy:100", (validResult as VmResult.Success).data.taskId)
+        assertNull((invalidResult as VmResult.Success).data.taskId)
+        assertNull((blankResult as VmResult.Success).data.taskId)
     }
 
     @Test

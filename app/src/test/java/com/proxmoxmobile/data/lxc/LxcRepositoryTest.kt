@@ -5,6 +5,7 @@ import com.proxmoxmobile.data.model.Container
 import com.proxmoxmobile.data.model.LxcSnapshot
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -74,6 +75,21 @@ class LxcRepositoryTest {
     }
 
     @Test
+    fun performAction_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
+        val validRepository = LxcRepository(FakeLxcApi(actionTaskId = "  UPID:pve:123:start:100  "))
+        val invalidRepository = LxcRepository(FakeLxcApi(actionTaskId = "not-a-upid"))
+        val blankRepository = LxcRepository(FakeLxcApi(actionTaskId = "   "))
+
+        val validResult = validRepository.performAction("pve", 100, LxcPowerAction.Start)
+        val invalidResult = invalidRepository.performAction("pve", 100, LxcPowerAction.Start)
+        val blankResult = blankRepository.performAction("pve", 100, LxcPowerAction.Start)
+
+        assertEquals("UPID:pve:123:start:100", (validResult as LxcResult.Success).data.taskId)
+        assertNull((invalidResult as LxcResult.Success).data.taskId)
+        assertNull((blankResult as LxcResult.Success).data.taskId)
+    }
+
+    @Test
     fun deleteContainer_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
         val api = FakeLxcApi(deleteTaskId = "UPID:pve:123:vzdestroy:100")
         val repository = LxcRepository(api)
@@ -87,6 +103,21 @@ class LxcRepositoryTest {
         assertEquals("UPID:pve:123:vzdestroy:100", action.taskId)
         assertEquals(listOf(100), api.deleteRequests)
         assertEquals(emptyList<String>(), api.actionRequests)
+    }
+
+    @Test
+    fun deleteContainer_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
+        val validRepository = LxcRepository(FakeLxcApi(deleteTaskId = "  UPID:pve:123:vzdestroy:100  "))
+        val invalidRepository = LxcRepository(FakeLxcApi(deleteTaskId = "deleted"))
+        val blankRepository = LxcRepository(FakeLxcApi(deleteTaskId = "   "))
+
+        val validResult = validRepository.deleteContainer("pve", 100)
+        val invalidResult = invalidRepository.deleteContainer("pve", 100)
+        val blankResult = blankRepository.deleteContainer("pve", 100)
+
+        assertEquals("UPID:pve:123:vzdestroy:100", (validResult as LxcResult.Success).data.taskId)
+        assertNull((invalidResult as LxcResult.Success).data.taskId)
+        assertNull((blankResult as LxcResult.Success).data.taskId)
     }
 
     @Test

@@ -65,7 +65,7 @@ class VmRepository(
             VmActionResult(
                 vmid = vmid,
                 action = action,
-                taskId = response.data.takeIf { it.isNotBlank() }
+                taskId = response.data.toProxmoxTaskIdOrNull()
             )
         }
     }
@@ -82,7 +82,7 @@ class VmRepository(
             VmActionResult(
                 vmid = vmid,
                 action = VmPowerAction.Delete,
-                taskId = response.data.takeIf { it.isNotBlank() }
+                taskId = response.data.toProxmoxTaskIdOrNull()
             )
         }
     }
@@ -207,6 +207,10 @@ class VmRepository(
             else -> message ?: "VM request failed"
         }
     }
+}
+
+private fun String.toProxmoxTaskIdOrNull(): String? {
+    return trim().takeIf { it.startsWith("UPID:") }
 }
 
 private const val CURRENT_SNAPSHOT_NAME = "current"

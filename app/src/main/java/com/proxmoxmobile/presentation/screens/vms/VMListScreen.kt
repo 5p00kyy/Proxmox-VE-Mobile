@@ -412,7 +412,7 @@ fun VMCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
             // Header with VM name and status
             Row(
@@ -459,7 +459,7 @@ fun VMCard(
                 )
             }
             
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             // VM details
             Row(
@@ -484,7 +484,7 @@ fun VMCard(
             }
             
             // Action buttons
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -494,7 +494,7 @@ fun VMCard(
                     enabled = vm.status != "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Start) {
                         CircularProgressIndicator(
@@ -505,7 +505,7 @@ fun VMCard(
                         Icon(
                             Icons.Filled.PlayArrow,
                             contentDescription = stringResource(R.string.vm_start),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -521,7 +521,7 @@ fun VMCard(
                     enabled = vm.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Shutdown) {
                         CircularProgressIndicator(
@@ -532,7 +532,7 @@ fun VMCard(
                         Icon(
                             Icons.Filled.PowerSettingsNew,
                             contentDescription = stringResource(R.string.vm_shutdown),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -547,7 +547,7 @@ fun VMCard(
                     onClick = onReboot,
                     enabled = vm.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Reboot) {
                         CircularProgressIndicator(
@@ -558,7 +558,7 @@ fun VMCard(
                         Icon(
                             Icons.Filled.Refresh,
                             contentDescription = stringResource(R.string.vm_reboot),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(2.dp))
@@ -574,7 +574,8 @@ fun VMCard(
             OutlinedButton(
                 onClick = onStop,
                 enabled = vm.status == "running" && !hasActionInProgress,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 if (actionInProgress == VmPowerAction.Stop) {
                     CircularProgressIndicator(
@@ -605,7 +606,8 @@ fun VMCard(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
-                )
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             ) {
                 if (actionInProgress == VmPowerAction.Delete) {
                     CircularProgressIndicator(
@@ -620,25 +622,39 @@ fun VMCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onDetails,
-                enabled = !hasActionInProgress && detailEnabled,
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.Info, contentDescription = stringResource(R.string.vm_view_details))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.vm_view_details))
-            }
+                OutlinedButton(
+                    onClick = onDetails,
+                    enabled = !hasActionInProgress && detailEnabled,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Default.Info, contentDescription = stringResource(R.string.vm_view_details))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.vm_view_details),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onTasks,
-                enabled = !hasActionInProgress && taskHistoryEnabled,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.vm_view_tasks))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.vm_view_tasks))
+                OutlinedButton(
+                    onClick = onTasks,
+                    enabled = !hasActionInProgress && taskHistoryEnabled,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.vm_view_tasks))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.vm_view_tasks),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
