@@ -1,0 +1,164 @@
+name: Beta APK Release
+
+on:
+  push:
+    tags:
+      - "v*-beta.*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      beta_tag:
+        description: "Beta tag name used for artifact naming"
+        required: true
+        default: "v0.1.0-beta.1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: beta-release-${{ github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  beta-apk:
+    name: Build beta APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    env:
+      BETA_TAG: ${{ inputs.beta_tag || github.event.release.tag_name || github.ref_name }}
+
+    steps:
+      - name: Validate beta tag
+        run: |
+          case "$BETA_TAG" in
+            v*-beta.*) ;;
+            *)
+              echo "Beta release workflow only accepts tags like v0.1.0-beta.1."
+              exit 1
+              ;;
+          esac
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensure Gradle wrapper is executable
+        run: chmod +x ./gradlew
+
+      - name: Run unit tests
+        run: ./gradlew test --stacktrace --no-daemon
+
+      - name: Run Android lint
+        run: ./gradlew lint --stacktrace --no-daemon
+
+      - name: Assemble release APK
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
+
+      - name: Stage unsigned release APK
+        run: |
+          mkdir -p release-artifacts
+          unsigned_apk="$(find app/build/outputs/apk/release -name '*-release-unsigned.apk' | sort | head -n 1)"
+          if [ -z "$unsigned_apk" ]; then
+            echo "No unsigned release APK was produced."
+            exit 1
+          fi
+          cp "$unsigned_apk" "release-artifacts/proxmox-ve-mobile-${BETA_TAG}-release-unsigned.apk"
+
+      - name: Require signing secrets for release publishing
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          missing=0
+          for name in \
+            ANDROID_RELEASE_KEYSTORE_BASE64 \
+            ANDROID_RELEASE_KEYSTORE_PASSWORD \
+            ANDROID_RELEASE_KEY_ALIAS \
+            ANDROID_RELEASE_KEY_PASSWORD
+          do
+            if [ -z "${!name}" ]; then
+              echo "$name is required before a beta APK can be attached to a release."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - name: Sign release APK
+        id: sign
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_RELEASE_KEYSTORE_BASE64" ] || \
+             [ -z "$ANDROID_RELEASE_KEYSTORE_PASSWORD" ] || \
+             [ -z "$ANDROID_RELEASE_KEY_ALIAS" ] || \
+             [ -z "$ANDROID_RELEASE_KEY_PASSWORD" ]; then
+            echo "signed_apk=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          unsigned_apk="$(find app/build/outputs/apk/release -name '*-release-unsigned.apk' | sort | head -n 1)"
+          aligned_apk="$RUNNER_TEMP/proxmox-ve-mobile-${BETA_TAG}-release-aligned.apk"
+          signed_apk="release-artifacts/proxmox-ve-mobile-${BETA_TAG}-release.apk"
+          keystore="$RUNNER_TEMP/release.keystore"
+          zipalign="$(find "$ANDROID_HOME/build-tools" -name zipalign | sort -V | tail -n 1)"
+          apksigner="$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)"
+
+          if [ -z "$zipalign" ] || [ -z "$apksigner" ]; then
+            echo "Android build tools did not provide zipalign and apksigner."
+            exit 1
+          fi
+
+          printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          "$zipalign" -p -f 4 "$unsigned_apk" "$aligned_apk"
+          "$apksigner" sign \
+            --ks "$keystore" \
+            --ks-key-alias "$ANDROID_RELEASE_KEY_ALIAS" \
+            --ks-pass "pass:$ANDROID_RELEASE_KEYSTORE_PASSWORD" \
+            --key-pass "pass:$ANDROID_RELEASE_KEY_PASSWORD" \
+            --out "$signed_apk" \
+            "$aligned_apk"
+          "$apksigner" verify --verbose "$signed_apk"
+          echo "signed_apk=$signed_apk" >> "$GITHUB_OUTPUT"
+
+      - name: Upload beta APK workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: proxmox-ve-mobile-${{ env.BETA_TAG }}-apk
+          path: release-artifacts/*.apk
+          if-no-files-found: error
+
+      - name: Attach signed APK to GitHub release
+        if: ${{ steps.sign.outputs.signed_apk != '' && (github.event_name == 'push' || github.event_name == 'release') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$BETA_TAG" >/dev/null 2>&1; then
+            gh release create "$BETA_TAG" \
+              --draft \
+              --prerelease \
+              --title "$BETA_TAG" \
+              --notes "Beta APK artifact generated by GitHub Actions. Review CHANGELOG.md and docs/beta-release-plan.md before publishing."
+          fi
+          gh release upload "$BETA_TAG" "${{ steps.sign.outputs.signed_apk }}" --clobber

@@ -38,6 +38,11 @@ Observed pass:
 - LXC task history opens with node and VMID filters populated.
 - Task statistics count Proxmox `OK` task results as finished.
 - Task detail opens from task history and loads task metadata plus task log output.
+- Storage initially exposed a live Proxmox payload compatibility issue where storage `content` arrived as a comma-separated string rather than an array.
+- Rebuilt app parses string/array storage content shapes plus numeric storage flags.
+- Storage list opens from the dashboard and renders real storage rows on a Pixel-sized viewport.
+- Storage card capacity fields remain readable when storage content lists are long.
+- Storage content browser opens read-only content for a selected storage.
 
 Still pending:
 
@@ -46,5 +51,5 @@ Still pending:
 - Invalid credential and invalid TLS error-state smoke.
 - VM/LXC lifecycle smoke on disposable guests.
 - Task detail/log handoff smoke after lifecycle actions.
-- Storage, network, users, backups, and cluster read-only navigation smoke.
+- Network, users, backups, and cluster read-only navigation smoke.
 - Small-screen/rotation/background-resume pass.

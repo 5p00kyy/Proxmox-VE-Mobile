@@ -1,6 +1,7 @@
 package com.proxmoxmobile.presentation.navigation
 
-import android.net.Uri
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -8,23 +9,23 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object VMList : Screen("vm_list") {
         fun createRoute(nodeName: String): String {
-            return "vm_list/${Uri.encode(nodeName)}"
+            return "vm_list/${nodeName.asRouteSegment()}"
         }
     }
     object ContainerList : Screen("container_list") {
         fun createRoute(nodeName: String): String {
-            return "container_list/${Uri.encode(nodeName)}"
+            return "container_list/${nodeName.asRouteSegment()}"
         }
     }
     object Storage : Screen("storage") {
         fun createRoute(nodeName: String): String {
-            return "storage/${Uri.encode(nodeName)}"
+            return "storage/${nodeName.asRouteSegment()}"
         }
     }
     object Network : Screen("network")
     object NodeNetwork : Screen("network/{node}") {
         fun createRoute(node: String): String {
-            return "network/${Uri.encode(node)}"
+            return "network/${node.asRouteSegment()}"
         }
     }
     object Users : Screen("users")
@@ -32,12 +33,12 @@ sealed class Screen(val route: String) {
     object Tasks : Screen("tasks")
     object NodeTasks : Screen("tasks/{node}") {
         fun createRoute(node: String): String {
-            return "tasks/${Uri.encode(node)}"
+            return "tasks/${node.asRouteSegment()}"
         }
     }
     object ResourceTasks : Screen("tasks/{node}/{vmid}") {
         fun createRoute(node: String, vmid: Int): String {
-            return "tasks/${Uri.encode(node)}/$vmid"
+            return "tasks/${node.asRouteSegment()}/$vmid"
         }
     }
     object Cluster : Screen("cluster")
@@ -50,7 +51,7 @@ sealed class Screen(val route: String) {
 
     object VMDetailWithNode : Screen("vm_detail/{node}/{vmid}") {
         fun createRoute(node: String, vmid: Int): String {
-            return "vm_detail/${Uri.encode(node)}/$vmid"
+            return "vm_detail/${node.asRouteSegment()}/$vmid"
         }
     }
     
@@ -60,27 +61,32 @@ sealed class Screen(val route: String) {
 
     object ContainerDetailWithNode : Screen("container_detail/{node}/{vmid}") {
         fun createRoute(node: String, vmid: Int): String {
-            return "container_detail/${Uri.encode(node)}/$vmid"
+            return "container_detail/${node.asRouteSegment()}/$vmid"
         }
     }
     
     object NodeDetail : Screen("node_detail/{node}") {
         fun createRoute(node: String): String {
-            return "node_detail/${Uri.encode(node)}"
+            return "node_detail/${node.asRouteSegment()}"
         }
     }
     
     object StorageDetail : Screen("storage_detail/{storage}") {
-        fun createRoute(storage: String) = "storage_detail/$storage"
+        fun createRoute(storage: String) = "storage_detail/${storage.asRouteSegment()}"
     }
     
     object UserDetail : Screen("user_detail/{userid}") {
-        fun createRoute(userid: String) = "user_detail/$userid"
+        fun createRoute(userid: String) = "user_detail/${userid.asRouteSegment()}"
     }
     
     object TaskDetail : Screen("task_detail/{node}/{upid}") {
         fun createRoute(node: String, upid: String): String {
-            return "task_detail/${Uri.encode(node)}/${Uri.encode(upid)}"
+            return "task_detail/${node.asRouteSegment()}/${upid.asRouteSegment()}"
         }
     }
+}
+
+internal fun String.asRouteSegment(): String {
+    return URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
+        .replace("+", "%20")
 }

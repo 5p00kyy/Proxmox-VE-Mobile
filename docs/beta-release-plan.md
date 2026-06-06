@@ -22,10 +22,10 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [################....] 80%
-Real Proxmox smoke QA        [########............] 40%
-UX/copy release polish       [########............] 40%
-Release packaging            [##..................] 10%
-Official beta readiness      [##########..........] 50%
+Real Proxmox smoke QA        [#########...........] 45%
+UX/copy release polish       [#########...........] 45%
+Release packaging            [############........] 60%
+Official beta readiness      [###########.........] 55%
 ```
 
 ## Release Gates
@@ -46,6 +46,35 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 | Known limitations | Yes | README and release notes clearly identify read-only and planned areas |
 | Release notes | Yes | `CHANGELOG.md` has a `v0.1.0-beta.1` section before tagging |
 | Release artifact | Yes | APK attached to GitHub release |
+
+## Release Packaging Workflow
+
+The beta APK release path is handled by `.github/workflows/beta-release.yml`.
+
+Triggers:
+
+- `push` tags matching `v*-beta.*`, including `v0.1.0-beta.1`.
+- Published GitHub releases.
+- Manual `workflow_dispatch` dry runs with a beta tag name input for artifact naming.
+
+The workflow runs the beta gate with:
+
+```bash
+./gradlew test --stacktrace --no-daemon
+./gradlew lint --stacktrace --no-daemon
+./gradlew assembleRelease --stacktrace --no-daemon
+```
+
+Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag and release events must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
+
+- `ANDROID_RELEASE_KEYSTORE_BASE64`
+- `ANDROID_RELEASE_KEYSTORE_PASSWORD`
+- `ANDROID_RELEASE_KEY_ALIAS`
+- `ANDROID_RELEASE_KEY_PASSWORD`
+
+`ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
+
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads.
 
 ## Beta Scope
 
@@ -133,8 +162,9 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 4. Fix only beta blockers on the baseline branch.
 5. Add release screenshots or short screen recordings to the README/release notes.
 6. Promote `CHANGELOG.md` from `Unreleased` to `v0.1.0-beta.1`.
-7. Build and attach the beta APK to a GitHub release.
-8. Keep a post-beta issue list for deferred parity work.
+7. Configure release signing secrets and run the beta APK release workflow on the beta tag.
+8. Confirm the signed APK is attached to the GitHub release.
+9. Keep a post-beta issue list for deferred parity work.
 
 ## Estimated Timeline
 

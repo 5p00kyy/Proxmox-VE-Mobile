@@ -22,6 +22,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Android CI workflow for pull requests and pushes to `main`.
 - GitHub issue templates for bug reports and feature requests.
 - Pull request template with QA, risk, and contributor checklists.
+- Beta APK release workflow for `v*-beta.*` tags, published releases, and manual dry runs.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
 - CODEOWNERS file for default review ownership.
@@ -92,6 +93,9 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - VM/LXC delete controls are now disabled until the guest is stopped.
 - VM/LXC compact lifecycle action labels no longer wrap or truncate on Pixel-sized screens.
 - Task statistics and task details now treat Proxmox `OK` task results as successful finished tasks.
+- Node, storage, user, and task detail routes now encode path segments consistently for names and IDs containing reserved characters.
+- Storage parsing now accepts Proxmox storage `content` as either a comma-separated string or an array, plus numeric storage flags.
+- Storage cards now keep capacity labels readable when storage content lists are long.
 - `verifySsl` is now honored by the networking layer instead of being ignored.
 - VM list actions now surface returned Proxmox task IDs in snackbar/task context.
 - LXC list actions now surface returned Proxmox task IDs in snackbar/task context.

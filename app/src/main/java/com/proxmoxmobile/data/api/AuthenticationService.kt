@@ -29,7 +29,7 @@ class AuthenticationService(
     
     override suspend fun authenticate(serverConfig: ServerConfig): Result<LoginResponse> {
         return try {
-            Log.d(TAG, "Starting authentication for ${serverConfig.username}@${serverConfig.host}:${serverConfig.port}")
+            Log.d(TAG, "Starting authentication request")
             
             validatePasswordConfig(serverConfig)
             
@@ -42,14 +42,14 @@ class AuthenticationService(
                 realm = serverConfig.realm
             )
             
-            Log.d(TAG, "Sending login request with realm: ${serverConfig.realm}")
+            Log.d(TAG, "Sending login request")
             val response = apiService.login(loginRequest)
             
             if (response.data.ticket.isBlank()) {
                 throw IllegalStateException("Received empty authentication ticket")
             }
             
-            Log.d(TAG, "Login successful for user: ${response.data.username}")
+            Log.d(TAG, "Login successful")
             
             Result.success(response)
         } catch (e: Exception) {

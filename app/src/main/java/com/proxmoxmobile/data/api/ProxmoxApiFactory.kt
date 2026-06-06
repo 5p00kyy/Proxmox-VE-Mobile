@@ -4,6 +4,7 @@ import android.util.Log
 import com.proxmoxmobile.BuildConfig
 import com.proxmoxmobile.data.model.ServerConfig
 import com.proxmoxmobile.data.security.CertificateFingerprint
+import com.proxmoxmobile.data.security.SensitiveLogRedactor
 import com.proxmoxmobile.data.security.TlsPolicy
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -37,7 +38,7 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
         val retrofit = Retrofit.Builder()
             .baseUrl(serverConfig.baseUrl())
             .client(createOkHttpClient(serverConfig, auth))
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(ProxmoxGsonFactory.create()))
             .build()
 
         return retrofit.create(ProxmoxApiService::class.java)
@@ -77,7 +78,7 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
 
         val pinnedFingerprint = CertificateFingerprint.normalize(serverConfig.certificateFingerprint)
         if (serverConfig.useHttps && pinnedFingerprint != null) {
-            Log.i(TAG, "Using pinned certificate fingerprint for ${serverConfig.host}")
+            Log.i(TAG, "Using pinned certificate fingerprint for configured HTTPS server")
             val trustManager = createPinnedTrustManager(pinnedFingerprint)
             val sslContext = SSLContext.getInstance("TLS").apply {
                 init(null, arrayOf<TrustManager>(trustManager), null)
@@ -95,7 +96,7 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
                 }
         } else if (serverConfig.useHttps && !serverConfig.verifySsl) {
             TlsPolicy.requireInsecureTlsAllowed(BuildConfig.DEBUG)
-            Log.w(TAG, "SSL verification disabled for ${serverConfig.host}; debug-only trusted lab mode")
+            Log.w(TAG, "SSL verification disabled for configured HTTPS server; debug-only trusted lab mode")
             val trustManager = createInsecureTrustManager()
             val sslContext = SSLContext.getInstance("TLS").apply {
                 init(null, arrayOf<TrustManager>(trustManager), null)
@@ -111,7 +112,7 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
 
     private fun createLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor { message ->
-            Log.d(TAG, "HTTP: ${message.redactSensitiveValues()}")
+            Log.d(TAG, "HTTP: ${SensitiveLogRedactor.redact(message)}")
         }.apply {
             level = HttpLoggingInterceptor.Level.BASIC
             redactHeader("Authorization")
@@ -150,10 +151,4 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
         return "$protocol://$host:$port/"
     }
 
-    private fun String.redactSensitiveValues(): String {
-        return replace(Regex("PVEAuthCookie=[^;\\s]+"), "PVEAuthCookie=<redacted>")
-            .replace(Regex("PVEAPIToken=[^\\s]+"), "PVEAPIToken=<redacted>")
-            .replace(Regex("CSRFPreventionToken[:=][^\\s]+"), "CSRFPreventionToken=<redacted>")
-            .replace(Regex("password=[^&\\s]+", RegexOption.IGNORE_CASE), "password=<redacted>")
-    }
 }
