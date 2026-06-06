@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 34 instrumentation tests after post-login route recreation smoke was expanded.
+Result: passed with 38 instrumentation tests after VM/LXC guarded-action UI smoke was added.
 
 Observed pass:
 
@@ -129,6 +129,8 @@ Observed pass:
 - Fake dashboard instrumentation can render synthetic node and task summary data without live Proxmox data.
 - Fake VM/LXC instrumentation can submit a synthetic lifecycle start action, receive a synthetic Proxmox-style UPID, show the persistent task handoff card, and navigate through the real View Task UI to the task-detail route without live Proxmox data.
 - Fake VM/LXC instrumentation can recreate the Activity after a synthetic lifecycle task is returned, keep the persistent task handoff card through the retained ViewModel, and still navigate to the task-detail route without live Proxmox data.
+- Fake VM/LXC instrumentation can render running-resource delete guards as visible disabled actions without live Proxmox data.
+- Fake VM/LXC instrumentation can render failed start actions as inline errors without showing a task handoff CTA.
 - LXC detail route resumed from Home/launcher on the emulator with top app bar, loaded data, scroll position, read-only snapshot copy, and read-only resource copy still visible.
 - Focused post-resume logcat scan found no fatal app crash entries.
 
@@ -221,11 +223,11 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation for node/resource task, task detail, network, and storage routes, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail/storage/network/users/backups/cluster/dashboard route rendering, fake VM/LXC returned-task handoff to task-detail routes, and fake lifecycle task-handoff card persistence across Activity recreation. The narrowest next automatable steps are:
+The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation for node/resource task, task detail, network, and storage routes, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail/storage/network/users/backups/cluster/dashboard route rendering, fake VM/LXC returned-task handoff to task-detail routes, fake lifecycle task-handoff card persistence across Activity recreation, and fake VM/LXC guarded-action UI states. The narrowest next automatable steps are:
 
 - Add additional instrumentation rotation/resume coverage for other post-login routes, preserving only non-secret fields across Activity recreation.
 - Expand fake-backed route tests for empty, error, partial-data, and guarded-action states where those states materially affect beta confidence.
-- Add fake-API Compose tests for VM/LXC blocked delete and failed-action task notice states.
+- Add more fake-API Compose variants for partial lifecycle/task-notice states where they materially affect beta confidence.
 - Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.
 
 Media readiness:
