@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.proxmoxmobile.data.lxc.LxcApi
@@ -18,18 +19,25 @@ import com.proxmoxmobile.data.lxc.LxcRepository
 import com.proxmoxmobile.data.model.ApiResponse
 import com.proxmoxmobile.data.model.Container
 import com.proxmoxmobile.data.model.LxcSnapshot
+import com.proxmoxmobile.data.model.NetworkInterface
 import com.proxmoxmobile.data.model.NodeCpuInfo
 import com.proxmoxmobile.data.model.NodeMemory
 import com.proxmoxmobile.data.model.NodeStatus
 import com.proxmoxmobile.data.model.RootFS
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.model.Storage
+import com.proxmoxmobile.data.model.StorageContent
 import com.proxmoxmobile.data.model.Swap
 import com.proxmoxmobile.data.model.Task
 import com.proxmoxmobile.data.model.TaskLogEntry
 import com.proxmoxmobile.data.model.VirtualMachine
 import com.proxmoxmobile.data.model.VmSnapshot
+import com.proxmoxmobile.data.network.NetworkApi
+import com.proxmoxmobile.data.network.NetworkRepository
 import com.proxmoxmobile.data.node.NodeApi
 import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.storage.StorageApi
+import com.proxmoxmobile.data.storage.StorageRepository
 import com.proxmoxmobile.data.task.TaskApi
 import com.proxmoxmobile.data.task.TaskRepository
 import com.proxmoxmobile.data.vm.VmApi
@@ -98,12 +106,41 @@ class DetailRouteSmokeTest {
         composeRule.waitUntilAtLeastOneExists(hasText("fixture task completed", substring = true))
     }
 
+    @Test
+    fun fakeStorageRouteRendersPopulatedContent() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Storage.createRoute(LAB_NODE),
+            storageRepositoryOverride = StorageRepository(FakeStorageApi())
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("local-fixture", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("dir", substring = true))
+        composeRule.onNodeWithText("Browse content").performClick()
+        composeRule.waitUntilAtLeastOneExists(hasText("local-fixture:iso/proxmox-mobile-fixture.iso", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("Public fixture ISO", substring = true))
+    }
+
+    @Test
+    fun fakeNetworkRouteRendersPopulatedContent() {
+        startFakeAuthenticatedRoute(
+            route = Screen.NodeNetwork.createRoute(LAB_NODE),
+            networkRepositoryOverride = NetworkRepository(FakeNetworkApi())
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("Network Interfaces (2)", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("vmbr-fixture", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("bridge", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("eth-fixture", substring = true))
+    }
+
     private fun startFakeAuthenticatedRoute(
         route: String,
         vmRepositoryOverride: VmRepository? = null,
         lxcRepositoryOverride: LxcRepository? = null,
         nodeRepositoryOverride: NodeRepository? = null,
-        taskRepositoryOverride: TaskRepository? = null
+        taskRepositoryOverride: TaskRepository? = null,
+        storageRepositoryOverride: StorageRepository? = null,
+        networkRepositoryOverride: NetworkRepository? = null
     ) {
         composeRule.setContent {
             val navController = rememberNavController()
@@ -127,7 +164,9 @@ class DetailRouteSmokeTest {
                         vmRepositoryOverride = vmRepositoryOverride,
                         lxcRepositoryOverride = lxcRepositoryOverride,
                         nodeRepositoryOverride = nodeRepositoryOverride,
-                        taskRepositoryOverride = taskRepositoryOverride
+                        taskRepositoryOverride = taskRepositoryOverride,
+                        storageRepositoryOverride = storageRepositoryOverride,
+                        networkRepositoryOverride = networkRepositoryOverride
                     )
                 }
             }
@@ -254,6 +293,81 @@ class DetailRouteSmokeTest {
                         snaptime = 1_700_100_000,
                         vmstate = 0,
                         parent = null
+                    )
+                )
+            )
+        }
+    }
+
+    private class FakeStorageApi : StorageApi {
+        override suspend fun getStorages(nodeName: String): ApiResponse<List<Storage>> {
+            return ApiResponse(
+                listOf(
+                    Storage(
+                        storage = "local-fixture",
+                        type = "dir",
+                        content = listOf("iso", "backup"),
+                        nodes = listOf(nodeName),
+                        shared = false,
+                        active = true,
+                        available = 80L * 1024L * 1024L * 1024L,
+                        used = 20L * 1024L * 1024L * 1024L,
+                        total = 100L * 1024L * 1024L * 1024L
+                    )
+                )
+            )
+        }
+
+        override suspend fun getStorageContent(
+            nodeName: String,
+            storageName: String
+        ): ApiResponse<List<StorageContent>> {
+            return ApiResponse(
+                listOf(
+                    StorageContent(
+                        volid = "$storageName:iso/proxmox-mobile-fixture.iso",
+                        content = "iso",
+                        size = 512L * 1024L * 1024L,
+                        format = "iso",
+                        ctime = 1_700_000_000,
+                        notes = "Public fixture ISO",
+                        vmid = null,
+                        used = null,
+                        parent = null,
+                        protectedContent = null
+                    )
+                )
+            )
+        }
+    }
+
+    private class FakeNetworkApi : NetworkApi {
+        override suspend fun getNetworkInterfaces(nodeName: String): ApiResponse<List<NetworkInterface>> {
+            return ApiResponse(
+                listOf(
+                    NetworkInterface(
+                        iface = "vmbr-fixture",
+                        type = "bridge",
+                        method = "manual",
+                        address = null,
+                        netmask = null,
+                        gateway = null,
+                        active = true,
+                        autostart = true,
+                        exists = true,
+                        families = listOf("inet")
+                    ),
+                    NetworkInterface(
+                        iface = "eth-fixture",
+                        type = "eth",
+                        method = "manual",
+                        address = null,
+                        netmask = null,
+                        gateway = null,
+                        active = false,
+                        autostart = false,
+                        exists = true,
+                        families = emptyList()
                     )
                 )
             )

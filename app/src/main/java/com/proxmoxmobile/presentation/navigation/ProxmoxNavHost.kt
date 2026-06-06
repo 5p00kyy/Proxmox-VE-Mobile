@@ -13,7 +13,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.proxmoxmobile.R
 import com.proxmoxmobile.data.lxc.LxcRepository
+import com.proxmoxmobile.data.network.NetworkRepository
 import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.storage.StorageRepository
 import com.proxmoxmobile.data.task.TaskRepository
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.screens.auth.LoginScreen
@@ -41,7 +43,9 @@ fun ProxmoxNavHost(
     vmRepositoryOverride: VmRepository? = null,
     lxcRepositoryOverride: LxcRepository? = null,
     nodeRepositoryOverride: NodeRepository? = null,
-    taskRepositoryOverride: TaskRepository? = null
+    taskRepositoryOverride: TaskRepository? = null,
+    storageRepositoryOverride: StorageRepository? = null,
+    networkRepositoryOverride: NetworkRepository? = null
 ) {
     val confirmationDialog by viewModel.showConfirmationDialog.collectAsState()
 
@@ -92,14 +96,16 @@ fun ProxmoxNavHost(
             StorageScreen(
                 navController = navController,
                 viewModel = viewModel,
-                nodeName = nodeName
+                nodeName = nodeName,
+                repositoryOverride = storageRepositoryOverride
             )
         }
         
         composable(Screen.Network.route) {
             NetworkScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = networkRepositoryOverride
             )
         }
 
@@ -108,7 +114,8 @@ fun ProxmoxNavHost(
             NetworkScreen(
                 navController = navController,
                 viewModel = viewModel,
-                initialNodeName = node
+                initialNodeName = node,
+                repositoryOverride = networkRepositoryOverride
             )
         }
         

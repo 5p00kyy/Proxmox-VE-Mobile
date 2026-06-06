@@ -30,22 +30,24 @@ import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 fun StorageScreen(
     navController: NavController,
     viewModel: MainViewModel,
-    nodeName: String? = null
+    nodeName: String? = null,
+    repositoryOverride: StorageRepository? = null
 ) {
     val invalidNodeName = stringResource(R.string.storage_invalid_node)
     val storageRepository = remember(viewModel) {
         StorageRepository(ProxmoxStorageApi { viewModel.getApiService() })
     }
+    val activeStorageRepository = repositoryOverride ?: storageRepository
     val storageViewModel: StorageViewModel = composeViewModel(
         key = "storage-${nodeName.orEmpty()}",
-        factory = remember(nodeName, storageRepository, invalidNodeName) {
+        factory = remember(nodeName, activeStorageRepository, invalidNodeName) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(StorageViewModel::class.java)) {
                         return StorageViewModel(
                             nodeName = nodeName,
-                            repository = storageRepository,
+                            repository = activeStorageRepository,
                             invalidNodeMessage = invalidNodeName
                         ) as T
                     }

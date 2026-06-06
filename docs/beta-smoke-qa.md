@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 24 instrumentation tests after post-login route recreation smoke was added.
+Result: passed with 26 instrumentation tests after fake-backed storage and network route smoke was added.
 
 Observed pass:
 
@@ -118,8 +118,10 @@ Observed pass:
 - Activity recreation preserves unsaved task-filter type and VMID drafts before filters are applied.
 - Activity recreation preserves a fake-authenticated post-login node-scoped task route and its route argument.
 - Fake authenticated instrumentation can render Settings, server list, dashboard, tasks, node-scoped tasks, resource-filtered tasks, task detail, network, node-scoped network, storage, users, backups, and cluster route entry points without live Proxmox data.
-- Fake-backed instrumentation can render populated node, VM, LXC, and task detail routes through the real navigation host without live Proxmox data.
+- Fake-backed instrumentation can render populated node, VM, LXC, task detail, storage, and node-scoped network routes through the real navigation host without live Proxmox data.
 - Fake task-detail instrumentation can render a synthetic task summary and log lines from a fake repository through the real task-detail route without live Proxmox data.
+- Fake storage instrumentation can render a synthetic storage card, browse synthetic storage content, and show read-only content rows without live Proxmox data.
+- Fake network instrumentation can render synthetic bridge and Ethernet interfaces for a node-scoped route without live Proxmox data.
 - Fake VM/LXC instrumentation can submit a synthetic lifecycle start action, receive a synthetic Proxmox-style UPID, show the persistent task handoff card, and navigate through the real View Task UI to the task-detail route without live Proxmox data.
 - Fake VM/LXC instrumentation can recreate the Activity after a synthetic lifecycle task is returned, keep the persistent task handoff card through the retained ViewModel, and still navigate to the task-detail route without live Proxmox data.
 - LXC detail route resumed from Home/launcher on the emulator with top app bar, loaded data, scroll position, read-only snapshot copy, and read-only resource copy still visible.
@@ -214,10 +216,10 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail route rendering, fake VM/LXC returned-task handoff to task-detail routes, and fake lifecycle task-handoff card persistence across Activity recreation. The narrowest next automatable steps are:
+The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail/storage/network route rendering, fake VM/LXC returned-task handoff to task-detail routes, and fake lifecycle task-handoff card persistence across Activity recreation. The narrowest next automatable steps are:
 
 - Add additional instrumentation rotation/resume coverage for other post-login routes, preserving only non-secret fields across Activity recreation.
-- Expand fake-backed route tests for populated storage, network, users, backups, cluster, and dashboard states.
+- Expand fake-backed route tests for populated users, backups, cluster, and dashboard states.
 - Add fake-API Compose tests for VM/LXC blocked delete and failed-action task notice states.
 - Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.
 

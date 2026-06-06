@@ -33,7 +33,8 @@ import com.proxmoxmobile.R
 fun NetworkScreen(
     navController: NavController,
     viewModel: MainViewModel,
-    initialNodeName: String? = null
+    initialNodeName: String? = null,
+    repositoryOverride: NetworkRepository? = null
 ) {
     val normalizedInitialNodeName = initialNodeName?.trim()?.takeIf { it.isNotBlank() }
     val cachedNodes = viewModel.getCachedNodes()
@@ -49,16 +50,17 @@ fun NetworkScreen(
     val networkRepository = remember(viewModel) {
         NetworkRepository(ProxmoxNetworkApi { viewModel.getApiService() })
     }
+    val activeNetworkRepository = repositoryOverride ?: networkRepository
     val networkViewModel: NetworkViewModel = composeViewModel(
         key = "network-${normalizedInitialNodeName.orEmpty()}-${availableNodes.joinToString("|")}",
-        factory = remember(availableNodes, networkRepository, noNodesMessage, normalizedInitialNodeName) {
+        factory = remember(availableNodes, activeNetworkRepository, noNodesMessage, normalizedInitialNodeName) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(NetworkViewModel::class.java)) {
                         return NetworkViewModel(
                             availableNodes = availableNodes,
-                            repository = networkRepository,
+                            repository = activeNetworkRepository,
                             noNodesMessage = noNodesMessage,
                             initialNodeName = normalizedInitialNodeName
                         ) as T
