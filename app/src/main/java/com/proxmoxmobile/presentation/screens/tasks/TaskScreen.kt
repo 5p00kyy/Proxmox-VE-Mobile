@@ -67,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -560,14 +561,19 @@ private fun TaskFilterCard(
     var selectedStatusName by rememberSaveable { mutableStateOf(filters.status.name) }
     var typeText by rememberSaveable { mutableStateOf(filters.typeFilter.orEmpty()) }
     var vmidText by rememberSaveable { mutableStateOf(filters.vmid?.toString().orEmpty()) }
+    var syncedFiltersKey by rememberSaveable { mutableStateOf(filters.toDraftKey()) }
     var statusExpanded by remember { mutableStateOf(false) }
     val selectedStatus = runCatching { TaskStatusFilter.valueOf(selectedStatusName) }
         .getOrDefault(TaskStatusFilter.All)
 
     LaunchedEffect(filters) {
-        selectedStatusName = filters.status.name
-        typeText = filters.typeFilter.orEmpty()
-        vmidText = filters.vmid?.toString().orEmpty()
+        val nextFiltersKey = filters.toDraftKey()
+        if (nextFiltersKey != syncedFiltersKey) {
+            selectedStatusName = filters.status.name
+            typeText = filters.typeFilter.orEmpty()
+            vmidText = filters.vmid?.toString().orEmpty()
+            syncedFiltersKey = nextFiltersKey
+        }
     }
 
     val parsedVmid = vmidText.trim().takeIf { it.isNotEmpty() }?.toIntOrNull()
@@ -623,6 +629,7 @@ private fun TaskFilterCard(
                     },
                     modifier = Modifier
                         .menuAnchor()
+                        .testTag(TASK_FILTER_STATUS_TAG)
                         .fillMaxWidth()
                 )
                 ExposedDropdownMenu(
@@ -647,7 +654,9 @@ private fun TaskFilterCard(
                 label = { Text(stringResource(R.string.task_filter_type)) },
                 placeholder = { Text(stringResource(R.string.task_filter_type_placeholder)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .testTag(TASK_FILTER_TYPE_TAG)
+                    .fillMaxWidth()
             )
 
             OutlinedTextField(
@@ -663,7 +672,9 @@ private fun TaskFilterCard(
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .testTag(TASK_FILTER_VMID_TAG)
+                    .fillMaxWidth()
             )
 
             Row(
@@ -701,6 +712,14 @@ private fun TaskFilterCard(
         }
     }
 }
+
+private fun TaskFilters.toDraftKey(): String {
+    return "${status.name}|${typeFilter.orEmpty()}|${vmid?.toString().orEmpty()}"
+}
+
+const val TASK_FILTER_STATUS_TAG = "task_filter_status"
+const val TASK_FILTER_TYPE_TAG = "task_filter_type"
+const val TASK_FILTER_VMID_TAG = "task_filter_vmid"
 
 @Composable
 private fun TaskCard(

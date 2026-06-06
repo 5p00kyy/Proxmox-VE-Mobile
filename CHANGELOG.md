@@ -37,6 +37,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Reusable beta QA status script for summarizing pending, passed, failed, and blocked smoke evidence.
 - Optional strict beta gate mode for requiring completed smoke QA evidence during final pre-tag dry runs.
 - Compose instrumentation smoke for login rendering, local API-token mode controls, SHA-256 fingerprint validation, and Activity recreation of non-secret login draft state.
+- Compose instrumentation smoke for task-filter draft persistence across Activity recreation before filters are applied.
 - Compose instrumentation smoke seam for fake authenticated route hosting across Settings, server list, dashboard, tasks, task detail, storage, network, users, backups, and cluster entry points.
 - Compose instrumentation smoke for fake-backed node, VM, and LXC detail routes through the real navigation host.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff from lifecycle action to task-detail route.

@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 19 instrumentation tests after fake-backed node, VM, and LXC detail route smoke was added.
+Result: passed with 20 instrumentation tests after task-filter draft persistence smoke was added.
 
 Observed pass:
 
@@ -115,6 +115,7 @@ Observed pass:
 - An invalid SHA-256 fingerprint shows validation copy and keeps the connect action disabled.
 - A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
 - Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
+- Activity recreation preserves unsaved task-filter type and VMID drafts before filters are applied.
 - Fake authenticated instrumentation can render Settings, server list, dashboard, tasks, node-scoped tasks, resource-filtered tasks, task detail, network, node-scoped network, storage, users, backups, and cluster route entry points without live Proxmox data.
 - Fake-backed instrumentation can render populated node, VM, and LXC detail routes through the real navigation host without live Proxmox data.
 - Fake VM/LXC instrumentation can submit a synthetic lifecycle start action, receive a synthetic Proxmox-style UPID, show the persistent task handoff card, and navigate through the real View Task UI to the task-detail route without live Proxmox data.
@@ -130,7 +131,7 @@ Still requires emulator/manual smoke:
 
 - Rotate while logged in on dashboard and verify the app stays authenticated, the dashboard remains on screen, and refresh still works.
 - Rotate on VM, LXC, storage, network, users, backups, tasks, task detail, cluster, and settings screens and verify the route, top app bar padding, scrollability, and loaded data remain usable.
-- Rotate while typing an unsaved login form and task filter form and verify drafts survive.
+- Rotate while typing unsaved login/task-filter drafts is covered by instrumentation; keep manual spot checks for visual clipping and keyboard behavior.
 - Background and resume from dashboard, task detail, VM list, and LXC list and verify polling resumes without duplicated snackbar/task notices.
 - Test one narrow/small-phone viewport and landscape mode for clipped top bars, wrapped action labels, and inaccessible bottom content.
 
@@ -209,9 +210,9 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login draft state, fake authenticated route-host entry points, fake-backed node/VM/LXC detail route rendering, and fake VM/LXC returned-task handoff to task-detail routes. The narrowest next automatable steps are:
+The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated route-host entry points, fake-backed node/VM/LXC detail route rendering, and fake VM/LXC returned-task handoff to task-detail routes. The narrowest next automatable steps are:
 
-- Add an instrumentation rotation/resume test for task-filter draft state and post-login route state, preserving only non-secret fields across Activity recreation.
+- Add an instrumentation rotation/resume test for lifecycle task handoff notices and post-login route state, preserving only non-secret fields across Activity recreation.
 - Expand fake-backed route tests for populated task detail, storage, network, users, backups, cluster, and dashboard states.
 - Add fake-API Compose tests for VM/LXC blocked delete and failed-action task notice states.
 - Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.

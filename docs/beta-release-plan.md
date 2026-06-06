@@ -211,10 +211,10 @@ The latest UX polish pass tightened repeated VM/LXC resource cards, paired detai
 
 ### Automation Plan For Remaining Blockers
 
-The route registry, unit tests, and instrumentation smoke prove beta route patterns, route encoding, lifecycle ViewModel behavior, fake VM/LXC returned-task UI handoff, task-center filtering/abort behavior, task-detail route generation, login UI rendering, API-token mode controls, SHA-256 fingerprint validation, saveable login UI state after Activity recreation, fake authenticated route hosting across multiple beta entry points, and populated fake-backed node/VM/LXC detail route rendering. They do not prove background resume, broad Compose layout coverage, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
+The route registry, unit tests, and instrumentation smoke prove beta route patterns, route encoding, lifecycle ViewModel behavior, fake VM/LXC returned-task UI handoff, task-center filtering/abort behavior, task-detail route generation, login UI rendering, API-token mode controls, SHA-256 fingerprint validation, saveable login and task-filter draft state after Activity recreation, fake authenticated route hosting across multiple beta entry points, and populated fake-backed node/VM/LXC detail route rendering. They do not prove background resume, broad Compose layout coverage, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
 
 - Continue expanding Compose instrumentation smoke across registered beta routes that still need fake repositories, especially task detail, storage, network, users, backups, cluster, and dashboard populated states.
-- Add Activity recreation coverage for task filter drafts and post-login route state.
+- Add Activity recreation coverage for lifecycle task handoff notices and post-login route state.
 - Continue fake-API UI coverage for additional VM/LXC task notice states and guarded delete states.
 - Leave API-token login, TLS/fingerprint behavior, disposable lifecycle actions, and task-log handoff as lab-backed smoke until a disposable Proxmox fixture can be provisioned in CI.
 
