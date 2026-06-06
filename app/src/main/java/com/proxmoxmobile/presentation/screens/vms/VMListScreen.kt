@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -487,7 +488,8 @@ fun VMCard(
                     onClick = onStart,
                     enabled = vm.status != "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Start) {
                         CircularProgressIndicator(
@@ -495,17 +497,26 @@ fun VMCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.vm_start))
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            contentDescription = stringResource(R.string.vm_start),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.vm_start))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.vm_start),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 
                 Button(
                     onClick = onShutdown,
                     enabled = vm.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Shutdown) {
                         CircularProgressIndicator(
@@ -513,16 +524,25 @@ fun VMCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PowerSettingsNew, contentDescription = stringResource(R.string.vm_shutdown))
+                        Icon(
+                            Icons.Filled.PowerSettingsNew,
+                            contentDescription = stringResource(R.string.vm_shutdown),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.vm_shutdown))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.vm_shutdown),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 OutlinedButton(
                     onClick = onReboot,
                     enabled = vm.status == "running" && !hasActionInProgress,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == VmPowerAction.Reboot) {
                         CircularProgressIndicator(
@@ -530,10 +550,18 @@ fun VMCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.vm_reboot))
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.vm_reboot),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.vm_reboot))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.vm_reboot),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
@@ -552,7 +580,11 @@ fun VMCard(
                     Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.vm_stop))
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.vm_stop))
+                Text(
+                    text = stringResource(R.string.vm_stop),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))

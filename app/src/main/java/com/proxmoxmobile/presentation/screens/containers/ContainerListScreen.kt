@@ -39,6 +39,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import com.proxmoxmobile.presentation.navigation.Screen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.text.KeyboardOptions
@@ -502,7 +503,8 @@ fun ContainerCard(
                     onClick = onStart,
                     enabled = container.status != "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Start) {
                         CircularProgressIndicator(
@@ -510,17 +512,26 @@ fun ContainerCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PlayArrow, contentDescription = stringResource(R.string.container_start))
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            contentDescription = stringResource(R.string.container_start),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.container_start))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.container_start),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Button(
                     onClick = onShutdown,
                     enabled = container.status == "running" && !hasActionInProgress,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Shutdown) {
                         CircularProgressIndicator(
@@ -528,16 +539,25 @@ fun ContainerCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.PowerSettingsNew, contentDescription = stringResource(R.string.container_shutdown))
+                        Icon(
+                            Icons.Filled.PowerSettingsNew,
+                            contentDescription = stringResource(R.string.container_shutdown),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.container_shutdown))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.container_shutdown),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 OutlinedButton(
                     onClick = onReboot,
                     enabled = container.status == "running" && !hasActionInProgress,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
                     if (actionInProgress == LxcPowerAction.Reboot) {
                         CircularProgressIndicator(
@@ -545,10 +565,18 @@ fun ContainerCard(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.container_reboot))
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.container_reboot),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(stringResource(R.string.container_reboot))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = stringResource(R.string.container_reboot),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
@@ -567,7 +595,11 @@ fun ContainerCard(
                     Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.container_stop))
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.container_stop))
+                Text(
+                    text = stringResource(R.string.container_stop),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))

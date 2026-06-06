@@ -706,6 +706,9 @@ private fun TaskCard(
     onOpenDetails: () -> Unit,
     onAbort: () -> Unit
 ) {
+    val statusLabel = task.displayStatusLabel()
+    val statusColor = task.displayStatusColor()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -725,7 +728,7 @@ private fun TaskCard(
                 Icon(
                     imageVector = taskIcon(task.type),
                     contentDescription = null,
-                    tint = taskStatusColor(task.status)
+                    tint = statusColor
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -738,14 +741,14 @@ private fun TaskCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = stringResource(R.string.task_status_label, task.status.uppercase(Locale.getDefault())),
+                        text = stringResource(R.string.task_status_label, statusLabel),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                TaskStatusDot(task.status)
+                TaskStatusDot(statusColor)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -811,6 +814,8 @@ private fun TaskDetailSummaryCard(
     onAbort: () -> Unit
 ) {
     val task = detail.task
+    val statusLabel = task.displayStatusLabel()
+    val statusColor = task.displayStatusColor()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -827,7 +832,7 @@ private fun TaskDetailSummaryCard(
                 Icon(
                     imageVector = taskIcon(task.type),
                     contentDescription = null,
-                    tint = taskStatusColor(task.status)
+                    tint = statusColor
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
@@ -839,12 +844,12 @@ private fun TaskDetailSummaryCard(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = stringResource(R.string.task_status_label, task.status.uppercase(Locale.getDefault())),
+                        text = stringResource(R.string.task_status_label, statusLabel),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                TaskStatusDot(task.status)
+                TaskStatusDot(statusColor)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -924,14 +929,9 @@ private fun TaskDetailRow(
 
 @Composable
 private fun TaskStatisticsCard(tasks: List<Task>) {
-    val runningTasks = tasks.count { it.status.equals("running", ignoreCase = true) }
-    val finishedTasks = tasks.count { task ->
-        task.status.equals("finished", ignoreCase = true) ||
-            (task.status.equals("stopped", ignoreCase = true) && task.exitstatus.equals("OK", ignoreCase = true))
-    }
-    val stoppedTasks = tasks.count { task ->
-        task.status.equals("stopped", ignoreCase = true) && !task.exitstatus.equals("OK", ignoreCase = true)
-    }
+    val runningTasks = tasks.count { it.isRunningTask() }
+    val finishedTasks = tasks.count { it.isFinishedTask() }
+    val stoppedTasks = tasks.count { it.isStoppedTask() }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1134,12 +1134,12 @@ private fun TaskEmptyLogCard() {
 }
 
 @Composable
-private fun TaskStatusDot(status: String) {
+private fun TaskStatusDot(color: Color) {
     Box(
         modifier = Modifier
             .size(12.dp)
             .background(
-                color = taskStatusColor(status),
+                color = color,
                 shape = RoundedCornerShape(6.dp)
             )
     )
@@ -1171,6 +1171,7 @@ private fun TaskStatusFilter.toDisplayLabel(): String {
 private fun taskStatusColor(status: String): Color {
     return when {
         status.equals("running", ignoreCase = true) -> taskRunningColor()
+        status.equals("OK", ignoreCase = true) || status == "0" -> taskFinishedColor()
         status.equals("stopped", ignoreCase = true) -> taskStoppedColor()
         status.equals("finished", ignoreCase = true) -> taskFinishedColor()
         else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -1194,6 +1195,41 @@ private fun taskFinishedColor(): Color = MaterialTheme.colorScheme.primary
 
 @Composable
 private fun taskStoppedColor(): Color = MaterialTheme.colorScheme.error
+
+private fun Task.isRunningTask(): Boolean {
+    return status.equals("running", ignoreCase = true)
+}
+
+private fun Task.isFinishedTask(): Boolean {
+    return status.equals("finished", ignoreCase = true) ||
+        status.equals("OK", ignoreCase = true) ||
+        status == "0" ||
+        exitstatus.equals("OK", ignoreCase = true) ||
+        exitstatus == "0"
+}
+
+private fun Task.isStoppedTask(): Boolean {
+    return status.equals("stopped", ignoreCase = true) && !isFinishedTask()
+}
+
+private fun Task.displayStatusLabel(): String {
+    return when {
+        isRunningTask() -> "RUNNING"
+        isFinishedTask() -> "OK"
+        isStoppedTask() -> "STOPPED"
+        else -> status.uppercase(Locale.getDefault())
+    }
+}
+
+@Composable
+private fun Task.displayStatusColor(): Color {
+    return when {
+        isRunningTask() -> taskRunningColor()
+        isFinishedTask() -> taskFinishedColor()
+        isStoppedTask() -> taskStoppedColor()
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+}
 
 private fun formatTaskTimestamp(seconds: Long): String {
     if (seconds <= 0) return "-"

@@ -29,16 +29,22 @@ Observed pass:
 - Task activity card renders running/recent/latest task data.
 - Node list renders at least one online node.
 - Quick action cards render for VM/LXC/storage/network entry points.
+- VM list opens from the dashboard and renders stopped/running guests from a real Proxmox VE node.
+- VM lifecycle labels render as readable single-line labels on a Pixel-sized viewport.
+- VM delete is available for stopped guests and disabled with explicit copy for running guests.
+- LXC list opens from the dashboard and renders running containers from a real Proxmox VE node.
+- LXC lifecycle labels render as readable single-line labels on a Pixel-sized viewport.
+- LXC delete is disabled with explicit copy for running containers.
+- LXC task history opens with node and VMID filters populated.
+- Task statistics count Proxmox `OK` task results as finished.
+- Task detail opens from task history and loads task metadata plus task log output.
 
 Still pending:
 
 - API token login smoke.
 - TLS fingerprint/self-signed smoke.
 - Invalid credential and invalid TLS error-state smoke.
-- VM list/detail smoke.
-- LXC list/detail smoke.
 - VM/LXC lifecycle smoke on disposable guests.
 - Task detail/log handoff smoke after lifecycle actions.
 - Storage, network, users, backups, and cluster read-only navigation smoke.
 - Small-screen/rotation/background-resume pass.
-

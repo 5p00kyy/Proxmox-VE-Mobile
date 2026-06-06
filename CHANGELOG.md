@@ -90,6 +90,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - VM/LXC shutdown, force stop, and reboot actions now use contextual confirmation dialogs before sending disruptive lifecycle requests.
 - VM/LXC cards now distinguish graceful shutdown from force stop.
 - VM/LXC delete controls are now disabled until the guest is stopped.
+- VM/LXC compact lifecycle action labels no longer wrap or truncate on Pixel-sized screens.
+- Task statistics and task details now treat Proxmox `OK` task results as successful finished tasks.
 - `verifySsl` is now honored by the networking layer instead of being ignored.
 - VM list actions now surface returned Proxmox task IDs in snackbar/task context.
 - LXC list actions now surface returned Proxmox task IDs in snackbar/task context.

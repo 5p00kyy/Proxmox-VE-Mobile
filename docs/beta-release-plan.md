@@ -22,7 +22,7 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [################....] 80%
-Real Proxmox smoke QA        [###.................] 15%
+Real Proxmox smoke QA        [########............] 40%
 UX/copy release polish       [########............] 40%
 Release packaging            [##..................] 10%
 Official beta readiness      [##########..........] 50%
