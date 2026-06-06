@@ -21,11 +21,11 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 ```text
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
-Automated release gate       [#################...] 85%
+Automated release gate       [##################..] 88%
 Real Proxmox smoke QA        [#############.......] 65%
 UX/copy release polish       [###############.....] 75%
-Release packaging            [###############.....] 75%
-Official beta readiness      [################....] 80%
+Release packaging            [################....] 78%
+Official beta readiness      [################....] 81%
 ```
 
 ## Release Gates
@@ -66,7 +66,19 @@ The workflow runs the beta gate with:
 ./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
-The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, scans tracked public docs/workflows/scripts and application source for machine-specific details, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
+Manual smoke progress can be summarized locally with:
+
+```bash
+./scripts/beta-qa-status.sh
+```
+
+Before tagging, use the same checker as a hard completion gate:
+
+```bash
+./scripts/beta-qa-status.sh --require-complete
+```
+
+The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, calls `scripts/public-hygiene-check.sh`, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. The hygiene check scans tracked public docs/workflows/scripts and application source for local environment details, inline secret-looking values, and optional locally supplied deny-list patterns through `EXTRA_PUBLIC_HYGIENE_PATTERN`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
 
 Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag runs must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
 
@@ -197,6 +209,15 @@ Pixel-class Android emulator smoke now covers password login, dashboard load, no
 
 The latest UX polish pass tightened repeated VM/LXC resource cards, paired detail/task controls, and moved disabled surfaces toward read-only beta copy instead of raw implementation-status language. The next polish pass should verify the full route matrix on-device and capture public-safe media only from a disposable or redacted environment.
 
+### Automation Plan For Remaining Blockers
+
+The route registry and unit tests prove beta route patterns, route encoding, lifecycle ViewModel behavior, and task-detail route generation, but they do not prove Activity recreation, background resume, Compose layout, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
+
+- Add Compose instrumentation smoke for every registered beta route using fake session data and fake repositories.
+- Add Activity recreation coverage for login non-secret drafts and task filter drafts.
+- Add fake-API UI coverage for VM/LXC task notices opening task detail routes.
+- Leave API-token login, TLS/fingerprint behavior, disposable lifecycle actions, and task-log handoff as lab-backed smoke until a disposable Proxmox fixture can be provisioned in CI.
+
 ## Development Work Remaining
 
 1. Open the pushed baseline branch as a draft PR.
@@ -220,6 +241,40 @@ The beta release notes should be concise and honest about scope:
 - Summarize verified smoke coverage only after the smoke matrix is complete.
 - Keep unfinished areas in a known limitations section rather than implying they work.
 - Ask testers to report Proxmox version, Android version, auth method, TLS setup, and sanitized logs/screenshots.
+
+Use this release-note shape before publishing the draft GitHub Release:
+
+```text
+Proxmox VE Mobile v0.1.0-beta.1
+
+Status
+- First public beta for Android operators testing mobile Proxmox VE workflows.
+- Not a full desktop web UI replacement.
+
+Install
+- Download only the signed APK attached to this GitHub Release.
+- Do not use debug APKs or unsigned workflow artifacts as public beta builds.
+
+Included In This Beta
+- Password and API token login.
+- TLS validation with fingerprint pinning support for self-signed environments.
+- Dashboard, node, VM, LXC, task, storage, network, user, backup, and cluster inspection.
+- VM/LXC lifecycle actions with confirmation and task follow-up.
+
+Known Limitations
+- Guest console, snapshot mutation, backup mutation, user mutation, node power actions, and Proxmox Backup Server management are outside this beta scope.
+- Storage, network, user, backup, and cluster areas are primarily read-only.
+- TFA-specific password login handling is not complete.
+
+Verified Smoke Coverage
+- Fill this section only from completed entries in docs/beta-smoke-qa.md.
+
+Public Media
+- List only disposable-lab or fully sanitized screenshots/recordings.
+
+Report Issues
+- Include Android version, Proxmox VE major version, auth method, TLS mode, and sanitized logs/screenshots.
+```
 
 Before tagging, promote `CHANGELOG.md` from `Unreleased` to:
 
@@ -249,6 +304,7 @@ Recommended media set:
 - 4-6 PNG screenshots for the GitHub Release body.
 - 1 short screen recording or GIF showing dashboard to guest action to task detail, only after disposable lifecycle smoke passes.
 - Alt text or captions that describe the workflow without environment identifiers.
+- A media manifest that maps every file to its screen/workflow, source type, sanitized identifiers, caption or alt text, and QA status.
 
 If public-safe media cannot be captured before the beta tag, ship the release notes without screenshots rather than publishing redacted private infrastructure accidentally.
 

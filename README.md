@@ -47,6 +47,8 @@ Do not publish screenshots that reveal private hostnames, public or private IP a
 
 Safe examples include placeholder host text, generic node names such as `pve-demo`, disposable guest names such as `demo-vm-101`, redacted UPIDs, and storage or cluster views from a throwaway lab.
 
+Before attaching screenshots or recordings to a GitHub Release, record a public media manifest in the release notes or [`docs/beta-smoke-qa.md`](docs/beta-smoke-qa.md). The manifest should list each filename, screen or workflow, source type, sanitized identifiers used, caption or alt text, and QA status. Good candidate filenames are `login-tls.png`, `dashboard.png`, `vm-detail.png`, `lxc-detail.png`, `task-detail.png`, and `read-only-admin.png`.
+
 ## Localization
 
 The app ships string resources for these locales:
@@ -175,6 +177,18 @@ For beta release candidates, run the consolidated gate:
 
 ```bash
 ./scripts/beta-gate.sh v0.1.0-beta.1
+```
+
+To summarize manual beta smoke evidence while QA is in progress:
+
+```bash
+./scripts/beta-qa-status.sh
+```
+
+Before tagging, run the same summary as a hard completion check:
+
+```bash
+./scripts/beta-qa-status.sh --require-complete
 ```
 
 The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with JDK 17 and an Android SDK configured through environment variables. Unit coverage currently starts with the session/auth, node, VM, LXC, task, and localization seams; broader behavioral coverage is still needed.

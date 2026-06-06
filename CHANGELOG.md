@@ -33,6 +33,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
+- Public release media manifest and GitHub Release note draft template for `v0.1.0-beta.1` preparation.
+- Reusable beta QA status script for summarizing pending, passed, failed, and blocked smoke evidence.
 - Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
@@ -151,6 +153,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Backup planned-action labels now stay readable on Pixel-sized screens.
 - Settings version and build labels now use Gradle build metadata.
 - Beta release workflow now blocks tag/APK version metadata mismatches before packaging.
+- Beta release gate now delegates public hygiene scanning to a reusable script with an optional local deny-list pattern.
 - Signed beta release workflow artifacts no longer include the staged unsigned APK copy.
 - Signed beta release workflow refuses to mutate an existing release unless it is still a draft prerelease.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.

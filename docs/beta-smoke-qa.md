@@ -113,8 +113,89 @@ Still pending:
 | Route matrix rotation and background-resume smoke | Pending | Route name, orientation/resume result, and any clipping/crash notes without screenshots unless sanitized |
 | Small-phone and landscape viewport smoke | Pending | Device/API class and route names with clipping/accessibility notes |
 
+## Beta Evidence Capture Matrix
+
+Record each pass with sanitized route names and outcomes only. Do not record real node names, guest names, VMIDs, UPIDs, usernames, hosts, IP addresses, fingerprints, tokens, or screenshots from private environments.
+
+### Auth And TLS Smoke
+
+| Scenario | Required evidence | Result |
+| --- | --- | --- |
+| Password login succeeds | APK type, Android device/API class, Proxmox VE major version, TLS mode, dashboard reached | Pending |
+| Password login fails with invalid credentials | APK type, auth method, visible error behavior, no active session remains | Pending |
+| API token login succeeds | APK type, Android device/API class, Proxmox VE major version, TLS mode, dashboard reached | Pending |
+| API token login fails with invalid token | APK type, visible error behavior, no active session remains | Pending |
+| Platform-trusted HTTPS succeeds | TLS mode, Proxmox VE major version, dashboard reached | Pending |
+| Fingerprint-pinned self-signed HTTPS succeeds | TLS mode as fingerprint pin, visible certificate flow outcome, dashboard reached | Pending |
+| Invalid fingerprint or invalid TLS fails clearly | TLS mode, visible error behavior, no active session remains | Pending |
+| Release build blocks insecure trust-all mode | APK type as signed release or release candidate, visible behavior, no insecure connection path | Pending |
+
+### Disposable Lifecycle Smoke
+
+Run only against disposable lab guests. Capture action outcomes without guest names, IDs, task IDs, or task log content.
+
+| Resource | Action | Required evidence | Result |
+| --- | --- | --- | --- |
+| VM | Start | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| VM | Graceful shutdown | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| VM | Force stop | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| VM | Reboot | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| VM | Delete stopped guest | Confirmation shown, delete submitted once, returned task notice appears, task detail/log route opens | Pending |
+| VM | Delete running guest | Delete blocked with clear copy, no task notice is carried over | Pending |
+| LXC | Start | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| LXC | Graceful shutdown | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| LXC | Force stop | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| LXC | Reboot | Confirmation shown, action submitted once, returned task notice appears, task detail/log route opens | Pending |
+| LXC | Delete stopped container | Confirmation shown, delete submitted once, returned task notice appears, task detail/log route opens | Pending |
+| LXC | Delete running container | Delete blocked with clear copy, no task notice is carried over | Pending |
+
+### Route Rotation And Resume Smoke
+
+For every route, verify portrait, forced landscape where possible, Home/background plus launcher resume, back navigation, top app bar padding, scrollability, and loaded-data usability. Logcat should be scanned for fatal app crash entries after resume. Evidence should state `Pass`, `Fail`, or `Blocked` per route.
+
+| Route | Rotation evidence | Resume evidence | Notes |
+| --- | --- | --- | --- |
+| Login | Pending | Pending | Include unsaved non-secret draft preservation |
+| Dashboard | Pending | Pending | Include manual refresh after resume |
+| Node detail | Pending | Pending | Include node context preservation |
+| VM list | Pending | Pending | Include action labels and task notice behavior |
+| VM detail | Pending | Pending | Include read-only config/snapshot areas |
+| LXC list | Pending | Pending | Include action labels and task notice behavior |
+| LXC detail | Pending | Pending | Include read-only snapshot/resource areas |
+| Storage list | Pending | Pending | Include long content labels and capacity fields |
+| Storage content browser | Pending | Pending | Include read-only content browsing |
+| Network list | Pending | Pending | Include global and node-scoped entry paths |
+| Users | Pending | Pending | Include disabled mutation actions |
+| Backups | Pending | Pending | Include storage filtering and partial failure state if available |
+| Tasks | Pending | Pending | Include global, node-scoped, and resource-filtered paths |
+| Task detail/log | Pending | Pending | Include returned lifecycle task handoff after disposable smoke |
+| Cluster | Pending | Pending | Include standalone or clustered response shape |
+| Settings | Pending | Pending | Include beta version and disabled settings |
+
+## Automation Candidates
+
+The current beta blocker evidence is mostly manual because there is no checked-in instrumentation test suite yet. The narrowest automatable next steps are:
+
+- Add `app/src/androidTest` Compose navigation smoke tests that boot the app with fake session data and assert every `Screen.betaRegisteredRoutes` destination can render without crashing.
+- Add an instrumentation rotation/resume test for login draft state and task-filter draft state, preserving only non-secret fields across Activity recreation.
+- Add fake-API Compose tests for VM/LXC list task notice navigation so returned UPIDs open task detail without relying on a live Proxmox target.
+- Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.
+
 Media readiness:
 
 - Private emulator screenshots from this pass must not be used as release media.
 - Public release screenshots remain pending until they can be captured from a disposable lab or fully sanitized sample environment.
 - Release media must avoid hostnames, IP addresses, usernames, backup notes, task log identifiers, tokens, tickets, cookies, certificate fingerprints tied to a private server, and local machine paths.
+
+## Public Release Media Manifest
+
+Use this manifest before adding screenshots or recordings to the README or GitHub Release notes. Leave entries as `Pending` until the file is captured from a disposable lab or fully sanitized sample environment.
+
+| File | Screen or workflow | Source type | Sanitized identifiers | Caption or alt text | QA status |
+| --- | --- | --- | --- | --- | --- |
+| `login-tls.png` | Login with TLS/fingerprint controls | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
+| `dashboard.png` | Dashboard summary and node/task overview | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
+| `vm-detail.png` | VM list/detail with lifecycle and read-only data | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
+| `lxc-detail.png` | LXC list/detail with lifecycle and read-only data | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
+| `task-detail.png` | Returned task follow-up and task log view | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
+| `read-only-admin.png` | Storage, backup, cluster, network, or users read-only slice | Disposable lab or fully sanitized capture | Pending | Pending | Pending |
