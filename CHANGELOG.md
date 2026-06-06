@@ -37,6 +37,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Reusable beta QA status script for summarizing pending, passed, failed, and blocked smoke evidence.
 - Optional strict beta gate mode for requiring completed smoke QA evidence during final pre-tag dry runs.
 - Compose instrumentation smoke for login rendering, local API-token mode controls, SHA-256 fingerprint validation, and Activity recreation of non-secret login draft state.
+- Compose instrumentation smoke seam for starting the route host on a fake authenticated Settings destination.
+- Task center ViewModel coverage for resource-filtered loading, filter forwarding, invalid-node abort handling, duplicate abort suppression, and task-detail abort suppression.
 - Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
@@ -129,6 +131,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Node detail now accepts node status endpoint payloads that omit list-style node/status fields.
 - Node detail now maps nested node status CPU and memory payloads into the rendered resource summary.
 - VM/LXC lifecycle actions now suppress duplicate requests before queued coroutine work can race.
+- Task list and task detail abort actions now suppress duplicate requests before queued coroutine work can race.
 - VM/LXC lifecycle task handoff now ignores blank or non-UPID task identifiers.
 - VM/LXC blocked delete attempts now clear stale task-detail handoff state.
 - VM/LXC repeated resource cards use tighter action spacing and paired detail/task controls on Pixel-class screens.
@@ -160,6 +163,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Signed beta release workflow refuses to mutate an existing release unless it is still a draft prerelease.
 - Beta tag release workflow now requires completed smoke QA evidence before packaging or signing.
 - Android CI and beta gate now compile instrumentation tests so checked-in emulator smoke sources cannot silently break.
+- Navigation host now supports an explicit start destination for fake-route instrumentation without changing the production default.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
 - Failed VM/LXC lifecycle actions now clear stale last-task notices instead of leaving an old task handoff card visible.
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.

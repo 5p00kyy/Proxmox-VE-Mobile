@@ -119,11 +119,11 @@ class TaskListViewModel(
 
         if (_uiState.value.actionInProgressUpid != null) return
 
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(actionInProgressUpid = upid, errorMessage = null)
-            }
+        _uiState.update {
+            it.copy(actionInProgressUpid = upid, errorMessage = null)
+        }
 
+        viewModelScope.launch {
             when (val result = repository.abortTask(nodeName, upid)) {
                 is TaskResult.Success -> {
                     _uiState.update {
@@ -221,9 +221,9 @@ class TaskDetailViewModel(
 
         if (_uiState.value.isAborting) return
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isAborting = true, errorMessage = null) }
+        _uiState.update { it.copy(isAborting = true, errorMessage = null) }
 
+        viewModelScope.launch {
             when (val result = repository.abortTask(nodeName, upid)) {
                 is TaskResult.Success -> {
                     _uiState.update {

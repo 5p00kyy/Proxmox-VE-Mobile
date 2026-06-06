@@ -115,6 +115,7 @@ Observed pass:
 - An invalid SHA-256 fingerprint shows validation copy and keeps the connect action disabled.
 - A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
 - Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
+- Fake authenticated instrumentation can start the navigation host on the Settings route and render Settings content without live Proxmox data.
 - LXC detail route resumed from Home/launcher on the emulator with top app bar, loaded data, scroll position, read-only snapshot copy, and read-only resource copy still visible.
 - Focused post-resume logcat scan found no fatal app crash entries.
 
@@ -206,9 +207,9 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is still mostly manual, but the first checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, and Activity recreation for non-secret login draft state. The narrowest next automatable steps are:
+The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login draft state, and one fake authenticated route-host entry point. The narrowest next automatable steps are:
 
-- Add `app/src/androidTest` Compose navigation smoke tests that boot the app with fake session data and assert every `Screen.betaRegisteredRoutes` destination can render without crashing.
+- Expand `app/src/androidTest` Compose navigation smoke tests to boot more beta routes with fake session data and fake repositories.
 - Add an instrumentation rotation/resume test for task-filter draft state and post-login route state, preserving only non-secret fields across Activity recreation.
 - Add fake-API Compose tests for VM/LXC list task notice navigation so returned UPIDs open task detail without relying on a live Proxmox target.
 - Keep API-token, TLS/fingerprint, and disposable lifecycle passes as manual or lab-backed tests until a disposable Proxmox fixture exists.

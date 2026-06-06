@@ -198,6 +198,14 @@ Before tagging, run the same summary as a hard completion check:
 ./scripts/beta-qa-status.sh --require-complete
 ```
 
+Public-safe Android Studio/emulator smoke tests live under `app/src/androidTest` and can be run with:
+
+```bash
+./gradlew connectedDebugAndroidTest
+```
+
+These tests use placeholder data and do not connect to a Proxmox host. They may reinstall the debug APK or clear saved test credentials, so run them before or after manual logged-in smoke sessions rather than during one.
+
 The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with JDK 17 and an Android SDK configured through environment variables. Unit coverage currently starts with the session/auth, node, VM, LXC, task, and localization seams; broader behavioral coverage is still needed.
 
 ## Project Workflow
