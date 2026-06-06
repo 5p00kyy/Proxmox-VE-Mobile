@@ -23,7 +23,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Android CI workflow for pull requests and pushes to `main`.
 - GitHub issue templates for bug reports and feature requests.
 - Pull request template with QA, risk, and contributor checklists.
-- Beta APK release workflow for `v*-beta.*` tags, published releases, and manual dry runs.
+- Beta APK release workflow for `v*-beta.*` tag pushes and manual dry runs.
+- Consolidated beta gate script for version matching, public hygiene checks, tests, lint, debug build, and release build.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.

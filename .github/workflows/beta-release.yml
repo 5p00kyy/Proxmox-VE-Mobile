@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - "v*-beta.*"
-  release:
-    types:
-      - published
   workflow_dispatch:
     inputs:
       beta_tag:
@@ -47,7 +44,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.release.tag_name || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Validate APK version matches beta tag
         run: |
@@ -74,16 +71,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Ensure Gradle wrapper is executable
-        run: chmod +x ./gradlew
+        run: chmod +x ./gradlew ./scripts/beta-gate.sh
 
-      - name: Run unit tests
-        run: ./gradlew test --stacktrace --no-daemon
-
-      - name: Run Android lint
-        run: ./gradlew lint --stacktrace --no-daemon
-
-      - name: Assemble release APK
-        run: ./gradlew assembleRelease --stacktrace --no-daemon
+      - name: Run beta release gate
+        run: ./scripts/beta-gate.sh "$BETA_TAG"
 
       - name: Stage unsigned release APK
         run: |
@@ -168,8 +159,8 @@ jobs:
           path: release-artifacts/*.apk
           if-no-files-found: error
 
-      - name: Attach signed APK to GitHub release
-        if: ${{ steps.sign.outputs.signed_apk != '' && (github.event_name == 'push' || github.event_name == 'release') }}
+      - name: Attach signed APK to draft GitHub release
+        if: ${{ steps.sign.outputs.signed_apk != '' && github.event_name == 'push' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

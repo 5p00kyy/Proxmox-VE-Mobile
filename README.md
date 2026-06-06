@@ -45,6 +45,8 @@ Screenshots and short screen recordings should be added before tagging `v0.1.0-b
 
 Do not publish screenshots that reveal private hostnames, public or private IP addresses, usernames, backup notes, task logs with environment details, API tokens, tickets, cookies, fingerprints tied to a private server, or desktop/user-specific paths. If sanitized real screenshots are not available, use a disposable Proxmox lab or omit screenshots until public-safe media can be captured.
 
+Safe examples include placeholder host text, generic node names such as `pve-demo`, disposable guest names such as `demo-vm-101`, redacted UPIDs, and storage or cluster views from a throwaway lab.
+
 ## Localization
 
 The app ships string resources for these locales:
@@ -164,8 +166,15 @@ Typical commands in a real Android environment:
 
 ```bash
 ./gradlew assembleDebug
+./gradlew assembleRelease
 ./gradlew test
 ./gradlew lint
+```
+
+For beta release candidates, run the consolidated gate:
+
+```bash
+./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
 The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with JDK 17 and an Android SDK configured through environment variables. Unit coverage currently starts with the session/auth, node, VM, LXC, task, and localization seams; broader behavioral coverage is still needed.
@@ -179,7 +188,7 @@ The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with J
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 
-Pull requests are expected to run `./gradlew test`, `./gradlew lint`, and `./gradlew assembleDebug`. The GitHub Actions workflow in `.github/workflows/android.yml` enforces the same baseline for pull requests and pushes to `main`.
+Pull requests are expected to run `./gradlew test`, `./gradlew lint`, `./gradlew assembleDebug`, and `./gradlew assembleRelease`. The GitHub Actions workflow in `.github/workflows/android.yml` enforces the same baseline for pull requests and pushes to `main`.
 
 ## Security Notes
 
@@ -202,7 +211,7 @@ Pull requests are expected to run `./gradlew test`, `./gradlew lint`, and `./gra
 - Automated test coverage is narrow and currently focused on session/auth, dashboard, node, VM, LXC, task, network, storage, user, backup, security, and localization seams.
 - CI is present for build, lint, and unit tests.
 - Several dependencies and parts of the UI suggest abandoned or unfinished feature work.
-- The settings screen overstates what is actually configurable.
+- Some settings remain planned or disabled until their runtime behavior is implemented.
 
 ## Recommended Next Steps
 

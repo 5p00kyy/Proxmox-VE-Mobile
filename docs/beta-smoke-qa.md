@@ -2,6 +2,24 @@
 
 This document records manual validation evidence for the `v0.1.0-beta.1` track. Do not record private hostnames, public IPs, usernames, tokens, screenshots with sensitive data, or other environment details that should not be public.
 
+## Public-Safe Evidence Template
+
+Use this shape for every manual QA pass:
+
+```text
+Date:
+Build SHA:
+APK type: debug | signed release
+Android device/API class:
+Proxmox VE major version:
+Auth method: password | API token
+TLS mode: platform trusted | fingerprint pin | debug insecure lab mode
+Result: Pending | Pass | Fail | Blocked
+Sanitized notes:
+```
+
+Do not include hostnames, IP addresses, usernames, tokens, cookies, tickets, certificate fingerprints from private servers, task IDs from private environments, backup comments, local machine paths, or screenshots with private details.
+
 ## 2026-06-06 Android Studio Emulator Pass
 
 Environment:
@@ -83,12 +101,17 @@ Still requires emulator/manual smoke:
 
 Still pending:
 
-- API token login smoke.
-- TLS fingerprint/self-signed smoke.
-- Invalid credential and invalid TLS error-state smoke.
-- VM/LXC lifecycle smoke on disposable guests.
-- Task detail/log handoff smoke after lifecycle actions.
-- Full emulator small-screen/landscape/route-matrix rotation and background-resume smoke.
+| Blocker | Status | Public-safe evidence required |
+| --- | --- | --- |
+| API token login smoke | Pending | Auth method, Proxmox major version, APK type, pass/fail notes without token ID or username |
+| TLS fingerprint/self-signed smoke | Pending | TLS mode, certificate flow outcome, pass/fail notes without private fingerprint values |
+| Invalid credential error-state smoke | Pending | Auth mode and user-visible error behavior without attempted username or host |
+| Invalid TLS error-state smoke | Pending | TLS mode and user-visible error behavior without endpoint details |
+| VM lifecycle smoke on disposable guest | Pending | Action names, task handoff result, and guest type/name sanitized |
+| LXC lifecycle smoke on disposable guest | Pending | Action names, task handoff result, and container type/name sanitized |
+| Task detail/log handoff smoke after lifecycle actions | Pending | Whether returned task notice opens task detail/log without private UPID/log content |
+| Route matrix rotation and background-resume smoke | Pending | Route name, orientation/resume result, and any clipping/crash notes without screenshots unless sanitized |
+| Small-phone and landscape viewport smoke | Pending | Device/API class and route names with clipping/accessibility notes |
 
 Media readiness:
 

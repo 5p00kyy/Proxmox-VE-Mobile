@@ -21,11 +21,11 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 ```text
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
-Automated release gate       [################....] 80%
+Automated release gate       [#################...] 85%
 Real Proxmox smoke QA        [#############.......] 65%
 UX/copy release polish       [############........] 60%
-Release packaging            [#############.......] 65%
-Official beta readiness      [##############......] 70%
+Release packaging            [##############......] 70%
+Official beta readiness      [###############.....] 73%
 ```
 
 ## Release Gates
@@ -37,6 +37,7 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 | Unit tests | Yes | `./gradlew test` passes locally or in CI |
 | Lint | Yes | `./gradlew lint` passes locally or in CI |
 | Debug build | Yes | `./gradlew assembleDebug` passes locally or in CI |
+| Release build | Yes | `./gradlew assembleRelease` passes locally or in CI |
 | Public branch hygiene | Yes | No machine-specific paths, hostnames, tokens, private IPs, or credentials in tracked docs/source |
 | Real Proxmox login smoke | Yes | Password and API token login tested against a real Proxmox VE target |
 | TLS smoke | Yes | Platform-trusted certificate and self-signed/fingerprint flow tested or documented as known limitation |
@@ -57,20 +58,17 @@ The Android CI and beta release workflows opt into Node 24 JavaScript action exe
 Triggers:
 
 - `push` tags matching `v*-beta.*`, including `v0.1.0-beta.1`.
-- Published GitHub releases.
 - Manual `workflow_dispatch` dry runs with a beta tag name input for artifact naming.
 
 The workflow runs the beta gate with:
 
 ```bash
-./gradlew test --stacktrace --no-daemon
-./gradlew lint --stacktrace --no-daemon
-./gradlew assembleRelease --stacktrace --no-daemon
+./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
-Before building, the workflow verifies that the beta tag matches the Gradle `versionName` with a leading `v`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
+The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, scans public docs/workflows/source for machine-specific details, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
 
-Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag and release events must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
+Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag runs must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
 
 - `ANDROID_RELEASE_KEYSTORE_BASE64`
 - `ANDROID_RELEASE_KEYSTORE_PASSWORD`
@@ -79,7 +77,7 @@ Manual dry runs upload the produced release APK as a GitHub Actions artifact. Ta
 
 `ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
 
-Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag or release runs remove the unsigned APK copy from the uploaded workflow artifact after signing, so the release run's downloadable artifacts and GitHub Release attachment stay aligned around the signed APK.
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
 
 GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the repository default branch. While the beta baseline is still only on the draft PR branch, the release workflow can be linted and reviewed, but the manual dry run cannot be triggered from GitHub until the workflow is merged or otherwise present on the default branch.
 
@@ -148,11 +146,19 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 | Navigation | Node-scoped VM/LXC/storage/network/task routes keep node context | Yes |
 | VM | VM list loads and empty/error states render | Yes |
 | VM | VM detail loads status, config, and snapshots read-only | Yes |
-| VM | Start/shutdown/stop/reboot/delete prompt and submit on disposable guest | Yes |
+| VM | Start on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
+| VM | Graceful shutdown on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
+| VM | Force stop on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
+| VM | Reboot on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
+| VM | Delete on stopped disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
 | LXC | Container list loads and empty/error states render | Yes |
 | LXC | Container detail loads status and snapshots read-only | Yes |
-| LXC | Start/shutdown/stop/reboot/delete prompt and submit on disposable guest | Yes |
-| Tasks | Task result links open detail/log screen | Yes |
+| LXC | Start on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| LXC | Graceful shutdown on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| LXC | Force stop on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| LXC | Reboot on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| LXC | Delete on stopped disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| Tasks | Task list result links open detail/log screen | Yes |
 | Tasks | Task filters do not crash with empty or partial data | Yes |
 | Storage | Storage list and content browser load read-only | Yes |
 | Network | Interface list loads for selected node | Yes |
@@ -160,6 +166,28 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 | Backups | Backup list loads and partial-storage failures are understandable | Yes |
 | Cluster | Cluster status loads standalone and clustered responses | Yes |
 | Settings | Planned settings are disabled or do not imply runtime behavior | Yes |
+
+### Navigation Route Matrix
+
+These routes are in beta navigation scope and should be included in route, rotation, and resume smoke:
+
+- Login.
+- Dashboard.
+- Node detail.
+- VM list and VM detail, including node-scoped detail routes.
+- LXC list and LXC detail, including node-scoped detail routes.
+- Storage list and read-only content browser.
+- Network list, both global and node-scoped.
+- Users.
+- Backups.
+- Tasks, including global, node-scoped, resource-filtered, task detail, and task log states.
+- Cluster.
+- Settings.
+
+These route helpers exist but are not registered beta destinations and should not be claimed in beta release notes until implemented:
+
+- Storage detail.
+- User detail.
 
 ## Development Work Remaining
 

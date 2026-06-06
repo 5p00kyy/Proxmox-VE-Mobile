@@ -53,6 +53,9 @@ jobs:
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --stacktrace --no-daemon
 
+      - name: Assemble release APK
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
+
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
