@@ -11,7 +11,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,11 +38,14 @@ import kotlinx.coroutines.delay
 
 fun Double.format(digits: Int) = String.format(Locale.US, "%.${digits}f", this)
 
+const val DASHBOARD_RECENT_TASKS_METRIC_TAG = "dashboard_recent_tasks_metric"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    repositoryOverride: DashboardRepository? = null
 ) {
     val initialCachedNodes = remember(viewModel) {
         viewModel.getCachedNodes().orEmpty()
@@ -53,16 +58,17 @@ fun DashboardScreen(
             )
         )
     }
+    val activeDashboardRepository = repositoryOverride ?: dashboardRepository
     val dashboardViewModel: DashboardViewModel = composeViewModel(
         key = "dashboard",
-        factory = remember(initialCachedNodes, dashboardRepository, viewModel) {
+        factory = remember(initialCachedNodes, activeDashboardRepository, viewModel) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
                         return DashboardViewModel(
                             initialCachedNodes = initialCachedNodes,
-                            repository = dashboardRepository,
+                            repository = activeDashboardRepository,
                             cacheNodes = viewModel::setCachedNodes
                         ) as T
                     }
@@ -595,7 +601,10 @@ fun TaskActivityCard(
                         TaskActivityMetric(
                             label = stringResource(R.string.dashboard_recent_tasks),
                             value = summary.recentCount.toString(),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(DASHBOARD_RECENT_TASKS_METRIC_TAG)
+                                .semantics(mergeDescendants = true) {}
                         )
                     }
 

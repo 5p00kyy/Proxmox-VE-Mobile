@@ -35,7 +35,8 @@ import java.util.*
 @Composable
 fun BackupScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    repositoryOverride: BackupRepository? = null
 ) {
     val availableNodes = viewModel.getCachedNodes()
         ?.map { it.node }
@@ -45,16 +46,17 @@ fun BackupScreen(
     val backupRepository = remember(viewModel) {
         BackupRepository(ProxmoxBackupApi { viewModel.getApiService() })
     }
+    val activeBackupRepository = repositoryOverride ?: backupRepository
     val backupListViewModel: BackupListViewModel = composeViewModel(
         key = "backup-list-${availableNodes.joinToString("|")}",
-        factory = remember(availableNodes, backupRepository, noNodesMessage) {
+        factory = remember(availableNodes, activeBackupRepository, noNodesMessage) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(BackupListViewModel::class.java)) {
                         return BackupListViewModel(
                             availableNodes = availableNodes,
-                            repository = backupRepository,
+                            repository = activeBackupRepository,
                             noNodesMessage = noNodesMessage
                         ) as T
                     }

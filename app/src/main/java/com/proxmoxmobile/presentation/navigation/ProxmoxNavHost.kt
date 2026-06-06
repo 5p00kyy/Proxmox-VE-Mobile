@@ -12,11 +12,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.proxmoxmobile.R
+import com.proxmoxmobile.data.backup.BackupRepository
+import com.proxmoxmobile.data.cluster.ClusterRepository
+import com.proxmoxmobile.data.dashboard.DashboardRepository
 import com.proxmoxmobile.data.lxc.LxcRepository
 import com.proxmoxmobile.data.network.NetworkRepository
 import com.proxmoxmobile.data.node.NodeRepository
 import com.proxmoxmobile.data.storage.StorageRepository
 import com.proxmoxmobile.data.task.TaskRepository
+import com.proxmoxmobile.data.user.UserRepository
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.screens.auth.LoginScreen
 import com.proxmoxmobile.presentation.screens.dashboard.DashboardScreen
@@ -45,7 +49,11 @@ fun ProxmoxNavHost(
     nodeRepositoryOverride: NodeRepository? = null,
     taskRepositoryOverride: TaskRepository? = null,
     storageRepositoryOverride: StorageRepository? = null,
-    networkRepositoryOverride: NetworkRepository? = null
+    networkRepositoryOverride: NetworkRepository? = null,
+    userRepositoryOverride: UserRepository? = null,
+    backupRepositoryOverride: BackupRepository? = null,
+    clusterRepositoryOverride: ClusterRepository? = null,
+    dashboardRepositoryOverride: DashboardRepository? = null
 ) {
     val confirmationDialog by viewModel.showConfirmationDialog.collectAsState()
 
@@ -67,7 +75,8 @@ fun ProxmoxNavHost(
         composable(Screen.Dashboard.route) {
             DashboardScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = dashboardRepositoryOverride
             )
         }
         
@@ -122,7 +131,8 @@ fun ProxmoxNavHost(
         composable(Screen.Users.route) {
             UserManagementScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = userRepositoryOverride
             )
         }
         
@@ -168,14 +178,16 @@ fun ProxmoxNavHost(
         composable(Screen.Backups.route) {
             BackupScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = backupRepositoryOverride
             )
         }
         
         composable(Screen.Cluster.route) {
             ClusterScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = clusterRepositoryOverride
             )
         }
         

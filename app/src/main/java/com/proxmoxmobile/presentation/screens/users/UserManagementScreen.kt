@@ -34,18 +34,20 @@ import java.util.*
 @Composable
 fun UserManagementScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    repositoryOverride: UserRepository? = null
 ) {
     val userRepository = remember(viewModel) {
         UserRepository(ProxmoxUserApi { viewModel.getApiService() })
     }
+    val activeUserRepository = repositoryOverride ?: userRepository
     val userManagementViewModel: UserManagementViewModel = composeViewModel(
-        factory = remember(userRepository) {
+        factory = remember(activeUserRepository) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(UserManagementViewModel::class.java)) {
-                        return UserManagementViewModel(userRepository) as T
+                        return UserManagementViewModel(activeUserRepository) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }

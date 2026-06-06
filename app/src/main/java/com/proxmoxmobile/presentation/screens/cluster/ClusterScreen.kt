@@ -58,19 +58,21 @@ import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 @Composable
 fun ClusterScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    repositoryOverride: ClusterRepository? = null
 ) {
     val clusterRepository = remember(viewModel) {
         ClusterRepository(ProxmoxClusterApi { viewModel.getApiService() })
     }
+    val activeClusterRepository = repositoryOverride ?: clusterRepository
     val clusterViewModel: ClusterViewModel = composeViewModel(
         key = "cluster-status",
-        factory = remember(clusterRepository) {
+        factory = remember(activeClusterRepository) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(ClusterViewModel::class.java)) {
-                        return ClusterViewModel(clusterRepository) as T
+                        return ClusterViewModel(activeClusterRepository) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
