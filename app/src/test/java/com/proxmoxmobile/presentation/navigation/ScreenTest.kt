@@ -1,9 +1,58 @@
 package com.proxmoxmobile.presentation.navigation
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ScreenTest {
+    @Test
+    fun betaRouteRegistry_containsRegisteredNavHostRoutes() {
+        val registeredRoutes = setOf(
+            Screen.Login.route,
+            Screen.ServerList.route,
+            Screen.Dashboard.route,
+            Screen.VMList.pattern,
+            Screen.ContainerList.pattern,
+            Screen.Storage.pattern,
+            Screen.Network.route,
+            Screen.NodeNetwork.route,
+            Screen.Users.route,
+            Screen.Backups.route,
+            Screen.Tasks.route,
+            Screen.NodeTasks.route,
+            Screen.ResourceTasks.route,
+            Screen.Cluster.route,
+            Screen.Settings.route,
+            Screen.VMDetail.route,
+            Screen.VMDetailWithNode.route,
+            Screen.ContainerDetail.route,
+            Screen.ContainerDetailWithNode.route,
+            Screen.NodeDetail.route,
+            Screen.TaskDetail.route
+        )
+
+        assertEquals(registeredRoutes, Screen.betaRegisteredRoutes)
+    }
+
+    @Test
+    fun plannedRoutes_areKnownButExcludedFromBetaRegistry() {
+        assertEquals(
+            setOf(Screen.StorageDetail.route, Screen.UserDetail.route),
+            Screen.plannedRoutes
+        )
+        assertTrue(Screen.allKnownRoutes.containsAll(Screen.plannedRoutes))
+        assertFalse(Screen.betaRegisteredRoutes.contains(Screen.StorageDetail.route))
+        assertFalse(Screen.betaRegisteredRoutes.contains(Screen.UserDetail.route))
+    }
+
+    @Test
+    fun knownRoutePatterns_areUniqueAcrossRegisteredAndPlannedRoutes() {
+        val routes = Screen.allKnownRoutePatterns
+
+        assertEquals(routes.distinct(), routes)
+    }
+
     @Test
     fun nodeScopedRoutes_encodeNodePathSegments() {
         val node = "lab node/1"

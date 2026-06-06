@@ -8,16 +8,22 @@ sealed class Screen(val route: String) {
     object ServerList : Screen("server_list")
     object Dashboard : Screen("dashboard")
     object VMList : Screen("vm_list") {
+        const val pattern = "vm_list/{nodeName}"
+
         fun createRoute(nodeName: String): String {
             return "vm_list/${nodeName.asRouteSegment()}"
         }
     }
     object ContainerList : Screen("container_list") {
+        const val pattern = "container_list/{nodeName}"
+
         fun createRoute(nodeName: String): String {
             return "container_list/${nodeName.asRouteSegment()}"
         }
     }
     object Storage : Screen("storage") {
+        const val pattern = "storage/{nodeName}"
+
         fun createRoute(nodeName: String): String {
             return "storage/${nodeName.asRouteSegment()}"
         }
@@ -83,6 +89,46 @@ sealed class Screen(val route: String) {
         fun createRoute(node: String, upid: String): String {
             return "task_detail/${node.asRouteSegment()}/${upid.asRouteSegment()}"
         }
+    }
+
+    companion object {
+        val betaRegisteredRoutePatterns: List<String> by lazy {
+            listOf(
+                Login.route,
+                ServerList.route,
+                Dashboard.route,
+                VMList.pattern,
+                ContainerList.pattern,
+                Storage.pattern,
+                Network.route,
+                NodeNetwork.route,
+                Users.route,
+                Backups.route,
+                Tasks.route,
+                NodeTasks.route,
+                ResourceTasks.route,
+                Cluster.route,
+                Settings.route,
+                VMDetail.route,
+                VMDetailWithNode.route,
+                ContainerDetail.route,
+                ContainerDetailWithNode.route,
+                NodeDetail.route,
+                TaskDetail.route
+            )
+        }
+
+        val plannedRoutePatterns: List<String> by lazy {
+            listOf(
+                StorageDetail.route,
+                UserDetail.route
+            )
+        }
+
+        val betaRegisteredRoutes: Set<String> by lazy { betaRegisteredRoutePatterns.toSet() }
+        val plannedRoutes: Set<String> by lazy { plannedRoutePatterns.toSet() }
+        val allKnownRoutePatterns: List<String> by lazy { betaRegisteredRoutePatterns + plannedRoutePatterns }
+        val allKnownRoutes: Set<String> by lazy { betaRegisteredRoutes + plannedRoutes }
     }
 }
 

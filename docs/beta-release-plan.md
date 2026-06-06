@@ -23,9 +23,9 @@ Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [#################...] 85%
 Real Proxmox smoke QA        [#############.......] 65%
-UX/copy release polish       [############........] 60%
-Release packaging            [##############......] 70%
-Official beta readiness      [###############.....] 73%
+UX/copy release polish       [#############.......] 65%
+Release packaging            [###############.....] 75%
+Official beta readiness      [###############.....] 75%
 ```
 
 ## Release Gates
@@ -66,7 +66,7 @@ The workflow runs the beta gate with:
 ./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
-The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, scans public docs/workflows/source for machine-specific details, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
+The gate verifies the beta tag format, confirms the tag matches the Gradle `versionName` with a leading `v`, runs `git diff --check`, scans tracked public docs/workflows/scripts and application source for machine-specific details, then runs `test`, `lint`, `assembleDebug`, and `assembleRelease`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
 
 Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag runs must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
 
@@ -77,7 +77,7 @@ Manual dry runs upload the produced release APK as a GitHub Actions artifact. Ta
 
 `ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
 
-Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. If a release already exists for the tag, the workflow refuses to upload unless it is still a draft prerelease. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
 
 GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the repository default branch. While the beta baseline is still only on the draft PR branch, the release workflow can be linted and reviewed, but the manual dry run cannot be triggered from GitHub until the workflow is merged or otherwise present on the default branch.
 
@@ -188,6 +188,8 @@ These route helpers exist but are not registered beta destinations and should no
 
 - Storage detail.
 - User detail.
+
+The source route registry and unit tests keep registered beta route patterns, planned route helpers, and duplicate route patterns explicit while the app moves toward broader navigation coverage.
 
 ## Development Work Remaining
 

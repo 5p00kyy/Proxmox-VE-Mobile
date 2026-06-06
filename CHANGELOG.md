@@ -25,6 +25,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Pull request template with QA, risk, and contributor checklists.
 - Beta APK release workflow for `v*-beta.*` tag pushes and manual dry runs.
 - Consolidated beta gate script for version matching, public hygiene checks, tests, lint, debug build, and release build.
+- Navigation route registry tests for registered beta destinations, planned detail helpers, and duplicate route patterns.
+- Beta-safe Settings About copy that avoids implying full administrative coverage.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
@@ -139,6 +141,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Settings version and build labels now use Gradle build metadata.
 - Beta release workflow now blocks tag/APK version metadata mismatches before packaging.
 - Signed beta release workflow artifacts no longer include the staged unsigned APK copy.
+- Signed beta release workflow refuses to mutate an existing release unless it is still a draft prerelease.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.
 - VM/LXC delete now has ViewModel-level stopped-state gating in addition to disabled UI controls.

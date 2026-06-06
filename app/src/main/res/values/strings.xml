@@ -502,13 +502,13 @@
     <string name="settings_about_dialog_title">About Proxmox VE Mobile</string>
     <string name="settings_about_version">Version: %1$s</string>
     <string name="settings_about_build">Build: %1$d</string>
-    <string name="settings_about_description">A modern Android client for managing Proxmox Virtual Environment servers.</string>
+    <string name="settings_about_description">A modern Android client for supported Proxmox Virtual Environment mobile workflows.</string>
     <string name="settings_about_features_header">Features:</string>
     <string name="settings_about_feature_auth">\u2022 Secure authentication with encrypted storage</string>
-    <string name="settings_about_feature_monitoring">\u2022 Real-time monitoring and management</string>
-    <string name="settings_about_feature_lxc_vm">\u2022 LXC container and VM management</string>
+    <string name="settings_about_feature_monitoring">\u2022 Monitoring and task follow-up</string>
+    <string name="settings_about_feature_lxc_vm">\u2022 LXC container and VM lifecycle actions</string>
     <string name="settings_about_feature_storage_network">\u2022 Storage and network monitoring</string>
-    <string name="settings_about_feature_user_task">\u2022 User and task management</string>
+    <string name="settings_about_feature_user_task">\u2022 Read-only user views and task tracking</string>
     <string name="settings_about_built_with_header">Built with:</string>
     <string name="settings_about_built_compose">\u2022 Jetpack Compose</string>
     <string name="settings_about_built_material">\u2022 Material Design 3</string>

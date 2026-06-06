@@ -34,6 +34,34 @@ class LocalizationConsistencyTest {
         }
     }
 
+    @Test
+    fun settingsAboutCopyDoesNotOverclaimBetaScope() {
+        val defaultStrings = readStrings("src/main/res/values/strings.xml")
+        val aboutKeys = listOf(
+            "settings_about_description",
+            "settings_about_feature_monitoring",
+            "settings_about_feature_lxc_vm",
+            "settings_about_feature_storage_network",
+            "settings_about_feature_user_task"
+        )
+        val overclaimingTerms = listOf(
+            "complete",
+            "full",
+            "managing",
+            "management"
+        )
+
+        aboutKeys.forEach { key ->
+            val value = defaultStrings.getValue(key).lowercase()
+            overclaimingTerms.forEach { term ->
+                assertTrue(
+                    "String '$key' overclaims beta scope with '$term': $value",
+                    !value.contains(term)
+                )
+            }
+        }
+    }
+
     private fun readStrings(path: String): Map<String, String> {
         val file = File(path)
         assertTrue("Missing string resource file: $path", file.exists())
