@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/5p00kyy/Proxmox-VE-Mobile/security
+    about: Please avoid public issues for vulnerabilities or credential-handling problems.
+  - name: Proxmox VE documentation
+    url: https://pve.proxmox.com/pve-docs/
+    about: Check official Proxmox documentation for server-side setup and API behavior.

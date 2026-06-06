@@ -1,0 +1,121 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The project follows the spirit of Keep a Changelog and will use Semantic Versioning once public releases are tagged.
+
+## [Unreleased]
+
+### Added
+
+- Project audit covering current feature state, QA results, risks, and feature parity direction.
+- Development cycle plan for product direction, refactor phases, QA workflow, community process, and staged delivery.
+- Android CI workflow for pull requests and pushes to `main`.
+- GitHub issue templates for bug reports and feature requests.
+- Pull request template with QA, risk, and contributor checklists.
+- Contributing and security policy documentation.
+- Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
+- CODEOWNERS file for default review ownership.
+- Centralized `ProxmoxApiFactory` for Retrofit/OkHttp creation, auth headers, logging, and TLS policy.
+- `ProxmoxApiServiceFactory` and `ProxmoxAuthenticationService` seams for session/auth unit testing.
+- `SessionManager` for password/API-token authentication state and API service creation.
+- API token login controls with encrypted token ID/secret storage.
+- Explicit SSL verification toggle for trusted self-signed lab servers.
+- Optional SHA-256 certificate fingerprint pinning for self-signed Proxmox servers.
+- VM repository and API seam for QEMU guest list and lifecycle actions.
+- VM list feature ViewModel for refresh, loading, error, action, and task notice state.
+- VM graceful shutdown lifecycle action with task notice handoff and list refresh.
+- VM reboot lifecycle action with task notice handoff and list refresh.
+- Unit tests for VM repository filtering, task ID mapping, and missing-session errors.
+- VM detail lookup through `VmRepository` + `VmDetailViewModel`, with preferred-node lookup and cached-node fallback.
+- Node-aware VM detail routes plus a visible Details action on VM cards.
+- LXC repository and API seam for container list and lifecycle actions.
+- LXC list feature ViewModel for refresh, loading, error, action, and task notice state.
+- LXC graceful shutdown lifecycle action with task notice handoff and list refresh.
+- LXC reboot lifecycle action with task notice handoff and list refresh.
+- Unit tests for LXC repository filtering, sorting, task ID mapping, and missing-session errors.
+- LXC detail lookup through `LxcRepository` + `LxcDetailViewModel`, with preferred-node lookup and cached-node fallback.
+- Node-aware LXC detail routes plus a visible Details action on container cards.
+- LXC snapshot loading through `LxcRepository` + `LxcDetailViewModel`, shown read-only on container detail.
+- VM snapshot loading through `VmRepository` + `VmDetailViewModel`, shown read-only on VM detail.
+- VM config loading through `VmRepository` + `VmDetailViewModel`, shown read-only on VM detail with sensitive values redacted.
+- Task repository and API seam for task history, task status, task logs, and running-task stop requests.
+- Task list/detail feature ViewModels for node selection, refresh, errors, task log loading, and stop state.
+- Network repository and feature ViewModel for node-scoped interface loading, refresh, retry, and cached-node selection.
+- Storage repository and feature ViewModel for node-scoped storage loading, read-only content browsing, refresh, retry, and error state.
+- User repository and feature ViewModel for access user loading, refresh, retry, and error state.
+- Backup repository and feature ViewModel for node-scoped backup storage discovery, storage filtering, refresh, retry, and partial-storage warnings.
+- Dashboard repository and feature ViewModel for node loading, cached node hydration, task activity summary, polling, and manual refresh.
+- Dashboard task activity indicator for running/recent task visibility across cached nodes.
+- Node repository, node detail ViewModel, and read-only node detail screen backed by `/nodes/{node}/status`.
+- Cluster repository, cluster status ViewModel, and read-only cluster screen backed by `/cluster/status`.
+- Node-aware node detail, node-filtered task routes, and node-scoped network routing.
+- `AuthSessionController` and `AuthSessionService` seams for authentication UI state and API service access.
+- `CredentialStore` seam plus neutral credential auth method constants for saved login data.
+- Task center filters for status, task type, and VMID, passed through to Proxmox task query parameters.
+- Unit tests for task repository filtering, UPID handling, task log ordering, stop requests, and missing-session errors.
+- Unit tests for network and storage repository filtering, sorting, storage-content filtering, blank-node validation, and missing-session errors.
+- Unit tests for network ViewModel node preselection and cached-node normalization.
+- Unit tests for user repository filtering, sorting, and missing-session errors.
+- Unit tests for backup repository storage discovery, backup filtering, partial storage failures, blank-node validation, and missing-session errors.
+- Unit tests for dashboard repository node filtering, task-summary handoff, task-summary error isolation, empty-node behavior, and missing-session errors.
+- Unit tests for node detail status loading, blank-node validation, invalid payload handling, and missing-session errors.
+- Unit tests for cluster status mapping, standalone-node handling, and missing-session errors.
+- Unit tests for VM snapshot filtering, sorting, validation errors, and missing-session errors.
+- Unit tests for LXC snapshot filtering, sorting, validation errors, and missing-session errors.
+- Unit tests for VM config sorting, sensitive-value redaction, validation errors, and missing-session errors.
+- Unit tests for VM/LXC shutdown and reboot action API value mapping.
+- Unit tests for `SessionManager` password sessions, API-token sessions, secret stripping, API service creation, validation failures, and logout.
+- Unit tests for auth session UI state success, failure cleanup, API-service access, and logout reset.
+- Unit tests for VM detail preferred-node lookup, cached-node fallback, not-found handling, missing-node validation, and missing-session errors.
+- Unit tests for LXC detail preferred-node lookup, cached-node fallback, not-found handling, missing-node validation, and missing-session errors.
+- Unit test coverage for TLS authentication failure messaging.
+- Unit test that keeps English, German, and Spanish string keys and format specifiers aligned.
+
+### Fixed
+
+- Lint-blocking dashboard indentation issue.
+- Global confirmation dialog rendering for destructive VM/LXC actions.
+- LXC action progress state during lifecycle/delete operations.
+- VM/LXC lifecycle cards now show progress for the specific action in flight instead of every action on the card.
+- VM/LXC shutdown, force stop, and reboot actions now use contextual confirmation dialogs before sending disruptive lifecycle requests.
+- VM/LXC cards now distinguish graceful shutdown from force stop.
+- `verifySsl` is now honored by the networking layer instead of being ignored.
+- VM list actions now surface returned Proxmox task IDs in snackbar/task context.
+- LXC list actions now surface returned Proxmox task IDs in snackbar/task context.
+- VM and LXC task notices now link directly to the task detail/log screen from the snackbar action and persistent task card.
+- VM and LXC cards now expose task history entry points that open the task center filtered by node and VMID.
+- VM detail no longer exists only as an unused route placeholder; it now loads QEMU status through the feature repository path.
+- Dashboard, VM list, and LXC list settings icons now navigate to the settings screen instead of using placeholder handlers.
+- Backup create/download/restore/delete controls are disabled and labeled as planned instead of appearing functional.
+- User create/edit/delete controls are disabled and labeled as planned instead of appearing functional.
+- Settings controls that are not wired to runtime behavior are disabled until implemented.
+- LXC detail resource, start/stop, and console placeholder controls are disabled until implemented.
+- LXC detail no longer scans cached nodes or calls Retrofit directly from the Composable.
+- Task operations now use the Proxmox UPID field instead of the display/resource ID.
+- The task screen now labels the task stop endpoint as stopping/aborting a running task instead of deleting history.
+- Dashboard node refresh logging no longer treats non-null API response lists as nullable.
+- Network retry now performs a real reload instead of only resetting local UI state.
+- Storage and network screens no longer call Retrofit directly from Composables.
+- Storage screen can browse storage content read-only and labels upload/download/delete/restore as planned.
+- User retry now performs a real reload instead of only resetting local UI state.
+- User management no longer calls Retrofit directly from Composables.
+- Backup retry now performs a real reload instead of only resetting local UI state.
+- Backup management no longer calls Retrofit directly from Composables.
+- Cluster screen now loads live read-only status instead of showing a coming-soon placeholder.
+- Dashboard node loading and task summary loading no longer call Retrofit directly from Composables.
+- Dashboard now has a manual refresh action in addition to periodic polling.
+- Dashboard node cards now open node detail instead of jumping directly to the VM list.
+- Unused direct VM/LXC/user/backup action helpers were removed from `MainViewModel`; active actions now live in feature repositories/ViewModels or remain disabled until implemented.
+- Dead LXC screen metrics collection code and its direct `ProxmoxApiService` dependency were removed.
+- `MainViewModel` now delegates authentication state/API-service access to `AuthSessionController` and saved credential persistence to `CredentialStore`.
+- TLS authentication failures now point users toward Android trusted CAs, SHA-256 fingerprint pinning, or debug-only insecure lab mode.
+
+### Security
+
+- Documented trust-all TLS and cleartext traffic as release blockers to address before public beta.
+- Default HTTPS connections now use platform TLS validation.
+- Self-signed servers can now use a pinned SHA-256 certificate fingerprint instead of disabling all SSL verification.
+- Insecure certificate acceptance is limited to explicit debug builds instead of being available in release builds.
+- HTTP body logging was replaced with basic request logging and auth header redaction.
+- Release builds no longer request app-wide cleartext traffic through the manifest.

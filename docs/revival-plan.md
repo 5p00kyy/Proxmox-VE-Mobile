@@ -9,7 +9,8 @@ From code inspection, the project already has:
 - authentication and saved credentials
 - dashboard and node status loading
 - VM and container listing with some lifecycle actions
-- screens for tasks, storage, network, users, backups, cluster status, and settings
+- task history/detail/log viewing
+- screens for storage, network, users, backups, cluster status, and settings
 - a Compose-first UI and a working Gradle Android project layout
 
 The app is past the idea stage. The main problem is not "start over". The main problem is that it stalled in the messy middle.
@@ -20,13 +21,13 @@ The app is past the idea stage. The main problem is not "start over". The main p
 There are many screens, but not all actions are fully wired. Right now the repo looks more complete than it actually is.
 
 ### 2. Architecture is under strain
-The app is heavily centered around a large `MainViewModel` and direct API calls. That was a fine way to get moving, but it will become a drag as more real features land.
+The app now delegates authentication UI state/API-service access through `AuthSessionController` and saved login data through `CredentialStore`, while cached-node and global dialog state still live in `MainViewModel`. Dashboard, node detail, VM list/detail/config/snapshot visibility, LXC list/detail/snapshot visibility, tasks, network, storage browsing, users, backups, and cluster status have repository-backed paths, and stale direct VM/LXC/user/backup action helpers plus the unused LXC screen metrics collector have been removed.
 
 ### 3. Security is not production-ready
-The current networking code accepts any TLS certificate and hostname, and the manifest allows cleartext HTTP. That is acceptable for homelab prototyping, not a serious release.
+The original networking code accepted any TLS certificate and hostname, and the manifest allowed cleartext HTTP. Cycle 1 moved the app to platform TLS by default, SHA-256 certificate fingerprint pinning for self-signed servers, imported CA guidance, debug-only insecure lab mode, and release builds without app-wide cleartext. Full trust-on-first-use still needs production-grade design.
 
 ### 4. No verification safety net
-There are no committed tests and no CI. That makes cleanup and feature work riskier than it needs to be.
+CI now runs build, lint, and tests, and the dashboard/VM/LXC/task/network/storage/user/backup/security seams have focused unit tests. There are still no instrumentation or screenshot tests, and most features still lack ViewModel or UI coverage. That makes deeper cleanup and feature work riskier than it needs to be.
 
 ### 5. Scope is too wide for current confidence
 The app already exposes many surfaces. Before adding more, the existing ones need to be verified and either hardened or cut back.
@@ -36,7 +37,7 @@ The app already exposes many surfaces. Before adding more, the existing ones nee
 ### Phase 1: Reality Pass
 Goal: turn assumptions into facts.
 
-Do this on the desktop with Android Studio and a real Proxmox instance available.
+Do this on a local development machine with Android Studio and a real Proxmox instance available.
 
 For each screen, mark it as one of:
 
@@ -50,9 +51,9 @@ Suggested verification checklist:
 1. Login with password auth
 2. Saved credentials and relaunch flow
 3. Dashboard data freshness
-4. VM list and start/stop/delete
-5. Container list and start/stop/delete
-6. Tasks screen refresh and task accuracy
+4. VM list and start/shutdown/force-stop/reboot/delete
+5. Container list and start/shutdown/force-stop/reboot/delete
+6. Tasks screen refresh, task accuracy, log detail, and running-task stop behavior
 7. Storage/network/users/backups/cluster/settings screens
 8. Error handling for unreachable host, bad credentials, and TLS issues
 
@@ -99,8 +100,8 @@ Goal: stop treating the app like a prototype.
 
 Priority items:
 
-1. Remove trust-all TLS and hostname verification
-2. Decide on certificate strategy for homelab use
+1. Prefer SHA-256 certificate fingerprint pinning for self-signed homelab servers
+2. Design trust-on-first-use only if it includes explicit confirmation and certificate-change warnings
 3. Revisit `usesCleartextTraffic`
 4. Review credential storage and session expiry behavior
 5. Add explicit operator messaging when the app is in insecure compatibility mode
@@ -167,7 +168,7 @@ I would start with option 1 and build it in a way that could later become option
 
 Use the two-seat workflow:
 
-- **Desktop:** Android Studio, emulator/device, logcat, UI inspection, real manual verification
-- **OpenClaw host:** refactors, docs, reviews, CI setup, code cleanup, smaller implementation slices
+- **Local development machine:** Android Studio, emulator/device, logcat, UI inspection, real manual verification
+- **Automation environment:** refactors, docs, reviews, CI setup, code cleanup, smaller implementation slices
 
 That split gives the project a real development loop without forcing all Android work into a headless container.

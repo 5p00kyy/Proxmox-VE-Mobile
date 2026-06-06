@@ -1,0 +1,60 @@
+name: Feature request
+description: Propose a new workflow, screen, or improvement.
+title: "[Feature]: "
+labels:
+  - type:feature
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: What Proxmox task are you trying to complete from mobile?
+      placeholder: I want to restore a backup from my phone after a failed update...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the mobile workflow you expect.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Authentication/session
+        - Dashboard/nodes
+        - VM management
+        - LXC management
+        - Tasks/logs
+        - Storage
+        - Backups/restore
+        - Users/permissions
+        - Network
+        - Cluster/admin
+        - UI/UX
+        - Localization
+        - Build/release
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: How do you handle this today in the Proxmox web UI, official mobile app, scripts, or other tools?
+  - type: input
+    id: pve_version
+    attributes:
+      label: Proxmox VE version or API endpoint, if known
+      placeholder: 8.2.7, /nodes/{node}/qemu/{vmid}/status/current, etc.
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I can test this against a real Proxmox environment.
+        - label: I can provide screenshots or payload examples with sensitive data removed.
+        - label: I may be able to help implement this.
