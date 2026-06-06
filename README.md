@@ -198,7 +198,7 @@ Before tagging, run the same summary as a hard completion check:
 ./scripts/beta-qa-status.sh --require-complete
 ```
 
-Public-safe Android Studio/emulator smoke tests live under `app/src/androidTest` and can be run with:
+Android Studio/emulator smoke tests live under [`app/src/androidTest`](app/src/androidTest/README.md) and can be run with:
 
 ```bash
 ./gradlew connectedDebugAndroidTest
