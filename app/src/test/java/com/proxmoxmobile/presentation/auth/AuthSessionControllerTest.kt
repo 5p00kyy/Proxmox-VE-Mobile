@@ -29,7 +29,7 @@ class AuthSessionControllerTest {
         assertEquals(serverConfig.copy(password = null), controller.currentServer.value)
         assertEquals("ticket-value", controller.authToken.value)
         assertEquals("csrf-value", controller.csrfToken.value)
-        assertEquals("✅ Authentication successful!", controller.errorMessage.value)
+        assertEquals("\u2705 Authentication successful!", controller.errorMessage.value)
         assertFalse(controller.isLoading.value)
         assertEquals(0, service.logoutCalls)
     }
@@ -47,7 +47,7 @@ class AuthSessionControllerTest {
         assertFalse(controller.isAuthenticated.value)
         assertNull(controller.authToken.value)
         assertNull(controller.csrfToken.value)
-        assertEquals("❌ Invalid credentials", controller.errorMessage.value)
+        assertEquals("\u274c Invalid credentials", controller.errorMessage.value)
         assertFalse(controller.isLoading.value)
         assertEquals(1, service.logoutCalls)
     }

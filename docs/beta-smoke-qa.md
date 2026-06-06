@@ -59,7 +59,7 @@ Source-level fixes:
 - App-level session state now uses the AndroidX ViewModel store instead of Compose-only `remember`, reducing rotation risk for the authenticated session, current server, and cached nodes.
 - Saved credential restore is initialized in an ordered Activity effect and skips rewriting the current server when the app session is already active.
 - Login form drafts use saveable state for non-secret fields so host, port, username, realm, TLS, fingerprint, save-credentials, and API-token ID survive rotation before submission. Passwords and API token secrets remain in in-memory state instead of Android saved-instance-state bundles.
-- Saved login prefill runs once per login composition so restored form drafts are not overwritten by saved credentials after rotation.
+- Saved login prefill runs once per login composition, keeps restored non-secret drafts from being overwritten, and reloads memory-only saved password/API-token secret values from encrypted storage only when the restored non-secret draft still matches the saved credential entry.
 - Task filter drafts for status, type, and VMID use saveable state so in-progress filter edits survive rotation before applying.
 
 Emulator smoke evidence:

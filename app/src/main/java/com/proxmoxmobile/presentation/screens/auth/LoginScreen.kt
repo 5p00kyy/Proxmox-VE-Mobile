@@ -22,6 +22,7 @@ import com.proxmoxmobile.R
 import com.proxmoxmobile.data.model.ServerConfig
 import com.proxmoxmobile.data.security.CertificateFingerprint
 import com.proxmoxmobile.data.security.CredentialAuthMethod
+import com.proxmoxmobile.data.security.SavedCredentials
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
@@ -44,7 +45,7 @@ fun LoginScreen(
     var useApiToken by rememberSaveable { mutableStateOf(false) }
     var apiTokenId by rememberSaveable { mutableStateOf("") }
     var apiTokenSecret by remember { mutableStateOf("") }
-    var hasLoadedSavedCredentials by rememberSaveable { mutableStateOf(false) }
+    var hasLoadedSavedCredentials by remember { mutableStateOf(false) }
     
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -52,25 +53,54 @@ fun LoginScreen(
     val allowInsecureTls = BuildConfig.DEBUG
     
     // Load saved credentials on first load
-    LaunchedEffect(hasLoadedSavedCredentials) {
+    LaunchedEffect(Unit) {
         if (hasLoadedSavedCredentials) {
             return@LaunchedEffect
         }
         hasLoadedSavedCredentials = true
         val savedCredentials = viewModel.loadSavedCredentials()
         if (savedCredentials != null) {
-            host = savedCredentials.host
-            port = savedCredentials.port.toString()
-            username = savedCredentials.username
-            password = savedCredentials.password
-            realm = savedCredentials.realm
-            useHttps = savedCredentials.useHttps
-            verifySsl = savedCredentials.verifySsl || !allowInsecureTls
-            certificateFingerprint = savedCredentials.certificateFingerprint
-            saveCredentials = true
-            useApiToken = savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN
-            apiTokenId = savedCredentials.apiTokenId
-            apiTokenSecret = savedCredentials.apiTokenSecret
+            val hasDraft = host.isNotBlank() ||
+                username.isNotBlank() ||
+                password.isNotBlank() ||
+                apiTokenId.isNotBlank() ||
+                apiTokenSecret.isNotBlank()
+
+            if (!hasDraft) {
+                host = savedCredentials.host
+                port = savedCredentials.port.toString()
+                username = savedCredentials.username
+                password = savedCredentials.password
+                realm = savedCredentials.realm
+                useHttps = savedCredentials.useHttps
+                verifySsl = savedCredentials.verifySsl || !allowInsecureTls
+                certificateFingerprint = savedCredentials.certificateFingerprint
+                saveCredentials = true
+                useApiToken = savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN
+                apiTokenId = savedCredentials.apiTokenId
+                apiTokenSecret = savedCredentials.apiTokenSecret
+            } else if (
+                saveCredentials &&
+                savedCredentialsMatchNonSecretLoginDraft(
+                    savedCredentials = savedCredentials,
+                    host = host,
+                    port = port,
+                    username = username,
+                    realm = realm,
+                    useHttps = useHttps,
+                    verifySsl = verifySsl,
+                    certificateFingerprint = certificateFingerprint,
+                    useApiToken = useApiToken,
+                    apiTokenId = apiTokenId,
+                    allowInsecureTls = allowInsecureTls
+                )
+            ) {
+                if (useApiToken && apiTokenSecret.isBlank()) {
+                    apiTokenSecret = savedCredentials.apiTokenSecret
+                } else if (!useApiToken && password.isBlank()) {
+                    password = savedCredentials.password
+                }
+            }
         }
     }
 
@@ -517,4 +547,48 @@ fun LoginScreen(
             )
         }
     }
+}
+
+internal fun savedCredentialsMatchNonSecretLoginDraft(
+    savedCredentials: SavedCredentials,
+    host: String,
+    port: String,
+    username: String,
+    realm: String,
+    useHttps: Boolean,
+    verifySsl: Boolean,
+    certificateFingerprint: String,
+    useApiToken: Boolean,
+    apiTokenId: String,
+    allowInsecureTls: Boolean
+): Boolean {
+    val expectedUseApiToken = savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN
+    val expectedVerifySsl = savedCredentials.verifySsl || !allowInsecureTls
+
+    return savedCredentials.host == host &&
+        savedCredentials.port == port.toIntOrNull() &&
+        savedCredentials.username == username &&
+        savedCredentials.realm == realm &&
+        savedCredentials.useHttps == useHttps &&
+        (!useHttps || verifySsl == expectedVerifySsl) &&
+        certificateFingerprintMatches(savedCredentials.certificateFingerprint, certificateFingerprint, useHttps) &&
+        useApiToken == expectedUseApiToken &&
+        (!expectedUseApiToken || savedCredentials.apiTokenId == apiTokenId)
+}
+
+private fun certificateFingerprintMatches(
+    savedFingerprint: String,
+    draftFingerprint: String,
+    useHttps: Boolean
+): Boolean {
+    if (!useHttps) {
+        return true
+    }
+    if (savedFingerprint.isBlank() && draftFingerprint.isBlank()) {
+        return true
+    }
+    val normalizedSavedFingerprint = CertificateFingerprint.normalize(savedFingerprint)
+    val normalizedDraftFingerprint = CertificateFingerprint.normalize(draftFingerprint)
+    return normalizedSavedFingerprint != null &&
+        normalizedSavedFingerprint == normalizedDraftFingerprint
 }
