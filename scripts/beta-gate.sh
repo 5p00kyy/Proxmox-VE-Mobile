@@ -45,3 +45,4 @@ case "${REQUIRE_BETA_QA_COMPLETE,,}" in
 esac
 
 ./gradlew test lint assembleDebug assembleRelease compileDebugAndroidTestKotlin $GRADLE_ARGS
+./gradlew compileQaReleaseAndroidTestKotlin -Pandroid.testBuildType=qaRelease $GRADLE_ARGS

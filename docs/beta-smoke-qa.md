@@ -104,9 +104,10 @@ Automated checks:
 
 ```bash
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
+scripts/qa-release-tls-smoke.sh
 ```
 
-Result: passed with 59 instrumentation tests after forced-safe TLS UI and constrained viewport smoke were added.
+Result: debug instrumentation passed with 59 executed tests plus one skipped `qaRelease`-only smoke after forced-safe TLS UI and constrained viewport coverage were added. Release-like `qaRelease` login TLS smoke passed as a focused one-test instrumentation run.
 
 Observed pass:
 
@@ -116,6 +117,7 @@ Observed pass:
 - A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
 - Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
 - Forced-safe login TLS instrumentation verifies HTTPS defaults on, certificate fingerprint input remains visible, SSL verification remains checked and disabled when insecure TLS is unavailable, the debug-only insecure warning is absent, invalid fingerprints block Connect, and valid fingerprints allow Connect with required credentials.
+- Release-like login instrumentation verifies that debug-only insecure TLS controls are not exposed when insecure TLS is unavailable: SSL verification remains checked and disabled, the insecure warning is absent, and fingerprint validation still gates form submission.
 - Activity recreation preserves unsaved task-filter type and VMID drafts before filters are applied.
 - Fake-authenticated post-login dashboard, node detail, VM list/detail, LXC list/detail, storage, node-scoped network, users, backups, cluster, settings, task list, node-scoped task list, resource-filtered task list, and task-detail routes render loaded fixture content after Activity recreation and Home/background-style resume transitions.
 - Fake-backed constrained viewport instrumentation renders compact portrait dashboard content and compact landscape VM/task detail route identity content without live Proxmox data.
@@ -140,6 +142,7 @@ Not counted as complete:
 
 - Manual forced landscape route evidence was not counted because the emulator returned to the launcher during the attempt; fake-backed constrained landscape instrumentation now covers representative VM and task detail routes only.
 - The instrumentation pass does not prove live API-token authentication, live TLS/fingerprint connection success, live task-log loading, process-death session restore, or disposable lifecycle task handoff.
+- The release-like TLS smoke uses a debuggable, debug-signed release-like APK; it does not prove final signed release artifact install behavior.
 - The lifecycle task-handoff recreation smoke proves config-change retention only; it does not prove process-death persistence.
 
 Still requires emulator/manual smoke:

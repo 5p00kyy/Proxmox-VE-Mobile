@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "com.proxmoxmobile"
     compileSdk = 34
+    testBuildType = providers.gradleProperty("android.testBuildType").orElse("debug").get()
 
     defaultConfig {
         applicationId = "com.proxmoxmobile"
@@ -33,6 +34,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        create("qaRelease") {
+            initWith(getByName("release"))
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release", "debug")
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "false")
         }
     }
     compileOptions {
@@ -94,4 +103,5 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.bundles.compose.test)
     debugImplementation(libs.bundles.compose.debug)
+    add("qaReleaseImplementation", libs.bundles.compose.debug)
 }
