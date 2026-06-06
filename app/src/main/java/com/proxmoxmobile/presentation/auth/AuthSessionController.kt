@@ -29,30 +29,33 @@ class AuthSessionController(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    suspend fun authenticate(serverConfig: ServerConfig) {
+    suspend fun authenticate(serverConfig: ServerConfig): Boolean {
         _isLoading.value = true
         _errorMessage.value = null
 
         try {
             val result = sessionManager.authenticate(serverConfig)
-            result.fold(
+            return result.fold(
                 onSuccess = { session ->
                     _authToken.value = session.authToken
                     _csrfToken.value = session.csrfToken
                     _currentServer.value = session.serverConfig
                     _isAuthenticated.value = true
                     _errorMessage.value = "✅ Authentication successful!"
+                    true
                 },
                 onFailure = { exception ->
                     clearSessionState()
                     _errorMessage.value = "❌ ${exception.message}"
                     sessionManager.logout()
+                    false
                 }
             )
         } catch (e: Exception) {
             clearSessionState()
             _errorMessage.value = "❌ Network error: ${e.message}"
             sessionManager.logout()
+            return false
         } finally {
             _isLoading.value = false
         }

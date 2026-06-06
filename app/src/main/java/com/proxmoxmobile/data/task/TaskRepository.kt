@@ -69,9 +69,10 @@ class TaskRepository(
             require(upid.isNotBlank()) { "Task UPID is required" }
 
             val status = api.getTaskStatus(nodeName, upid).data
+            require(status.isValidForTaskOperations()) { "Task status payload is invalid" }
             val logEntries = api.getTaskLog(nodeName, upid)
                 .data
-                .filter { it.text.isNotBlank() }
+                .filter { it.isValidLogEntry() }
                 .sortedBy { it.lineNumber }
 
             TaskDetail(
@@ -101,11 +102,19 @@ class TaskRepository(
     }
 
     private fun Task.isValidForTaskOperations(): Boolean {
-        return taskUpid() != null &&
-            node.isNotBlank() &&
-            type.isNotBlank() &&
-            status.isNotBlank() &&
-            starttime >= 0
+        return runCatching {
+            taskUpid() != null &&
+                node.isNotBlank() &&
+                type.isNotBlank() &&
+                status.isNotBlank() &&
+                starttime >= 0
+        }.getOrDefault(false)
+    }
+
+    private fun TaskLogEntry.isValidLogEntry(): Boolean {
+        return runCatching {
+            lineNumber >= 0 && text.isNotBlank()
+        }.getOrDefault(false)
     }
 
     private fun Exception.toTaskErrorMessage(): String {
@@ -239,8 +248,7 @@ data class TaskFilters(
 enum class TaskStatusFilter(val apiValue: String?) {
     All(null),
     Running("running"),
-    Finished("finished"),
-    Stopped("stopped")
+    Finished("stopped")
 }
 
 fun Task.taskUpid(): String? {

@@ -34,17 +34,19 @@ class NodeRepository(
     }
 
     private fun NodeStatus.isValid(): Boolean {
-        return status.isNotBlank() &&
-            cpu >= 0 &&
-            maxcpu >= 0 &&
-            mem >= 0 &&
-            maxmem >= 0 &&
-            uptime >= 0 &&
-            loadavg.all { it >= 0 } &&
-            rootfs.total >= 0 &&
-            rootfs.used >= 0 &&
-            swap.total >= 0 &&
-            swap.used >= 0
+        return runCatching {
+            status.isNotBlank() &&
+                cpu >= 0 &&
+                maxcpu >= 0 &&
+                mem >= 0 &&
+                maxmem >= 0 &&
+                uptime >= 0 &&
+                loadavg.all { it >= 0 } &&
+                rootfs.total >= 0 &&
+                rootfs.used >= 0 &&
+                swap.total >= 0 &&
+                swap.used >= 0
+        }.getOrDefault(false)
     }
 
     private fun Exception.toNodeErrorMessage(): String {

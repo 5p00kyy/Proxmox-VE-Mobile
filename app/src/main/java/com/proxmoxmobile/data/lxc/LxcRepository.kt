@@ -118,18 +118,22 @@ class LxcRepository(
     }
 
     private fun Container.isValid(): Boolean {
-        return vmid > 0 &&
-            name.isNotBlank() &&
-            status.isNotBlank() &&
-            cpu >= 0 &&
-            mem >= 0 &&
-            maxmem >= 0 &&
-            uptime >= 0
+        return runCatching {
+            vmid > 0 &&
+                name.isNotBlank() &&
+                status.isNotBlank() &&
+                cpu >= 0 &&
+                mem >= 0 &&
+                maxmem >= 0 &&
+                uptime >= 0
+        }.getOrDefault(false)
     }
 
     private fun LxcSnapshot.isValid(): Boolean {
-        return name.isNotBlank() &&
-            (snaptime == null || snaptime >= 0)
+        return runCatching {
+            name.isNotBlank() &&
+                (snaptime == null || snaptime >= 0)
+        }.getOrDefault(false)
     }
 
     private fun Exception.toLxcErrorMessage(): String {

@@ -2,7 +2,28 @@
 
 `Proxmox VE Mobile` is an Android client for browsing and operating a Proxmox VE environment from a phone or tablet.
 
-The current codebase is a single-module Kotlin/Jetpack Compose app that is moving from screen-owned Retrofit calls toward repository-backed feature slices. It includes login, a dashboard, and management screens for nodes, VMs, containers, storage, network, users, tasks, backups, cluster status, and settings. Some of those surfaces are functional, some are read-only, and several contain unfinished actions or placeholder UI. This README describes the repository as it exists today rather than the intended end state.
+The current beta line is focused on common mobile operator workflows: login, secure connection handling, dashboard visibility, node navigation, VM/LXC lifecycle actions, task follow-up, and read-only infrastructure inspection. It is a single-module Kotlin/Jetpack Compose app that is moving from screen-owned Retrofit calls toward repository-backed feature slices. This README describes the repository as it exists today rather than the intended end state.
+
+## Beta Release
+
+The planned first official beta is `v0.1.0-beta.1`.
+
+Distribution plan:
+
+- GitHub Releases will be the first beta download path.
+- The beta APK will be attached to the release once automated gates and real Proxmox smoke QA pass.
+- Play Store and F-Droid packaging are deferred until after the first GitHub beta.
+
+Supported environment targets for the first beta:
+
+- Android API 24 or newer.
+- Proxmox VE 8.x is the primary smoke-test target.
+- Standalone nodes and small clusters are in scope.
+- Proxmox Backup Server management is not in scope for the first beta.
+
+## Screenshots
+
+Screenshots and short screen recordings should be added before tagging `v0.1.0-beta.1`. At minimum, capture login/TLS, dashboard, VM list/detail, LXC list/detail, task detail/logs, and one read-only admin slice.
 
 ## Localization
 
@@ -42,6 +63,20 @@ What is clearly incomplete or only partially implemented:
 - Unfinished backup, user, settings, and LXC-detail controls are disabled or marked as planned rather than presented as working.
 - The explicit insecure TLS fallback is debug-only; SHA-256 certificate fingerprint pinning is available for self-signed servers and should be preferred.
 - Unit test coverage exists for session/auth, dashboard, node, VM, LXC, task, network, storage, user, backup, security, and localization seams, but broader unit, instrumentation, and screenshot test coverage is still missing.
+
+## Known Limitations
+
+These limitations are expected for `v0.1.0-beta.1` and should be reflected in release notes:
+
+- Guest console access is not implemented.
+- VM and LXC configuration editing is not implemented.
+- Snapshot create, delete, and rollback are not implemented.
+- Backup create, restore, download, and delete are not implemented.
+- User create, edit, and delete flows are not implemented.
+- Node reboot, shutdown, shell, and advanced service actions are not implemented.
+- Storage, network, user, backup, and cluster areas are primarily read-only.
+- TFA-specific password login handling is not complete; API token login is the preferred beta workaround where appropriate.
+- Real Proxmox smoke QA is required before the beta is tagged.
 
 ## Tech Stack
 
@@ -118,6 +153,7 @@ The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with J
 ## Project Workflow
 
 - Roadmap and recovery plan: [`docs/development-cycle-2026.md`](docs/development-cycle-2026.md)
+- Beta release plan: [`docs/beta-release-plan.md`](docs/beta-release-plan.md)
 - Current audit and feature status: [`docs/project-audit-2026-06-06.md`](docs/project-audit-2026-06-06.md)
 - Contributor guide: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - Security policy: [`SECURITY.md`](SECURITY.md)
@@ -134,6 +170,13 @@ Pull requests are expected to run `./gradlew test`, `./gradlew lint`, and `./gra
 - Release builds no longer request app-wide cleartext traffic. Debug builds still allow HTTP for local testing.
 - See [`SECURITY.md`](SECURITY.md) for the recommended `openssl` command and trust-on-first-use policy notes.
 
+## Privacy Notes
+
+- The app does not include telemetry or analytics.
+- Saved host details, usernames, passwords, API token IDs, and API token secrets are stored locally through encrypted shared preferences when credential saving is enabled.
+- The app does not intentionally send credentials anywhere except the configured Proxmox VE endpoint.
+- Bug reports should remove passwords, API tokens, tickets, cookies, CSRF tokens, private keys, public IP details that should not be shared, and sensitive hostnames.
+
 ## Known Gaps
 
 - Automated test coverage is narrow and currently focused on session/auth, dashboard, node, VM, LXC, task, network, storage, user, backup, security, and localization seams.
@@ -145,8 +188,8 @@ Pull requests are expected to run `./gradlew test`, `./gradlew lint`, and `./gra
 
 1. Verify the app on a real Android SDK/emulator and record which screens/actions actually succeed against a Proxmox instance.
 2. Validate the self-signed certificate guidance against real Proxmox appliances and reverse proxies.
-3. Expand unit tests around authentication, model parsing, and view-model behavior.
-4. Decide which unfinished screens are in scope, then either complete them or reduce the navigation surface.
-5. Continue moving detail screens and remaining app-level actions into repositories and feature ViewModels.
+3. Execute the `v0.1.0-beta.1` smoke matrix and fix only beta blockers before tagging.
+4. Promote the changelog from `Unreleased` to `v0.1.0-beta.1` once QA evidence is collected.
+5. Continue moving deferred parity work into focused post-beta release trains.
 
-For a concrete staged roadmap, see [`docs/revival-plan.md`](docs/revival-plan.md). For the broader product, refactor, QA, workflow, and community development cycle, see [`docs/development-cycle-2026.md`](docs/development-cycle-2026.md).
+For a concrete staged roadmap, see [`docs/revival-plan.md`](docs/revival-plan.md). For the broader product, refactor, QA, workflow, and community development cycle, see [`docs/development-cycle-2026.md`](docs/development-cycle-2026.md). For the first official beta checklist, see [`docs/beta-release-plan.md`](docs/beta-release-plan.md).

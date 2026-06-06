@@ -133,13 +133,13 @@ fun NodeDetailScreen(
                     .padding(paddingValues)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 onOpenVms = {
-                    navController.navigate("${Screen.VMList.route}/${uiState.nodeName}")
+                    navController.navigate(Screen.VMList.createRoute(uiState.nodeName))
                 },
                 onOpenContainers = {
-                    navController.navigate("${Screen.ContainerList.route}/${uiState.nodeName}")
+                    navController.navigate(Screen.ContainerList.createRoute(uiState.nodeName))
                 },
                 onOpenStorage = {
-                    navController.navigate("${Screen.Storage.route}/${uiState.nodeName}")
+                    navController.navigate(Screen.Storage.createRoute(uiState.nodeName))
                 },
                 onOpenNetwork = {
                     navController.navigate(Screen.NodeNetwork.createRoute(uiState.nodeName))

@@ -6,9 +6,21 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object ServerList : Screen("server_list")
     object Dashboard : Screen("dashboard")
-    object VMList : Screen("vm_list")
-    object ContainerList : Screen("container_list")
-    object Storage : Screen("storage")
+    object VMList : Screen("vm_list") {
+        fun createRoute(nodeName: String): String {
+            return "vm_list/${Uri.encode(nodeName)}"
+        }
+    }
+    object ContainerList : Screen("container_list") {
+        fun createRoute(nodeName: String): String {
+            return "container_list/${Uri.encode(nodeName)}"
+        }
+    }
+    object Storage : Screen("storage") {
+        fun createRoute(nodeName: String): String {
+            return "storage/${Uri.encode(nodeName)}"
+        }
+    }
     object Network : Screen("network")
     object NodeNetwork : Screen("network/{node}") {
         fun createRoute(node: String): String {

@@ -4,11 +4,12 @@ Proxmox VE Mobile manages infrastructure resources, credentials, API tokens, and
 
 ## Supported Versions
 
-The project has not reached a stable public release yet. Until a beta or stable release is tagged, security fixes target the `main` branch.
+The project has not reached a stable public release yet. During beta, security fixes target active beta tags and the `main` branch.
 
 | Version | Supported |
 | --- | --- |
 | `main` | Yes |
+| `v0.1.0-beta.x` | Yes |
 | Tagged releases before beta | No |
 
 ## Reporting A Vulnerability
@@ -38,17 +39,17 @@ Reports should include:
 - Minimal reproduction steps.
 - Impact and suggested fix, if known.
 
-## Current Known Security Gaps
+## Beta Security Posture
 
-The current prototype has known security gaps and follow-up work:
+The current beta line has known limitations and follow-up work:
 
 - SHA-256 certificate fingerprint pinning is available for trusted self-signed Proxmox servers and should be preferred over disabling verification.
 - The insecure TLS fallback is restricted to debug builds as an explicit opt-in for trusted lab servers. Release builds require platform TLS validation or a configured SHA-256 certificate fingerprint.
-- Debug builds still allow cleartext for local testing. Release builds no longer request app-wide cleartext traffic, but the product policy for HTTP should be tightened before beta.
+- Debug builds still allow cleartext for local testing. Release builds no longer request app-wide cleartext traffic.
 - API token login is available, but token permissions and onboarding guidance still need documentation.
 - Logging now redacts auth headers and avoids body logs, but formal redaction tests are still missing.
 
-These are documented so they can be fixed before public beta. Please do not treat the current debug build as production-ready.
+Please do not treat debug builds as production-ready. Report any release-build path that bypasses platform TLS validation or SHA-256 fingerprint pinning as a security issue.
 
 ## TLS For Self-Signed Proxmox Servers
 

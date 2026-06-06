@@ -45,7 +45,7 @@ body:
     id: app_version
     attributes:
       label: App version or commit
-      placeholder: 0.2.0, debug build, or commit SHA
+      placeholder: v0.1.0-beta.1, debug build, or commit SHA
     validations:
       required: true
   - type: input

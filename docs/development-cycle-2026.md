@@ -179,7 +179,7 @@ Deliverables:
 - Default TLS validation uses platform trust.
 - Self-signed support is explicit: certificate pin/trust-on-first-use/imported CA or a clearly labeled insecure development mode.
 - Cleartext HTTP is disabled for release unless there is a deliberate debug-only exception.
-- API token login is implemented and preferred for saved sessions.
+- API token login is implemented and preferred for saved credentials.
 - TFA flow is modeled instead of treated as a generic login failure.
 - Production logging redacts auth headers, cookies, tickets, tokens, and request bodies containing secrets.
 
@@ -505,8 +505,8 @@ Each PR should state:
 
 Use a simple release path:
 
-- `0.1.x`: repository recovery, CI, security foundation.
-- `0.2.x`: core login/dashboard/VM/LXC/task beta.
+- `0.1.x`: first beta line covering repository recovery, CI, security foundation, core login/dashboard/VM/LXC/task operations, and read-only infrastructure slices.
+- `0.2.x`: beta stabilization and daily operator workflow expansion.
 - `0.3.x`: daily operations beta: snapshots, backups, storage, migration.
 - `0.4.x`: admin workflows.
 - `1.0.0`: stable operator app with secure defaults, documented support matrix, and no misleading placeholder surface.
@@ -591,7 +591,7 @@ Use Semantic Versioning for public releases and a Keep a Changelog style `CHANGE
 - Add task tracking to both.
 - Test partial permission and failure states.
 
-### Week 11: Community Beta
+### Week 11: Beta Polish
 
 - Prepare GitHub release notes.
 - Add screenshots, roadmap, and support matrix to README.
@@ -600,7 +600,7 @@ Use Semantic Versioning for public releases and a Keep a Changelog style `CHANGE
 
 ### Week 12: Beta Release And Feedback Loop
 
-- Release `0.2.0` or next appropriate beta tag.
+- Release `v0.1.0-beta.1` or the next appropriate beta tag.
 - Open a feedback discussion or tracking issue.
 - Convert feedback into labeled issues.
 - Pick the next development wave based on real usage, not speculation.

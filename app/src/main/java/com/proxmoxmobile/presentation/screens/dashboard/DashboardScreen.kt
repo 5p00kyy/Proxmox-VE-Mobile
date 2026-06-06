@@ -311,10 +311,7 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.ContainerList.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.ContainerList.route)
+                                navController.navigate(Screen.ContainerList.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to LXC", e)
@@ -330,10 +327,7 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.VMList.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.VMList.route)
+                                navController.navigate(Screen.VMList.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to VM", e)
@@ -356,10 +350,7 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.Storage.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.Storage.route)
+                                navController.navigate(Screen.Storage.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to Storage", e)

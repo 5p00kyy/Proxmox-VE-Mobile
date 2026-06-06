@@ -93,10 +93,12 @@ class MainViewModel(
         return credentialStore?.hasSavedCredentials() ?: false
     }
 
-    fun authenticate(serverConfig: ServerConfig) {
+    fun authenticate(serverConfig: ServerConfig, onSuccess: (() -> Unit)? = null) {
         Log.d(TAG, "Starting authentication process")
         viewModelScope.launch {
-            authSessionController.authenticate(serverConfig)
+            if (authSessionController.authenticate(serverConfig)) {
+                onSuccess?.invoke()
+            }
         }
     }
 

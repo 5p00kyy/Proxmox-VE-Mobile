@@ -459,22 +459,22 @@ fun LoginScreen(
                                     certificateFingerprint = if (useHttps) normalizedCertificateFingerprint else null
                                 )
                                 
-                                if (saveCredentials) {
-                                    viewModel.saveCredentials(
-                                        serverConfig = serverConfig,
-                                        password = if (useApiToken) null else password,
-                                        saveCredentials = true,
-                                        authMethod = if (useApiToken) {
-                                            CredentialAuthMethod.API_TOKEN
-                                        } else {
-                                            CredentialAuthMethod.PASSWORD
-                                        },
-                                        apiTokenId = if (useApiToken) apiTokenId else null,
-                                        apiTokenSecret = if (useApiToken) apiTokenSecret else null
-                                    )
+                                viewModel.authenticate(serverConfig) {
+                                    if (saveCredentials) {
+                                        viewModel.saveCredentials(
+                                            serverConfig = serverConfig,
+                                            password = if (useApiToken) null else password,
+                                            saveCredentials = true,
+                                            authMethod = if (useApiToken) {
+                                                CredentialAuthMethod.API_TOKEN
+                                            } else {
+                                                CredentialAuthMethod.PASSWORD
+                                            },
+                                            apiTokenId = if (useApiToken) apiTokenId else null,
+                                            apiTokenSecret = if (useApiToken) apiTokenSecret else null
+                                        )
+                                    }
                                 }
-                                
-                                viewModel.authenticate(serverConfig)
                             }
                         },
                         modifier = Modifier

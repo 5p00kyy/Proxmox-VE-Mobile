@@ -6,10 +6,19 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 
 ## [Unreleased]
 
+### Beta Release Candidate
+
+- `v0.1.0-beta.1` is the planned first official beta tag.
+- This beta is intended for public testing of login, TLS handling, dashboard, node navigation, VM/LXC lifecycle actions, task follow-up, and read-only infrastructure slices.
+- Known limitations for the beta include no guest console, no VM/LXC configuration editing, no snapshot mutation, no backup create/restore/download/delete, no user mutation flows, no node power actions, and no Proxmox Backup Server management.
+- Beta APK distribution is planned through GitHub Releases first. Play Store and F-Droid packaging are deferred.
+- Real Proxmox smoke QA is still required before tagging.
+
 ### Added
 
 - Project audit covering current feature state, QA results, risks, and feature parity direction.
 - Development cycle plan for product direction, refactor phases, QA workflow, community process, and staged delivery.
+- Beta release plan for `v0.1.0-beta.1` scope, gates, smoke QA, packaging, and timeline.
 - Android CI workflow for pull requests and pushes to `main`.
 - GitHub issue templates for bug reports and feature requests.
 - Pull request template with QA, risk, and contributor checklists.
@@ -113,7 +122,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 
 ### Security
 
-- Documented trust-all TLS and cleartext traffic as release blockers to address before public beta.
+- Documented trust-all TLS and cleartext traffic as beta release blockers.
 - Default HTTPS connections now use platform TLS validation.
 - Self-signed servers can now use a pinned SHA-256 certificate fingerprint instead of disabling all SSL verification.
 - Insecure certificate acceptance is limited to explicit debug builds instead of being available in release builds.

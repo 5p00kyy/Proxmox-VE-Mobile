@@ -46,12 +46,14 @@ class DashboardRepository(
     }
 
     private fun Node.isValid(): Boolean {
-        return node.isNotBlank() &&
-            status.isNotBlank() &&
-            cpu >= 0 &&
-            mem >= 0 &&
-            maxmem >= 0 &&
-            uptime >= 0
+        return runCatching {
+            node.isNotBlank() &&
+                status.isNotBlank() &&
+                cpu >= 0 &&
+                mem >= 0 &&
+                maxmem >= 0 &&
+                uptime >= 0
+        }.getOrDefault(false)
     }
 
     private fun Exception.toDashboardErrorMessage(): String {

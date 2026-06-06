@@ -16,6 +16,14 @@ Commands run:
 - [ ] Manual app test
 - [ ] Not run, reason:
 
+Beta release checks:
+
+- [ ] Version name/code reviewed for release.
+- [ ] Known limitations updated.
+- [ ] Changelog/release notes updated.
+- [ ] Screenshots or release media updated, or intentionally deferred.
+- [ ] Beta smoke matrix updated when release behavior changes.
+
 Test environment:
 
 - Android/device:

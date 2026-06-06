@@ -81,6 +81,20 @@ class TaskRepositoryTest {
     }
 
     @Test
+    fun getTasks_mapsFinishedFilterToStoppedApiStatus() = runBlocking {
+        val api = FakeTaskApi()
+        val repository = TaskRepository(api)
+
+        val result = repository.getTasks(
+            nodeName = "pve",
+            filters = TaskFilters(status = TaskStatusFilter.Finished)
+        )
+
+        assertTrue(result is TaskResult.Success)
+        assertEquals("stopped", api.requests.single().statusFilter)
+    }
+
+    @Test
     fun getTaskSummary_aggregatesAcrossDistinctNodes() = runBlocking {
         val api = FakeTaskApi(
             tasksByNode = mapOf(

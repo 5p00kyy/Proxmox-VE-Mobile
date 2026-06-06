@@ -925,8 +925,13 @@ private fun TaskDetailRow(
 @Composable
 private fun TaskStatisticsCard(tasks: List<Task>) {
     val runningTasks = tasks.count { it.status.equals("running", ignoreCase = true) }
-    val finishedTasks = tasks.count { it.status.equals("finished", ignoreCase = true) }
-    val stoppedTasks = tasks.count { it.status.equals("stopped", ignoreCase = true) }
+    val finishedTasks = tasks.count { task ->
+        task.status.equals("finished", ignoreCase = true) ||
+            (task.status.equals("stopped", ignoreCase = true) && task.exitstatus.equals("OK", ignoreCase = true))
+    }
+    val stoppedTasks = tasks.count { task ->
+        task.status.equals("stopped", ignoreCase = true) && !task.exitstatus.equals("OK", ignoreCase = true)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1159,7 +1164,6 @@ private fun TaskStatusFilter.toDisplayLabel(): String {
         TaskStatusFilter.All -> stringResource(R.string.task_filter_status_all)
         TaskStatusFilter.Running -> stringResource(R.string.task_filter_status_running)
         TaskStatusFilter.Finished -> stringResource(R.string.task_filter_status_finished)
-        TaskStatusFilter.Stopped -> stringResource(R.string.task_filter_status_stopped)
     }
 }
 

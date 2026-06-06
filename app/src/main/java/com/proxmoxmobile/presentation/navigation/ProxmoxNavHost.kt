@@ -59,7 +59,7 @@ fun ProxmoxNavHost(
         }
         
         composable("${Screen.ContainerList.route}/{nodeName}") { backStackEntry ->
-            val nodeName = backStackEntry.arguments?.getString("nodeName")
+            val nodeName = backStackEntry.arguments?.getString("nodeName")?.let(Uri::decode)
             ContainerListScreen(
                 navController = navController,
                 viewModel = viewModel,
@@ -68,7 +68,7 @@ fun ProxmoxNavHost(
         }
         
         composable("${Screen.VMList.route}/{nodeName}") { backStackEntry ->
-            val nodeName = backStackEntry.arguments?.getString("nodeName")
+            val nodeName = backStackEntry.arguments?.getString("nodeName")?.let(Uri::decode)
             VMListScreen(
                 navController = navController,
                 viewModel = viewModel,
@@ -77,7 +77,7 @@ fun ProxmoxNavHost(
         }
         
         composable("${Screen.Storage.route}/{nodeName}") { backStackEntry ->
-            val nodeName = backStackEntry.arguments?.getString("nodeName")
+            val nodeName = backStackEntry.arguments?.getString("nodeName")?.let(Uri::decode)
             StorageScreen(
                 navController = navController,
                 viewModel = viewModel,
