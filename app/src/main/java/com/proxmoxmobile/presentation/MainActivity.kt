@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
                     if (savedCredentials == null) {
                         return@LaunchedEffect
                     }
-                    val verifySsl = savedCredentials.verifySsl || !BuildConfig.DEBUG
+                    val verifySsl = savedCredentials.verifySsl || !BuildConfig.ALLOW_INSECURE_TLS
                     val serverConfig = ServerConfig(
                         host = savedCredentials.host,
                         port = savedCredentials.port,

@@ -37,6 +37,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Reusable beta QA status script for summarizing pending, passed, failed, and blocked smoke evidence.
 - Optional strict beta gate mode for requiring completed smoke QA evidence during final pre-tag dry runs.
 - Compose instrumentation smoke for login rendering, local API-token mode controls, SHA-256 fingerprint validation, and Activity recreation of non-secret login draft state.
+- Compose instrumentation smoke for forced-safe login TLS controls when insecure TLS is unavailable, backed by explicit `ALLOW_INSECURE_TLS` build configuration.
 - Compose instrumentation smoke for task-filter draft persistence across Activity recreation before filters are applied.
 - Compose instrumentation smoke seam for fake authenticated route hosting across Settings, server list, dashboard, tasks, task detail, storage, network, users, backups, and cluster entry points.
 - Compose instrumentation smoke for fake-backed node, VM, and LXC detail routes through the real navigation host.
@@ -47,6 +48,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Compose instrumentation smoke for post-login node-scoped task route state across Activity recreation.
 - Compose instrumentation smoke for post-login resource-filtered task, task detail, node-scoped network, and storage route state across Activity recreation.
 - Compose instrumentation smoke for fake-backed post-login dashboard, node detail, VM list/detail, LXC list/detail, storage, network, users, backups, cluster, settings, task-list, and task-detail routes across Activity recreation and background/resume transitions.
+- Compose instrumentation smoke for compact portrait dashboard and compact landscape VM/task detail routes using public-safe fake navigation data.
 - Shared public-safe navigation smoke fixtures for detail and lifecycle route tests so future fake-backed route coverage does not duplicate host, user, task, node, or guest data.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff from lifecycle action to task-detail route.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff card persistence across Activity recreation.

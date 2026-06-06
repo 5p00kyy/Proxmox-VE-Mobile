@@ -28,11 +28,20 @@ import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
 
+const val LOGIN_API_TOKEN_SWITCH_TAG = "login_api_token_switch"
+const val LOGIN_CERTIFICATE_FINGERPRINT_TAG = "login_certificate_fingerprint_field"
+const val LOGIN_CERTIFICATE_FINGERPRINT_SUPPORTING_TEXT_TAG = "login_certificate_fingerprint_supporting_text"
+const val LOGIN_CONNECT_BUTTON_TAG = "login_connect_button"
+const val LOGIN_HTTPS_SWITCH_TAG = "login_use_https_switch"
+const val LOGIN_VERIFY_SSL_SWITCH_TAG = "login_verify_ssl_switch"
+const val LOGIN_VERIFY_SSL_WARNING_TAG = "login_verify_ssl_warning"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     viewModel: MainViewModel,
-    onNavigateToDashboard: () -> Unit
+    onNavigateToDashboard: () -> Unit,
+    allowInsecureTls: Boolean = BuildConfig.ALLOW_INSECURE_TLS
 ) {
     var host by rememberSaveable { mutableStateOf("") }
     var port by rememberSaveable { mutableStateOf("8006") }
@@ -51,8 +60,6 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
-    val allowInsecureTls = BuildConfig.DEBUG
-    
     // Load saved credentials on first load
     LaunchedEffect(Unit) {
         if (hasLoadedSavedCredentials) {
@@ -287,7 +294,8 @@ fun LoginScreen(
                         Switch(
                             checked = useHttps,
                             onCheckedChange = { useHttps = it },
-                            enabled = !isLoading
+                            enabled = !isLoading,
+                            modifier = Modifier.testTag(LOGIN_HTTPS_SWITCH_TAG)
                         )
                     }
 
@@ -297,7 +305,9 @@ fun LoginScreen(
                             value = certificateFingerprint,
                             onValueChange = { certificateFingerprint = it },
                             label = { Text(stringResource(R.string.login_certificate_fingerprint)) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag(LOGIN_CERTIFICATE_FINGERPRINT_TAG),
                             enabled = !isLoading,
                             singleLine = true,
                             isError = hasInvalidCertificateFingerprint,
@@ -307,7 +317,8 @@ fun LoginScreen(
                                         stringResource(R.string.login_certificate_fingerprint_invalid)
                                     } else {
                                         stringResource(R.string.login_certificate_fingerprint_help)
-                                    }
+                                    },
+                                    modifier = Modifier.testTag(LOGIN_CERTIFICATE_FINGERPRINT_SUPPORTING_TEXT_TAG)
                                 )
                             },
                             keyboardOptions = KeyboardOptions(
@@ -341,14 +352,16 @@ fun LoginScreen(
                                     Text(
                                         text = stringResource(R.string.login_verify_ssl_warning),
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.error
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.testTag(LOGIN_VERIFY_SSL_WARNING_TAG)
                                     )
                                 }
                             }
                             Switch(
                                 checked = displayedVerifySsl,
                                 onCheckedChange = { verifySsl = it },
-                                enabled = !isLoading && allowInsecureTls
+                                enabled = !isLoading && allowInsecureTls,
+                                modifier = Modifier.testTag(LOGIN_VERIFY_SSL_SWITCH_TAG)
                             )
                         }
                     }
@@ -375,7 +388,7 @@ fun LoginScreen(
                             checked = useApiToken,
                             onCheckedChange = { useApiToken = it },
                             enabled = !isLoading,
-                            modifier = Modifier.testTag("login_api_token_switch")
+                            modifier = Modifier.testTag(LOGIN_API_TOKEN_SWITCH_TAG)
                         )
                     }
 
@@ -520,7 +533,8 @@ fun LoginScreen(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(48.dp),
+                            .height(48.dp)
+                            .testTag(LOGIN_CONNECT_BUTTON_TAG),
                         enabled = canSubmit && !isLoading
                     ) {
                         if (isLoading) {

@@ -23,10 +23,12 @@ android {
     buildTypes {
         debug {
             manifestPlaceholders["usesCleartextTraffic"] = "true"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "true")
         }
         release {
             isMinifyEnabled = false
             manifestPlaceholders["usesCleartextTraffic"] = "false"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

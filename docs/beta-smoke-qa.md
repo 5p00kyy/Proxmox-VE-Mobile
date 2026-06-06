@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 55 instrumentation tests after fake-backed post-login route lifecycle matrix smoke was added.
+Result: passed with 59 instrumentation tests after forced-safe TLS UI and constrained viewport smoke were added.
 
 Observed pass:
 
@@ -115,8 +115,10 @@ Observed pass:
 - An invalid SHA-256 fingerprint shows validation copy and keeps the connect action disabled.
 - A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
 - Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
+- Forced-safe login TLS instrumentation verifies HTTPS defaults on, certificate fingerprint input remains visible, SSL verification remains checked and disabled when insecure TLS is unavailable, the debug-only insecure warning is absent, invalid fingerprints block Connect, and valid fingerprints allow Connect with required credentials.
 - Activity recreation preserves unsaved task-filter type and VMID drafts before filters are applied.
 - Fake-authenticated post-login dashboard, node detail, VM list/detail, LXC list/detail, storage, node-scoped network, users, backups, cluster, settings, task list, node-scoped task list, resource-filtered task list, and task-detail routes render loaded fixture content after Activity recreation and Home/background-style resume transitions.
+- Fake-backed constrained viewport instrumentation renders compact portrait dashboard content and compact landscape VM/task detail route identity content without live Proxmox data.
 - Activity recreation reloads synthetic task-detail status and log content from a fake repository after restoring the encoded task route.
 - Fake authenticated instrumentation can render Settings, server list, dashboard, tasks, node-scoped tasks, resource-filtered tasks, task detail, network, node-scoped network, storage, users, backups, and cluster route entry points without live Proxmox data.
 - Fake-backed instrumentation can render populated node, VM, LXC, task detail, storage, node-scoped network, users, backups, cluster, and dashboard routes through the real navigation host without live Proxmox data.
@@ -136,7 +138,7 @@ Observed pass:
 
 Not counted as complete:
 
-- Forced landscape route evidence was not counted because the emulator returned to the launcher during the attempt.
+- Manual forced landscape route evidence was not counted because the emulator returned to the launcher during the attempt; fake-backed constrained landscape instrumentation now covers representative VM and task detail routes only.
 - The instrumentation pass does not prove live API-token authentication, live TLS/fingerprint connection success, live task-log loading, process-death session restore, or disposable lifecycle task handoff.
 - The lifecycle task-handoff recreation smoke proves config-change retention only; it does not prove process-death persistence.
 

@@ -95,7 +95,7 @@ class ProxmoxApiFactory : ProxmoxApiServiceFactory {
                     }
                 }
         } else if (serverConfig.useHttps && !serverConfig.verifySsl) {
-            TlsPolicy.requireInsecureTlsAllowed(BuildConfig.DEBUG)
+            TlsPolicy.requireInsecureTlsAllowed(BuildConfig.ALLOW_INSECURE_TLS)
             Log.w(TAG, "SSL verification disabled for configured HTTPS server; debug-only trusted lab mode")
             val trustManager = createInsecureTrustManager()
             val sslContext = SSLContext.getInstance("TLS").apply {
