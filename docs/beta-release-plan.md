@@ -21,11 +21,11 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 ```text
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
-Automated release gate       [##################..] 92%
+Automated release gate       [###################.] 94%
 Real Proxmox smoke QA        [#############.......] 65%
 UX/copy release polish       [###############.....] 75%
 Release packaging            [#################...] 82%
-Official beta readiness      [#################...] 84%
+Official beta readiness      [#################...] 85%
 ```
 
 ## Release Gates
@@ -203,7 +203,7 @@ These route helpers exist but are not registered beta destinations and should no
 
 The source route registry and unit tests keep registered beta route patterns, planned route helpers, and duplicate route patterns explicit while the app moves toward broader navigation coverage.
 
-VM and LXC lifecycle ViewModel tests now cover start, shutdown, force stop, reboot, delete guard behavior, duplicate action suppression, blank/invalid returned task IDs, failed action cleanup, stale task handoff cleanup, and task-detail route generation. Task center ViewModel tests now cover resource-filtered loading, filter forwarding, invalid-node abort handling, duplicate abort suppression, and task-detail abort suppression. This does not replace disposable guest smoke, but it reduces the chance of shipping a broken task handoff path into manual QA.
+VM and LXC lifecycle ViewModel tests now cover start, shutdown, force stop, reboot, delete guard behavior, duplicate action suppression, blank/invalid returned task IDs, failed action cleanup, stale task handoff cleanup, and task-detail route generation. Public-safe instrumentation also verifies fake VM/LXC returned-task handoff from lifecycle action to task-detail route. Task center ViewModel tests now cover resource-filtered loading, filter forwarding, invalid-node abort handling, duplicate abort suppression, and task-detail abort suppression. This does not replace disposable guest smoke, but it reduces the chance of shipping a broken task handoff path into manual QA.
 
 Pixel-class Android emulator smoke now covers password login, dashboard load, node detail navigation, VM list/detail routing, and LXC list routing against live Proxmox data. That smoke found and verified fixes for node status endpoint payload normalization, including missing list-style status fields and nested CPU/memory metrics. It does not replace API-token, TLS/fingerprint, disposable guest lifecycle, task follow-up, rotation, resume, or public-media smoke.
 
@@ -211,11 +211,11 @@ The latest UX polish pass tightened repeated VM/LXC resource cards, paired detai
 
 ### Automation Plan For Remaining Blockers
 
-The route registry, unit tests, and first instrumentation smoke prove beta route patterns, route encoding, lifecycle ViewModel behavior, task-center filtering/abort behavior, task-detail route generation, login UI rendering, API-token mode controls, SHA-256 fingerprint validation, saveable login UI state after Activity recreation, and a fake authenticated Settings route host smoke. They do not prove background resume, broad Compose layout coverage, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
+The route registry, unit tests, and instrumentation smoke prove beta route patterns, route encoding, lifecycle ViewModel behavior, fake VM/LXC returned-task UI handoff, task-center filtering/abort behavior, task-detail route generation, login UI rendering, API-token mode controls, SHA-256 fingerprint validation, saveable login UI state after Activity recreation, and a fake authenticated Settings route host smoke. They do not prove background resume, broad Compose layout coverage, or live Proxmox behavior. Before the beta tag, keep the manual smoke matrix as the source of truth while adding only narrow automation that can run without private infrastructure:
 
 - Expand Compose instrumentation smoke across registered beta routes using fake session data and fake repositories.
 - Add Activity recreation coverage for task filter drafts and post-login route state.
-- Add fake-API UI coverage for VM/LXC task notices opening task detail routes.
+- Continue fake-API UI coverage for additional VM/LXC task notice states and guarded delete states.
 - Leave API-token login, TLS/fingerprint behavior, disposable lifecycle actions, and task-log handoff as lab-backed smoke until a disposable Proxmox fixture can be provisioned in CI.
 
 ## Development Work Remaining

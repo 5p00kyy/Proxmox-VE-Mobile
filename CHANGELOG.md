@@ -38,6 +38,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Optional strict beta gate mode for requiring completed smoke QA evidence during final pre-tag dry runs.
 - Compose instrumentation smoke for login rendering, local API-token mode controls, SHA-256 fingerprint validation, and Activity recreation of non-secret login draft state.
 - Compose instrumentation smoke seam for starting the route host on a fake authenticated Settings destination.
+- Compose instrumentation smoke for fake VM/LXC returned-task handoff from lifecycle action to task-detail route.
 - Task center ViewModel coverage for resource-filtered loading, filter forwarding, invalid-node abort handling, duplicate abort suppression, and task-detail abort suppression.
 - Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
@@ -164,6 +165,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Beta tag release workflow now requires completed smoke QA evidence before packaging or signing.
 - Android CI and beta gate now compile instrumentation tests so checked-in emulator smoke sources cannot silently break.
 - Navigation host now supports an explicit start destination for fake-route instrumentation without changing the production default.
+- VM/LXC list screens now expose public-safe fake repository seams for instrumentation without changing production API creation.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
 - Failed VM/LXC lifecycle actions now clear stale last-task notices instead of leaving an old task handoff card visible.
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.

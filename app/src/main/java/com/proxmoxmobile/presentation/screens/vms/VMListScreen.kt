@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
@@ -41,7 +42,8 @@ import com.proxmoxmobile.R
 fun VMListScreen(
     navController: NavController,
     viewModel: MainViewModel,
-    nodeName: String? = null
+    nodeName: String? = null,
+    repositoryOverride: VmRepository? = null
 ) {
     val startSuccessTemplate = stringResource(R.string.vm_start_success)
     val startFailedTemplate = stringResource(R.string.vm_start_failed)
@@ -64,9 +66,10 @@ fun VMListScreen(
     val deleteRequiresStoppedMessage = stringResource(R.string.vm_delete_requires_stopped)
     val taskIdLabel = stringResource(R.string.vm_task_id_label)
     val viewTaskLabel = stringResource(R.string.vm_view_task)
-    val vmRepository = remember(viewModel) {
+    val defaultVmRepository = remember(viewModel) {
         VmRepository(ProxmoxVmApi { viewModel.getApiService() })
     }
+    val vmRepository = repositoryOverride ?: defaultVmRepository
     val vmListViewModel: VmListViewModel = composeViewModel(
         key = "vm-list-${nodeName.orEmpty()}",
         factory = remember(nodeName, vmRepository, deleteRequiresStoppedMessage) {
@@ -292,6 +295,7 @@ fun VMListScreen(
                             taskDetailRouteForNotice(nodeName, taskId)?.let { taskRoute ->
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(
+                                    modifier = Modifier.testTag(VM_LAST_TASK_VIEW_TASK_TAG),
                                     onClick = {
                                         navController.navigate(taskRoute)
                                     }
@@ -390,6 +394,8 @@ fun VMListScreen(
         }
     }
 }
+
+const val VM_LAST_TASK_VIEW_TASK_TAG = "vm_last_task_view_task"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

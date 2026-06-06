@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.proxmoxmobile.presentation.navigation.Screen
@@ -57,7 +58,8 @@ fun Double.format(digits: Int) = String.format(Locale.US, "%.${digits}f", this)
 fun ContainerListScreen(
     navController: NavController,
     viewModel: MainViewModel,
-    nodeName: String? = null
+    nodeName: String? = null,
+    repositoryOverride: LxcRepository? = null
 ) {
     val invalidNodeMsg = stringResource(R.string.container_invalid_node)
     val startSuccessTemplate = stringResource(R.string.container_start_success)
@@ -82,9 +84,10 @@ fun ContainerListScreen(
     val taskIdLabel = stringResource(R.string.container_task_id_label)
     val viewTaskLabel = stringResource(R.string.container_view_task)
     val snackbarHostState = remember { SnackbarHostState() }
-    val lxcRepository = remember(viewModel) {
+    val defaultLxcRepository = remember(viewModel) {
         LxcRepository(ProxmoxLxcApi { viewModel.getApiService() })
     }
+    val lxcRepository = repositoryOverride ?: defaultLxcRepository
     val lxcListViewModel: LxcListViewModel = composeViewModel(
         key = "lxc-list-${nodeName.orEmpty()}",
         factory = remember(nodeName, lxcRepository, invalidNodeMsg, deleteRequiresStoppedMessage) {
@@ -303,6 +306,7 @@ fun ContainerListScreen(
                             taskDetailRouteForNotice(nodeName, taskId)?.let { taskRoute ->
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(
+                                    modifier = Modifier.testTag(LXC_LAST_TASK_VIEW_TASK_TAG),
                                     onClick = {
                                         navController.navigate(taskRoute)
                                     }
@@ -402,6 +406,8 @@ fun ContainerListScreen(
         }
     }
 }
+
+const val LXC_LAST_TASK_VIEW_TASK_TAG = "lxc_last_task_view_task"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
