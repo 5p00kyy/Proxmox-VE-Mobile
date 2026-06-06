@@ -2,6 +2,7 @@ package com.proxmoxmobile.presentation.navigation
 
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -12,13 +13,14 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.proxmoxmobile.R
@@ -46,7 +48,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalTestApi::class)
 class LifecycleTaskHandoffSmokeTest {
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createEmptyComposeRule()
 
     private val targetContext: Context
         get() = InstrumentationRegistry.getInstrumentation().targetContext
@@ -55,76 +57,82 @@ class LifecycleTaskHandoffSmokeTest {
     fun fakeVmLifecycleTaskCardNavigatesToTaskDetailRoute() {
         val taskId = "UPID:qa-node:qmstart:101"
 
-        composeRule.setContent {
-            val navController = rememberNavController()
-            val viewModel = fakeAuthenticatedViewModel()
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            scenario.setVmHandoffContent(taskId)
 
-            ProxmoxTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavHost(navController = navController, startDestination = "vm_handoff") {
-                        composable("vm_handoff") {
-                            VMListScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                                nodeName = QA_NODE,
-                                repositoryOverride = VmRepository(FakeVmApi(taskId))
-                            )
-                        }
-                        taskDetailProbeDestination()
-                    }
-                }
-            }
+            composeRule.waitUntilAtLeastOneExists(hasText(QA_VM_NAME))
+            composeRule.onNodeWithText(text(R.string.vm_start)).performClick()
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(VM_LAST_TASK_VIEW_TASK_TAG))
+            composeRule.onNodeWithTag(VM_LAST_TASK_VIEW_TASK_TAG).performClick()
+
+            composeRule
+                .onNodeWithText(taskProbeText(QA_NODE, taskId))
+                .assertIsDisplayed()
         }
-
-        composeRule.waitUntilAtLeastOneExists(hasText(QA_VM_NAME))
-        composeRule.onNodeWithText(text(R.string.vm_start)).performClick()
-        composeRule.waitUntilAtLeastOneExists(hasTestTag(VM_LAST_TASK_VIEW_TASK_TAG))
-        composeRule.onNodeWithTag(VM_LAST_TASK_VIEW_TASK_TAG).performClick()
-
-        composeRule
-            .onNodeWithText(taskProbeText(QA_NODE, taskId))
-            .assertIsDisplayed()
     }
 
     @Test
     fun fakeLxcLifecycleTaskCardNavigatesToTaskDetailRoute() {
         val taskId = "UPID:qa-node:vzstart:201"
 
-        composeRule.setContent {
-            val navController = rememberNavController()
-            val viewModel = fakeAuthenticatedViewModel()
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            scenario.setLxcHandoffContent(taskId)
 
-            ProxmoxTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavHost(navController = navController, startDestination = "lxc_handoff") {
-                        composable("lxc_handoff") {
-                            ContainerListScreen(
-                                navController = navController,
-                                viewModel = viewModel,
-                                nodeName = QA_NODE,
-                                repositoryOverride = LxcRepository(FakeLxcApi(taskId))
-                            )
-                        }
-                        taskDetailProbeDestination()
-                    }
-                }
-            }
+            composeRule.waitUntilAtLeastOneExists(hasText(QA_LXC_NAME))
+            composeRule.onNodeWithText(text(R.string.container_start)).performClick()
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(LXC_LAST_TASK_VIEW_TASK_TAG))
+            composeRule.onNodeWithTag(LXC_LAST_TASK_VIEW_TASK_TAG).performClick()
+
+            composeRule
+                .onNodeWithText(taskProbeText(QA_NODE, taskId))
+                .assertIsDisplayed()
         }
+    }
 
-        composeRule.waitUntilAtLeastOneExists(hasText(QA_LXC_NAME))
-        composeRule.onNodeWithText(text(R.string.container_start)).performClick()
-        composeRule.waitUntilAtLeastOneExists(hasTestTag(LXC_LAST_TASK_VIEW_TASK_TAG))
-        composeRule.onNodeWithTag(LXC_LAST_TASK_VIEW_TASK_TAG).performClick()
+    @Test
+    fun fakeVmLifecycleTaskCardSurvivesActivityRecreation() {
+        val taskId = "UPID:qa-node:qmstart:101"
 
-        composeRule
-            .onNodeWithText(taskProbeText(QA_NODE, taskId))
-            .assertIsDisplayed()
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            scenario.setVmHandoffContent(taskId)
+
+            composeRule.waitUntilAtLeastOneExists(hasText(QA_VM_NAME))
+            composeRule.onNodeWithText(text(R.string.vm_start)).performClick()
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(VM_LAST_TASK_VIEW_TASK_TAG))
+
+            scenario.recreate()
+            scenario.setVmHandoffContent(taskId)
+
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(VM_LAST_TASK_VIEW_TASK_TAG))
+            composeRule.onNodeWithTag(VM_LAST_TASK_VIEW_TASK_TAG).performClick()
+
+            composeRule
+                .onNodeWithText(taskProbeText(QA_NODE, taskId))
+                .assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun fakeLxcLifecycleTaskCardSurvivesActivityRecreation() {
+        val taskId = "UPID:qa-node:vzstart:201"
+
+        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
+            scenario.setLxcHandoffContent(taskId)
+
+            composeRule.waitUntilAtLeastOneExists(hasText(QA_LXC_NAME))
+            composeRule.onNodeWithText(text(R.string.container_start)).performClick()
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(LXC_LAST_TASK_VIEW_TASK_TAG))
+
+            scenario.recreate()
+            scenario.setLxcHandoffContent(taskId)
+
+            composeRule.waitUntilAtLeastOneExists(hasTestTag(LXC_LAST_TASK_VIEW_TASK_TAG))
+            composeRule.onNodeWithTag(LXC_LAST_TASK_VIEW_TASK_TAG).performClick()
+
+            composeRule
+                .onNodeWithText(taskProbeText(QA_NODE, taskId))
+                .assertIsDisplayed()
+        }
     }
 
     private fun androidx.navigation.NavGraphBuilder.taskDetailProbeDestination() {
@@ -132,6 +140,62 @@ class LifecycleTaskHandoffSmokeTest {
             val node = backStackEntry.arguments?.getString("node").orEmpty()
             val upid = backStackEntry.arguments?.getString("upid").orEmpty()
             Text(taskProbeText(node, upid))
+        }
+    }
+
+    private fun ActivityScenario<ComponentActivity>.setVmHandoffContent(taskId: String) {
+        onActivity { activity ->
+            activity.setContent {
+                val navController = rememberNavController()
+                val viewModel = fakeAuthenticatedViewModel()
+
+                ProxmoxTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        NavHost(navController = navController, startDestination = "vm_handoff") {
+                            composable("vm_handoff") {
+                                VMListScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    nodeName = QA_NODE,
+                                    repositoryOverride = VmRepository(FakeVmApi(taskId))
+                                )
+                            }
+                            taskDetailProbeDestination()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ActivityScenario<ComponentActivity>.setLxcHandoffContent(taskId: String) {
+        onActivity { activity ->
+            activity.setContent {
+                val navController = rememberNavController()
+                val viewModel = fakeAuthenticatedViewModel()
+
+                ProxmoxTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        NavHost(navController = navController, startDestination = "lxc_handoff") {
+                            composable("lxc_handoff") {
+                                ContainerListScreen(
+                                    navController = navController,
+                                    viewModel = viewModel,
+                                    nodeName = QA_NODE,
+                                    repositoryOverride = LxcRepository(FakeLxcApi(taskId))
+                                )
+                            }
+                            taskDetailProbeDestination()
+                        }
+                    }
+                }
+            }
         }
     }
 
