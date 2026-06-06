@@ -112,6 +112,25 @@ class ProxmoxNavHostRouteSmokeTest {
     }
 
     @Test
+    fun fakeAuthenticatedSessionCanStartOnUsersWithoutApiSession() {
+        startFakeAuthenticatedRoute(Screen.Users.route)
+
+        composeRule.onNodeWithText(text(R.string.users_title)).assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText(text(R.string.users_error)), timeoutMillis = 5_000)
+        composeRule.onNodeWithText(text(R.string.users_error)).assertIsDisplayed()
+        composeRule.onNodeWithText(NOT_AUTHENTICATED).assertIsDisplayed()
+    }
+
+    @Test
+    fun fakeAuthenticatedSessionCanStartOnBackupsWithoutCachedNodes() {
+        startFakeAuthenticatedRoute(Screen.Backups.route)
+
+        composeRule.onNodeWithText(text(R.string.backup_management_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.backup_error)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.backup_error_no_nodes)).assertIsDisplayed()
+    }
+
+    @Test
     fun fakeAuthenticatedSessionCanDecodeNodeNetworkRoute() {
         startFakeAuthenticatedRoute(Screen.NodeNetwork.createRoute(ROUTE_NODE))
 

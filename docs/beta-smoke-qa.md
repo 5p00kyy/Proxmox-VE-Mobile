@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 14 instrumentation tests after the fake VM/LXC task-handoff smoke and fake authenticated route-host smoke were expanded.
+Result: passed with 16 instrumentation tests after the fake VM/LXC task-handoff smoke and fake authenticated route-host smoke were expanded.
 
 Observed pass:
 
@@ -115,7 +115,7 @@ Observed pass:
 - An invalid SHA-256 fingerprint shows validation copy and keeps the connect action disabled.
 - A well-formed SHA-256 fingerprint allows the local form to become submittable when required API-token fields are present.
 - Activity recreation preserves non-secret API-token login draft state and certificate fingerprint text.
-- Fake authenticated instrumentation can render Settings, server list, dashboard, tasks, node-scoped tasks, resource-filtered tasks, task detail, network, node-scoped network, storage, and cluster route entry points without live Proxmox data.
+- Fake authenticated instrumentation can render Settings, server list, dashboard, tasks, node-scoped tasks, resource-filtered tasks, task detail, network, node-scoped network, storage, users, backups, and cluster route entry points without live Proxmox data.
 - Fake VM/LXC instrumentation can submit a synthetic lifecycle start action, receive a synthetic Proxmox-style UPID, show the persistent task handoff card, and navigate through the real View Task UI to the task-detail route without live Proxmox data.
 - LXC detail route resumed from Home/launcher on the emulator with top app bar, loaded data, scroll position, read-only snapshot copy, and read-only resource copy still visible.
 - Focused post-resume logcat scan found no fatal app crash entries.
