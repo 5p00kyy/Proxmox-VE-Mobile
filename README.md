@@ -11,7 +11,7 @@ The planned first official beta is `v0.1.0-beta.1`.
 Distribution plan:
 
 - GitHub Releases will be the first beta download path.
-- The beta APK will be attached to the release once automated gates and real Proxmox smoke QA pass.
+- The beta APK will be attached to the release once automated gates and first-beta smoke QA pass.
 - Play Store and F-Droid packaging are deferred until after the first GitHub beta.
 
 Supported environment targets for the first beta:
@@ -35,7 +35,7 @@ Only install APKs attached to this repository's GitHub Releases. Debug APKs and 
 
 ## Screenshots
 
-Screenshots and short screen recordings should be added before tagging `v0.1.0-beta.1`. At minimum, capture:
+Screenshots and short screen recordings are useful for `v0.1.0-beta.1`, but they should be omitted if public-safe captures are not available. Good captures include:
 
 - Login with the TLS/fingerprint controls visible, using non-sensitive sample host text.
 - Dashboard with generic or disposable lab resources only.
@@ -100,7 +100,7 @@ These limitations are expected for `v0.1.0-beta.1` and should be reflected in re
 - Node reboot, shutdown, shell, and advanced service actions are outside first beta scope.
 - Storage, network, user, backup, and cluster areas are primarily read-only.
 - TFA-specific password login handling is not complete; API token login is the preferred beta workaround where appropriate.
-- Real Proxmox smoke QA is required before the beta is tagged.
+- First-beta smoke QA is required before the beta is tagged; the broader validation matrix continues after the first public beta.
 
 ## Tech Stack
 

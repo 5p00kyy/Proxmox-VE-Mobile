@@ -6,10 +6,14 @@ cd "$ROOT_DIR"
 
 QA_DOC="${1:-docs/beta-smoke-qa.md}"
 REQUIRE_COMPLETE="${REQUIRE_COMPLETE:-false}"
+SCOPE="${BETA_QA_STATUS_SCOPE:-release}"
 
 if [[ "${1:-}" == "--require-complete" ]]; then
   QA_DOC="${2:-docs/beta-smoke-qa.md}"
   REQUIRE_COMPLETE=true
+elif [[ "${1:-}" == "--all" ]]; then
+  QA_DOC="${2:-docs/beta-smoke-qa.md}"
+  SCOPE="all"
 fi
 
 if [[ ! -f "$QA_DOC" ]]; then
@@ -17,12 +21,29 @@ if [[ ! -f "$QA_DOC" ]]; then
   exit 1
 fi
 
-pending_count="$(grep -cE '^[|].*[|][[:space:]]*Pending[[:space:]]*[|]' "$QA_DOC" || true)"
-pass_count="$(grep -cE '^[|].*[|][[:space:]]*Pass[[:space:]]*[|]' "$QA_DOC" || true)"
-fail_count="$(grep -cE '^[|].*[|][[:space:]]*Fail[[:space:]]*[|]' "$QA_DOC" || true)"
-blocked_count="$(grep -cE '^[|].*[|][[:space:]]*Blocked[[:space:]]*[|]' "$QA_DOC" || true)"
+if [[ "$SCOPE" == "release" ]]; then
+  status_source="$(
+    awk '
+      /^## First Beta Release Readiness$/ { in_section=1; next }
+      /^## / && in_section { exit }
+      in_section { print }
+    ' "$QA_DOC"
+  )"
+  if [[ -z "$status_source" ]]; then
+    echo "Release readiness section not found in $QA_DOC"
+    exit 1
+  fi
+else
+  status_source="$(cat "$QA_DOC")"
+fi
+
+pending_count="$(grep -cE '^[|].*[|][[:space:]]*Pending[[:space:]]*[|]' <<< "$status_source" || true)"
+pass_count="$(grep -cE '^[|].*[|][[:space:]]*Pass[[:space:]]*[|]' <<< "$status_source" || true)"
+fail_count="$(grep -cE '^[|].*[|][[:space:]]*Fail[[:space:]]*[|]' <<< "$status_source" || true)"
+blocked_count="$(grep -cE '^[|].*[|][[:space:]]*Blocked[[:space:]]*[|]' <<< "$status_source" || true)"
 
 echo "Beta QA status from $QA_DOC"
+echo "Scope: $SCOPE"
 echo "Pending: $pending_count"
 echo "Pass: $pass_count"
 echo "Fail: $fail_count"

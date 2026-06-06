@@ -2,7 +2,7 @@
 
 Target: `v0.1.0-beta.1`
 
-This plan defines the work required to turn the current revival baseline into the first official beta release. The beta is intended to be a credible public test build for common Proxmox VE mobile operations, not a full desktop web UI replacement.
+This plan defines the work required to turn the current revival baseline into the first official beta release. The beta is intended to be a credible public test build for common Proxmox VE mobile operations, not a full desktop web UI replacement or a fully proven release candidate.
 
 ## Release Positioning
 
@@ -30,7 +30,7 @@ Official beta readiness      [#################...] 86%
 
 ## Release Gates
 
-All required gates must pass before tagging `v0.1.0-beta.1`.
+These are the gates for the first beta. The exhaustive smoke matrix remains useful, but it should not turn the first beta into a near-final release candidate.
 
 | Gate | Required | Evidence |
 | --- | --- | --- |
@@ -39,15 +39,23 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 | Debug build | Yes | `./gradlew assembleDebug` passes locally or in CI |
 | Release build | Yes | `./gradlew assembleRelease` passes locally or in CI |
 | Public branch hygiene | Yes | No machine-specific paths, hostnames, tokens, private IPs, or credentials in tracked docs/source |
-| Real Proxmox login smoke | Yes | Password and API token login tested against a real Proxmox VE target |
-| TLS smoke | Yes | Platform-trusted certificate and self-signed/fingerprint flow tested or documented as known limitation |
-| VM/LXC lifecycle smoke | Yes | Start, graceful shutdown, force stop, reboot, and delete tested only on disposable guests |
-| Task follow-up smoke | Yes | Returned task IDs open task detail/log state after VM/LXC actions |
-| Navigation smoke | Yes | Dashboard, node detail, VM, LXC, storage, network, users, backups, tasks, cluster, settings do not crash during normal navigation |
+| Real Proxmox password login smoke | Yes | Password login reaches dashboard against a real Proxmox VE target with private details omitted |
+| Core navigation smoke | Yes | Dashboard, node detail, VM, LXC, storage, network, users, backups, tasks, cluster, and settings have live, fake-backed, or instrumentation evidence without known crashes |
+| Release-like TLS guardrail smoke | Yes | `qaRelease` instrumentation proves debug-only insecure TLS controls are not exposed |
 | Known limitations | Yes | README and release notes clearly identify read-only and planned areas |
 | Release notes | Yes | `CHANGELOG.md` has a `v0.1.0-beta.1` section before tagging |
-| Release media | Yes | Public-safe screenshots or short recordings are captured, sanitized, and referenced without private environment details |
+| Release media | No | Use public-safe media only if available; otherwise ship without screenshots rather than publish private infrastructure |
 | Release artifact | Yes | Signed APK attached to GitHub release with release notes and install guidance |
+
+Post-beta or optional pre-beta validation:
+
+- Live API-token login smoke.
+- Live self-signed/fingerprint TLS connection smoke.
+- Invalid credential and invalid TLS error-state smoke.
+- Disposable VM/LXC lifecycle mutation matrix.
+- Full route rotation and background/resume matrix.
+- Small-phone and broad landscape viewport matrix.
+- Public screenshot/video capture from a disposable or fully sanitized lab.
 
 ## Release Packaging Workflow
 
@@ -66,13 +74,19 @@ The workflow runs the beta gate with:
 ./scripts/beta-gate.sh v0.1.0-beta.1
 ```
 
-Manual smoke progress can be summarized locally with:
+First-beta release readiness can be summarized locally with:
 
 ```bash
 ./scripts/beta-qa-status.sh
 ```
 
-Before tagging, use the same checker as a hard completion gate:
+The exhaustive backlog can still be counted when planning the next cycle:
+
+```bash
+./scripts/beta-qa-status.sh --all
+```
+
+Before tagging, use the release-readiness checker as a hard completion gate:
 
 ```bash
 ./scripts/beta-qa-status.sh --require-complete
@@ -89,7 +103,7 @@ Manual dry runs upload the produced release APK as a GitHub Actions artifact. Ta
 
 `ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
 
-Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Enable the `require_smoke_qa` input for the final pre-tag dry run so the workflow also fails while `docs/beta-smoke-qa.md` still contains pending, failed, or blocked release evidence. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs require completed smoke evidence automatically, create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. If a release already exists for the tag, the workflow refuses to upload unless it is still a draft prerelease. Publish the GitHub Release manually after the APK, changelog, release notes, and media are verified.
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Enable the `require_smoke_qa` input for the final pre-tag dry run so the workflow also fails while the first-beta readiness table in `docs/beta-smoke-qa.md` still contains pending, failed, or blocked release evidence. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag runs require completed first-beta readiness evidence automatically, create or update a draft prerelease, remove the unsigned APK copy from the uploaded workflow artifact after signing, and attach only the signed APK. If a release already exists for the tag, the workflow refuses to upload unless it is still a draft prerelease. Publish the GitHub Release manually after the APK, changelog, release notes, and any media are verified.
 
 GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the repository default branch. While the beta baseline is still only on the draft PR branch, the release workflow can be linted and reviewed, but the manual dry run cannot be triggered from GitHub until the workflow is merged or otherwise present on the default branch.
 
@@ -141,16 +155,16 @@ GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the
 
 ## Manual Smoke Matrix
 
-Run this matrix against a disposable or non-production Proxmox VE environment before release.
+Run this matrix against a disposable or non-production Proxmox VE environment as the next validation cycle. Failures in this matrix should block the beta only when they expose a defect in the minimum first-beta path.
 
 | Area | Test | Blocker |
 | --- | --- | --- |
 | Auth | Password login succeeds with valid credentials | Yes |
 | Auth | Password login shows useful error for invalid credentials | Yes |
-| Auth | API token login succeeds with valid token ID/secret | Yes |
+| Auth | API token login succeeds with valid token ID/secret | Post-beta |
 | Auth | Saved credentials restore and can be cleared | Yes |
 | TLS | Platform-trusted HTTPS connects without override | Yes |
-| TLS | Self-signed certificate path is understandable and functional | Yes |
+| TLS | Self-signed certificate path is understandable and functional | Post-beta |
 | TLS | Release build does not expose insecure trust-all mode | Yes |
 | Dashboard | Dashboard loads nodes and resource summary | Yes |
 | Dashboard | Manual refresh updates without duplicating state | Yes |
@@ -158,18 +172,18 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 | Navigation | Node-scoped VM/LXC/storage/network/task routes keep node context | Yes |
 | VM | VM list loads and empty/error states render | Yes |
 | VM | VM detail loads status, config, and snapshots read-only | Yes |
-| VM | Start on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
-| VM | Graceful shutdown on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
-| VM | Force stop on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
-| VM | Reboot on disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
-| VM | Delete on stopped disposable guest prompts, submits, returns task notice, and links to task detail/log | Yes |
+| VM | Start on disposable guest prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable guest is already available |
+| VM | Graceful shutdown on disposable guest prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable guest is already available |
+| VM | Force stop on disposable guest prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable guest is already available |
+| VM | Reboot on disposable guest prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable guest is already available |
+| VM | Delete on stopped disposable guest prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable guest is already available |
 | LXC | Container list loads and empty/error states render | Yes |
 | LXC | Container detail loads status and snapshots read-only | Yes |
-| LXC | Start on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
-| LXC | Graceful shutdown on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
-| LXC | Force stop on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
-| LXC | Reboot on disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
-| LXC | Delete on stopped disposable container prompts, submits, returns task notice, and links to task detail/log | Yes |
+| LXC | Start on disposable container prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable container is already available |
+| LXC | Graceful shutdown on disposable container prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable container is already available |
+| LXC | Force stop on disposable container prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable container is already available |
+| LXC | Reboot on disposable container prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable container is already available |
+| LXC | Delete on stopped disposable container prompts, submits, returns task notice, and links to task detail/log | Post-beta unless a disposable container is already available |
 | Tasks | Task list result links open detail/log screen | Yes |
 | Tasks | Task filters do not crash with empty or partial data | Yes |
 | Storage | Storage list and content browser load read-only | Yes |
@@ -221,16 +235,16 @@ The route registry, unit tests, and instrumentation smoke prove beta route patte
 
 ## Development Work Remaining
 
-1. Open the pushed baseline branch as a draft PR.
+1. Keep the pushed baseline branch as the release candidate branch.
 2. Run the automated gate in CI and locally after any blocker fixes.
-3. Execute the real Proxmox smoke matrix.
-4. Fix only beta blockers on the baseline branch.
-5. Add release screenshots or short screen recordings to the README/release notes.
-6. Promote `CHANGELOG.md` from `Unreleased` to `v0.1.0-beta.1`.
-7. Merge or otherwise land the beta release workflow on the repository default branch so `workflow_dispatch` can run.
-8. Configure release signing secrets and run the beta APK release workflow on the beta tag.
-9. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
-10. Keep a post-beta issue list for deferred parity work.
+3. Complete only the first-beta readiness rows in `docs/beta-smoke-qa.md`.
+4. Fix only beta-breaking defects on the baseline branch.
+5. Promote `CHANGELOG.md` from `Unreleased` to `v0.1.0-beta.1`.
+6. Squash-merge or otherwise land the revival branch on the repository default branch so the public history is concise and `workflow_dispatch` can run.
+7. Configure release signing secrets and run the beta APK release workflow on the beta tag.
+8. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
+9. Publish screenshots only if they are from a disposable or fully sanitized environment.
+10. Start the next development cycle from the post-beta validation backlog instead of continuing to add small pre-release commits.
 
 ## Release Notes And Media
 
@@ -239,7 +253,7 @@ The beta release notes should be concise and honest about scope:
 - Lead with the app purpose: an Android Proxmox VE companion for login, mobile inspection, VM/LXC lifecycle actions, and task follow-up.
 - State that this is a beta for public testing, not full desktop web UI feature parity.
 - Link the signed APK attached to the GitHub Release and call out that debug/unsigned artifacts are not public beta downloads.
-- Summarize verified smoke coverage only after the smoke matrix is complete.
+- Summarize verified first-beta readiness coverage and keep the remaining smoke matrix as known post-beta validation.
 - Keep unfinished areas in a known limitations section rather than implying they work.
 - Ask testers to report Proxmox version, Android version, auth method, TLS setup, and sanitized logs/screenshots.
 

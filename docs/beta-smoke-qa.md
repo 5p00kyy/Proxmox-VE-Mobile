@@ -20,6 +20,23 @@ Sanitized notes:
 
 Do not include hostnames, IP addresses, usernames, tokens, cookies, tickets, certificate fingerprints from private servers, task IDs from private environments, backup comments, local machine paths, or screenshots with private details.
 
+## First Beta Release Readiness
+
+This table is the readiness source used by `scripts/beta-qa-status.sh` and the final `REQUIRE_BETA_QA_COMPLETE=true` gate. It tracks the minimum evidence for a worthwhile first public beta, not the full post-beta validation matrix.
+
+| Gate | Status | Evidence | Release decision |
+| --- | --- | --- | --- |
+| Automated beta gate | Pass | `test`, `lint`, debug/release assembly, debug instrumentation compile, `qaRelease` instrumentation compile, public hygiene, and version/tag checks pass locally and in Android CI. | Required before tag |
+| Emulator install and launch | Pass | Pixel-class Android emulator installed and launched the app from Android Studio/debug builds. | Required before tag |
+| Real password login and dashboard smoke | Pass | User-supplied Proxmox VE environment reached dashboard; private connection details intentionally not recorded. | Required before tag |
+| Core read-only route smoke | Pass | Dashboard, node detail, VM/LXC lists and details, task detail, storage/content, network, users, backups, cluster, and settings rendered through live smoke, fake-backed instrumentation, or both. | Required before tag |
+| Release-like TLS UI guardrails | Pass | `qaRelease` login instrumentation verifies insecure TLS controls are not exposed when insecure TLS is unavailable. | Required before tag |
+| Known limitations documented | Pass | README, changelog, and release plan identify read-only scope, incomplete mutation areas, no guest console, and no full desktop Web UI parity claim. | Required before tag |
+| Public-safe release notes | Pass | `CHANGELOG.md` contains a dated `v0.1.0-beta.1` section with scoped beta claims and known limitations. | Required before publishing release |
+| Signed APK workflow result | External | Tag workflow must produce and attach a signed APK after the pre-tag readiness gate passes. | Required before publishing release; not counted by QA status script |
+
+The remaining tables below are validation backlog for improving confidence and planning the next development cycle. Pending rows below this section should not block `v0.1.0-beta.1` unless a failure exposes a concrete beta-breaking defect.
+
 ## 2026-06-06 Android Studio Emulator Pass
 
 Environment:

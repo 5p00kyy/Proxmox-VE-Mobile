@@ -6,14 +6,17 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 
 ## [Unreleased]
 
-### Beta Release Candidate
+No changes yet.
 
-- `v0.1.0-beta.1` is the planned first official beta tag.
+## [v0.1.0-beta.1] - 2026-06-07
+
+### Beta Release
+
+- `v0.1.0-beta.1` is the first official beta tag.
 - This beta is intended for public testing of login, TLS handling, dashboard, node navigation, VM/LXC lifecycle actions, task follow-up, and read-only infrastructure slices.
 - Known limitations for the beta include no guest console, no VM/LXC configuration editing, no snapshot mutation, no backup create/restore/download/delete, no user mutation flows, no node power actions, and no Proxmox Backup Server management.
 - Beta APK distribution is planned through GitHub Releases first. Play Store and F-Droid packaging are deferred.
-- Real Proxmox smoke QA is still required before tagging.
-- Before tagging, this section must be promoted to `## [v0.1.0-beta.1] - YYYY-MM-DD`, the smoke status must be updated from pending to verified or known limitation, and the release notes must reference only sanitized screenshots or media.
+- First-beta smoke QA is tracked separately from the broader post-beta route, lifecycle, TLS, and media validation backlog.
 
 ### Added
 
