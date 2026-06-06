@@ -32,13 +32,14 @@ import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 @Composable
 fun ProxmoxNavHost(
     navController: NavHostController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    startDestination: String = Screen.Login.route
 ) {
     val confirmationDialog by viewModel.showConfirmationDialog.collectAsState()
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = startDestination
     ) {
         composable(Screen.Login.route) {
             LoginScreen(
