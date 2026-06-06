@@ -48,7 +48,19 @@ data class NodeStatus(
     val pveversion: String,
     val rootfs: RootFS,
     val swap: Swap,
-    val idle: Int
+    val idle: Int,
+    val cpuinfo: NodeCpuInfo? = null,
+    val memory: NodeMemory? = null
+)
+
+data class NodeCpuInfo(
+    val cpus: Int
+)
+
+data class NodeMemory(
+    val free: Long,
+    val total: Long,
+    val used: Long
 )
 
 data class RootFS(

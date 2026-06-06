@@ -28,6 +28,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Navigation route registry tests for registered beta destinations, planned detail helpers, and duplicate route patterns.
 - Beta-safe Settings About copy that avoids implying full administrative coverage.
 - VM/LXC lifecycle ViewModel coverage for shutdown, force stop, reboot, blank task IDs, failed action cleanup, and task-detail route handoff.
+- Emulator smoke coverage for dashboard, node detail, VM list/detail, and LXC list routing on a Pixel-class Android emulator.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
@@ -79,6 +80,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Unit tests for backup repository storage discovery, backup filtering, partial storage failures, blank-node validation, and missing-session errors.
 - Unit tests for dashboard repository node filtering, task-summary handoff, task-summary error isolation, empty-node behavior, and missing-session errors.
 - Unit tests for node detail status loading, blank-node validation, invalid payload handling, and missing-session errors.
+- Unit tests for node detail normalization of Proxmox node status endpoint identity, status, CPU, and memory fields.
 - Unit tests for cluster status mapping, standalone-node handling, and missing-session errors.
 - Unit tests for VM snapshot filtering, sorting, validation errors, and missing-session errors.
 - Unit tests for LXC snapshot filtering, sorting, validation errors, and missing-session errors.
@@ -118,6 +120,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - LXC detail resource, start/stop, and console placeholder controls are disabled until implemented.
 - LXC detail no longer scans cached nodes or calls Retrofit directly from the Composable.
 - Task operations now use the Proxmox UPID field instead of the display/resource ID.
+- Node detail now accepts node status endpoint payloads that omit list-style node/status fields.
+- Node detail now maps nested node status CPU and memory payloads into the rendered resource summary.
 - The task screen now labels the task stop endpoint as stopping/aborting a running task instead of deleting history.
 - Dashboard node refresh logging no longer treats non-null API response lists as nullable.
 - Network retry now performs a real reload instead of only resetting local UI state.

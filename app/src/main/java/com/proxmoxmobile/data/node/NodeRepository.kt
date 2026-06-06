@@ -15,7 +15,7 @@ class NodeRepository(
             val normalizedNodeName = nodeName.trim()
             require(normalizedNodeName.isNotBlank()) { "Node name is required" }
 
-            val status = api.getNodeStatus(normalizedNodeName).data
+            val status = api.getNodeStatus(normalizedNodeName).data.normalizedForDetail(normalizedNodeName)
             require(status.isValid()) { "Node status payload is invalid" }
 
             NodeDetail(
@@ -35,7 +35,8 @@ class NodeRepository(
 
     private fun NodeStatus.isValid(): Boolean {
         return runCatching {
-            status.isNotBlank() &&
+            node.isNotBlank() &&
+                status.isNotBlank() &&
                 cpu >= 0 &&
                 maxcpu >= 0 &&
                 mem >= 0 &&
@@ -47,6 +48,23 @@ class NodeRepository(
                 swap.total >= 0 &&
                 swap.used >= 0
         }.getOrDefault(false)
+    }
+
+    private fun NodeStatus.normalizedForDetail(nodeName: String): NodeStatus {
+        val statusCpuInfo = runCatching { cpuinfo }.getOrNull()
+        val statusMemory = runCatching { memory }.getOrNull()
+
+        return copy(
+            node = nullableString { node }.takeUnless { it.isBlank() } ?: nodeName,
+            status = nullableString { status }.takeUnless { it.isBlank() } ?: "online",
+            maxcpu = if (maxcpu == 0 && statusCpuInfo != null) statusCpuInfo.cpus else maxcpu,
+            mem = if (mem == 0L && statusMemory != null) statusMemory.used else mem,
+            maxmem = if (maxmem == 0L && statusMemory != null) statusMemory.total else maxmem
+        )
+    }
+
+    private fun nullableString(value: () -> String): String {
+        return runCatching { value() }.getOrNull().orEmpty()
     }
 
     private fun Exception.toNodeErrorMessage(): String {
