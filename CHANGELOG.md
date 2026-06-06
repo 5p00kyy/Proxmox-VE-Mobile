@@ -47,6 +47,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Compose instrumentation smoke for post-login node-scoped task route state across Activity recreation.
 - Compose instrumentation smoke for post-login resource-filtered task, task detail, node-scoped network, and storage route state across Activity recreation.
 - Compose instrumentation smoke for fake-backed post-login dashboard, node detail, VM list/detail, LXC list/detail, storage, network, users, backups, cluster, settings, task-list, and task-detail routes across Activity recreation and background/resume transitions.
+- Shared public-safe navigation smoke fixtures for detail and lifecycle route tests so future fake-backed route coverage does not duplicate host, user, task, node, or guest data.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff from lifecycle action to task-detail route.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff card persistence across Activity recreation.
 - Compose instrumentation smoke for fake VM/LXC running-delete guards and failed-start UI states without task handoff CTAs.
