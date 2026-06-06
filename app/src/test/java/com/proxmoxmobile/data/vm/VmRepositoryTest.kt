@@ -33,7 +33,7 @@ class VmRepositoryTest {
 
     @Test
     fun performAction_returnsTaskId() = runBlocking {
-        val api = FakeVmApi(actionTaskId = "UPID:pve:123:start:100")
+        val api = FakeVmApi(actionTaskId = "UPID:fixture:123:start:100")
         val repository = VmRepository(api)
 
         val result = repository.performAction("pve", 100, VmPowerAction.Start)
@@ -42,13 +42,13 @@ class VmRepositoryTest {
         val action = (result as VmResult.Success).data
         assertEquals(VmPowerAction.Start, action.action)
         assertEquals(100, action.vmid)
-        assertEquals("UPID:pve:123:start:100", action.taskId)
+        assertEquals("UPID:fixture:123:start:100", action.taskId)
         assertEquals(listOf("start"), api.actionRequests)
     }
 
     @Test
     fun performAction_sendsRebootApiValue() = runBlocking {
-        val api = FakeVmApi(actionTaskId = "UPID:pve:123:reboot:100")
+        val api = FakeVmApi(actionTaskId = "UPID:fixture:123:reboot:100")
         val repository = VmRepository(api)
 
         val result = repository.performAction("pve", 100, VmPowerAction.Reboot)
@@ -56,13 +56,13 @@ class VmRepositoryTest {
         assertTrue(result is VmResult.Success)
         val action = (result as VmResult.Success).data
         assertEquals(VmPowerAction.Reboot, action.action)
-        assertEquals("UPID:pve:123:reboot:100", action.taskId)
+        assertEquals("UPID:fixture:123:reboot:100", action.taskId)
         assertEquals(listOf("reboot"), api.actionRequests)
     }
 
     @Test
     fun performAction_sendsShutdownApiValue() = runBlocking {
-        val api = FakeVmApi(actionTaskId = "UPID:pve:123:shutdown:100")
+        val api = FakeVmApi(actionTaskId = "UPID:fixture:123:shutdown:100")
         val repository = VmRepository(api)
 
         val result = repository.performAction("pve", 100, VmPowerAction.Shutdown)
@@ -70,13 +70,13 @@ class VmRepositoryTest {
         assertTrue(result is VmResult.Success)
         val action = (result as VmResult.Success).data
         assertEquals(VmPowerAction.Shutdown, action.action)
-        assertEquals("UPID:pve:123:shutdown:100", action.taskId)
+        assertEquals("UPID:fixture:123:shutdown:100", action.taskId)
         assertEquals(listOf("shutdown"), api.actionRequests)
     }
 
     @Test
     fun performAction_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
-        val validRepository = VmRepository(FakeVmApi(actionTaskId = "  UPID:pve:123:start:100  "))
+        val validRepository = VmRepository(FakeVmApi(actionTaskId = "  UPID:fixture:123:start:100  "))
         val invalidRepository = VmRepository(FakeVmApi(actionTaskId = "not-a-upid"))
         val blankRepository = VmRepository(FakeVmApi(actionTaskId = "   "))
 
@@ -84,14 +84,14 @@ class VmRepositoryTest {
         val invalidResult = invalidRepository.performAction("pve", 100, VmPowerAction.Start)
         val blankResult = blankRepository.performAction("pve", 100, VmPowerAction.Start)
 
-        assertEquals("UPID:pve:123:start:100", (validResult as VmResult.Success).data.taskId)
+        assertEquals("UPID:fixture:123:start:100", (validResult as VmResult.Success).data.taskId)
         assertNull((invalidResult as VmResult.Success).data.taskId)
         assertNull((blankResult as VmResult.Success).data.taskId)
     }
 
     @Test
     fun deleteVirtualMachine_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
-        val api = FakeVmApi(deleteTaskId = "UPID:pve:123:qmdestroy:100")
+        val api = FakeVmApi(deleteTaskId = "UPID:fixture:123:qmdestroy:100")
         val repository = VmRepository(api)
 
         val result = repository.deleteVirtualMachine("pve", 100)
@@ -100,14 +100,14 @@ class VmRepositoryTest {
         val action = (result as VmResult.Success).data
         assertEquals(VmPowerAction.Delete, action.action)
         assertEquals(100, action.vmid)
-        assertEquals("UPID:pve:123:qmdestroy:100", action.taskId)
+        assertEquals("UPID:fixture:123:qmdestroy:100", action.taskId)
         assertEquals(listOf(100), api.deleteRequests)
         assertEquals(emptyList<String>(), api.actionRequests)
     }
 
     @Test
     fun deleteVirtualMachine_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
-        val validRepository = VmRepository(FakeVmApi(deleteTaskId = "  UPID:pve:123:qmdestroy:100  "))
+        val validRepository = VmRepository(FakeVmApi(deleteTaskId = "  UPID:fixture:123:qmdestroy:100  "))
         val invalidRepository = VmRepository(FakeVmApi(deleteTaskId = "deleted"))
         val blankRepository = VmRepository(FakeVmApi(deleteTaskId = "   "))
 
@@ -115,7 +115,7 @@ class VmRepositoryTest {
         val invalidResult = invalidRepository.deleteVirtualMachine("pve", 100)
         val blankResult = blankRepository.deleteVirtualMachine("pve", 100)
 
-        assertEquals("UPID:pve:123:qmdestroy:100", (validResult as VmResult.Success).data.taskId)
+        assertEquals("UPID:fixture:123:qmdestroy:100", (validResult as VmResult.Success).data.taskId)
         assertNull((invalidResult as VmResult.Success).data.taskId)
         assertNull((blankResult as VmResult.Success).data.taskId)
     }
@@ -330,8 +330,8 @@ class VmRepositoryTest {
         private val vmsByNode: Map<String, List<VirtualMachine>> = emptyMap(),
         private val snapshotsByNodeAndVmid: Map<String, Map<Int, List<VmSnapshot>>> = emptyMap(),
         private val configsByNodeAndVmid: Map<String, Map<Int, Map<String, Any?>>> = emptyMap(),
-        private val actionTaskId: String = "UPID:pve:123:action:100",
-        private val deleteTaskId: String = "UPID:pve:123:delete:100"
+        private val actionTaskId: String = "UPID:fixture:123:action:100",
+        private val deleteTaskId: String = "UPID:fixture:123:delete:100"
     ) : VmApi {
         val statusRequests = mutableListOf<String>()
         val actionRequests = mutableListOf<String>()

@@ -131,8 +131,8 @@ class AuthSessionControllerTest {
 
         private fun serverConfig(password: String?): ServerConfig {
             return ServerConfig(
-                host = "pve.local",
-                username = "root",
+                host = "example.test",
+                username = "tester",
                 password = password,
                 realm = "pam",
                 useHttps = true,

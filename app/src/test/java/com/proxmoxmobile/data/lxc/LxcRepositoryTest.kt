@@ -33,7 +33,7 @@ class LxcRepositoryTest {
 
     @Test
     fun performAction_returnsTaskId() = runBlocking {
-        val api = FakeLxcApi(actionTaskId = "UPID:pve:123:start:100")
+        val api = FakeLxcApi(actionTaskId = "UPID:fixture:123:start:100")
         val repository = LxcRepository(api)
 
         val result = repository.performAction("pve", 100, LxcPowerAction.Start)
@@ -42,13 +42,13 @@ class LxcRepositoryTest {
         val action = (result as LxcResult.Success).data
         assertEquals(LxcPowerAction.Start, action.action)
         assertEquals(100, action.vmid)
-        assertEquals("UPID:pve:123:start:100", action.taskId)
+        assertEquals("UPID:fixture:123:start:100", action.taskId)
         assertEquals(listOf("start"), api.actionRequests)
     }
 
     @Test
     fun performAction_sendsRebootApiValue() = runBlocking {
-        val api = FakeLxcApi(actionTaskId = "UPID:pve:123:reboot:100")
+        val api = FakeLxcApi(actionTaskId = "UPID:fixture:123:reboot:100")
         val repository = LxcRepository(api)
 
         val result = repository.performAction("pve", 100, LxcPowerAction.Reboot)
@@ -56,13 +56,13 @@ class LxcRepositoryTest {
         assertTrue(result is LxcResult.Success)
         val action = (result as LxcResult.Success).data
         assertEquals(LxcPowerAction.Reboot, action.action)
-        assertEquals("UPID:pve:123:reboot:100", action.taskId)
+        assertEquals("UPID:fixture:123:reboot:100", action.taskId)
         assertEquals(listOf("reboot"), api.actionRequests)
     }
 
     @Test
     fun performAction_sendsShutdownApiValue() = runBlocking {
-        val api = FakeLxcApi(actionTaskId = "UPID:pve:123:shutdown:100")
+        val api = FakeLxcApi(actionTaskId = "UPID:fixture:123:shutdown:100")
         val repository = LxcRepository(api)
 
         val result = repository.performAction("pve", 100, LxcPowerAction.Shutdown)
@@ -70,13 +70,13 @@ class LxcRepositoryTest {
         assertTrue(result is LxcResult.Success)
         val action = (result as LxcResult.Success).data
         assertEquals(LxcPowerAction.Shutdown, action.action)
-        assertEquals("UPID:pve:123:shutdown:100", action.taskId)
+        assertEquals("UPID:fixture:123:shutdown:100", action.taskId)
         assertEquals(listOf("shutdown"), api.actionRequests)
     }
 
     @Test
     fun performAction_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
-        val validRepository = LxcRepository(FakeLxcApi(actionTaskId = "  UPID:pve:123:start:100  "))
+        val validRepository = LxcRepository(FakeLxcApi(actionTaskId = "  UPID:fixture:123:start:100  "))
         val invalidRepository = LxcRepository(FakeLxcApi(actionTaskId = "not-a-upid"))
         val blankRepository = LxcRepository(FakeLxcApi(actionTaskId = "   "))
 
@@ -84,14 +84,14 @@ class LxcRepositoryTest {
         val invalidResult = invalidRepository.performAction("pve", 100, LxcPowerAction.Start)
         val blankResult = blankRepository.performAction("pve", 100, LxcPowerAction.Start)
 
-        assertEquals("UPID:pve:123:start:100", (validResult as LxcResult.Success).data.taskId)
+        assertEquals("UPID:fixture:123:start:100", (validResult as LxcResult.Success).data.taskId)
         assertNull((invalidResult as LxcResult.Success).data.taskId)
         assertNull((blankResult as LxcResult.Success).data.taskId)
     }
 
     @Test
     fun deleteContainer_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
-        val api = FakeLxcApi(deleteTaskId = "UPID:pve:123:vzdestroy:100")
+        val api = FakeLxcApi(deleteTaskId = "UPID:fixture:123:vzdestroy:100")
         val repository = LxcRepository(api)
 
         val result = repository.deleteContainer("pve", 100)
@@ -100,14 +100,14 @@ class LxcRepositoryTest {
         val action = (result as LxcResult.Success).data
         assertEquals(LxcPowerAction.Delete, action.action)
         assertEquals(100, action.vmid)
-        assertEquals("UPID:pve:123:vzdestroy:100", action.taskId)
+        assertEquals("UPID:fixture:123:vzdestroy:100", action.taskId)
         assertEquals(listOf(100), api.deleteRequests)
         assertEquals(emptyList<String>(), api.actionRequests)
     }
 
     @Test
     fun deleteContainer_onlyReturnsTrimmedProxmoxUpidTaskIds() = runBlocking {
-        val validRepository = LxcRepository(FakeLxcApi(deleteTaskId = "  UPID:pve:123:vzdestroy:100  "))
+        val validRepository = LxcRepository(FakeLxcApi(deleteTaskId = "  UPID:fixture:123:vzdestroy:100  "))
         val invalidRepository = LxcRepository(FakeLxcApi(deleteTaskId = "deleted"))
         val blankRepository = LxcRepository(FakeLxcApi(deleteTaskId = "   "))
 
@@ -115,7 +115,7 @@ class LxcRepositoryTest {
         val invalidResult = invalidRepository.deleteContainer("pve", 100)
         val blankResult = blankRepository.deleteContainer("pve", 100)
 
-        assertEquals("UPID:pve:123:vzdestroy:100", (validResult as LxcResult.Success).data.taskId)
+        assertEquals("UPID:fixture:123:vzdestroy:100", (validResult as LxcResult.Success).data.taskId)
         assertNull((invalidResult as LxcResult.Success).data.taskId)
         assertNull((blankResult as LxcResult.Success).data.taskId)
     }
@@ -274,8 +274,8 @@ class LxcRepositoryTest {
         private val containers: List<Container> = listOf(container()),
         private val containersByNode: Map<String, List<Container>> = emptyMap(),
         private val snapshotsByNodeAndVmid: Map<String, Map<Int, List<LxcSnapshot>>> = emptyMap(),
-        private val actionTaskId: String = "UPID:pve:123:action:100",
-        private val deleteTaskId: String = "UPID:pve:123:delete:100"
+        private val actionTaskId: String = "UPID:fixture:123:action:100",
+        private val deleteTaskId: String = "UPID:fixture:123:delete:100"
     ) : LxcApi {
         val statusRequests = mutableListOf<String>()
         val actionRequests = mutableListOf<String>()

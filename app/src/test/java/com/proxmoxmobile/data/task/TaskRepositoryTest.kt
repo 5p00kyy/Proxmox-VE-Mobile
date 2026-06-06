@@ -14,11 +14,11 @@ class TaskRepositoryTest {
         val repository = TaskRepository(
             FakeTaskApi(
                 tasks = listOf(
-                    task(upid = "UPID:pve:old", id = "100", starttime = 10),
-                    task(upid = "UPID:pve:new", id = "101", starttime = 20),
+                    task(upid = "UPID:fixture:old", id = "100", starttime = 10),
+                    task(upid = "UPID:fixture:new", id = "101", starttime = 20),
                     task(upid = null, id = "102", starttime = 30),
-                    task(upid = "UPID:pve:missing-node", node = "", starttime = 40),
-                    task(upid = "UPID:pve:missing-status", status = "", starttime = 50)
+                    task(upid = "UPID:fixture:missing-node", node = "", starttime = 40),
+                    task(upid = "UPID:fixture:missing-status", status = "", starttime = 50)
                 )
             )
         )
@@ -27,14 +27,14 @@ class TaskRepositoryTest {
 
         assertTrue(result is TaskResult.Success)
         val tasks = (result as TaskResult.Success).data
-        assertEquals(listOf("UPID:pve:new", "UPID:pve:old"), tasks.map { it.taskUpid() })
+        assertEquals(listOf("UPID:fixture:new", "UPID:fixture:old"), tasks.map { it.taskUpid() })
     }
 
     @Test
     fun getTaskDetail_returnsStatusAndOrderedNonBlankLogEntries() = runBlocking {
         val repository = TaskRepository(
             FakeTaskApi(
-                taskStatus = task(upid = "UPID:pve:task", status = "running"),
+                taskStatus = task(upid = "UPID:fixture:task", status = "running"),
                 logEntries = listOf(
                     TaskLogEntry(lineNumber = 2, text = "second"),
                     TaskLogEntry(lineNumber = 1, text = "first"),
@@ -43,11 +43,11 @@ class TaskRepositoryTest {
             )
         )
 
-        val result = repository.getTaskDetail("pve", "UPID:pve:task")
+        val result = repository.getTaskDetail("pve", "UPID:fixture:task")
 
         assertTrue(result is TaskResult.Success)
         val detail = (result as TaskResult.Success).data
-        assertEquals("UPID:pve:task", detail.upid)
+        assertEquals("UPID:fixture:task", detail.upid)
         assertEquals("running", detail.task.status)
         assertEquals(listOf("first", "second"), detail.logEntries.map { it.text })
     }
@@ -60,11 +60,11 @@ class TaskRepositoryTest {
             )
         )
 
-        val result = repository.getTaskDetail("pve", "UPID:pve:qmstart:100")
+        val result = repository.getTaskDetail("pve", "UPID:fixture:qmstart:100")
 
         assertTrue(result is TaskResult.Success)
         val detail = (result as TaskResult.Success).data
-        assertEquals("UPID:pve:qmstart:100", detail.upid)
+        assertEquals("UPID:fixture:qmstart:100", detail.upid)
         assertEquals("100", detail.task.id)
     }
 
@@ -115,11 +115,11 @@ class TaskRepositoryTest {
         val api = FakeTaskApi(
             tasksByNode = mapOf(
                 "pve-a" to listOf(
-                    task(upid = "UPID:pve-a:running", node = "pve-a", status = "running", starttime = 30),
-                    task(upid = "UPID:pve-a:old", node = "pve-a", status = "finished", starttime = 10)
+                    task(upid = "UPID:fixture-a:running", node = "pve-a", status = "running", starttime = 30),
+                    task(upid = "UPID:fixture-a:old", node = "pve-a", status = "finished", starttime = 10)
                 ),
                 "pve-b" to listOf(
-                    task(upid = "UPID:pve-b:new", node = "pve-b", status = "finished", starttime = 50),
+                    task(upid = "UPID:fixture-b:new", node = "pve-b", status = "finished", starttime = 50),
                     task(upid = null, node = "pve-b", status = "running", starttime = 60)
                 )
             )
@@ -133,7 +133,7 @@ class TaskRepositoryTest {
         assertEquals(2, summary.nodesChecked)
         assertEquals(1, summary.runningCount)
         assertEquals(3, summary.recentCount)
-        assertEquals("UPID:pve-b:new", summary.latestTask?.taskUpid())
+        assertEquals("UPID:fixture-b:new", summary.latestTask?.taskUpid())
         assertEquals(listOf("pve-a", "pve-b"), api.requestedNodes)
     }
 
@@ -142,10 +142,10 @@ class TaskRepositoryTest {
         val api = FakeTaskApi()
         val repository = TaskRepository(api)
 
-        val result = repository.abortTask("pve", "UPID:pve:task")
+        val result = repository.abortTask("pve", "UPID:fixture:task")
 
         assertTrue(result is TaskResult.Success)
-        assertEquals("UPID:pve:task", api.abortedUpid)
+        assertEquals("UPID:fixture:task", api.abortedUpid)
     }
 
     @Test
@@ -224,7 +224,7 @@ class TaskRepositoryTest {
 
     companion object {
         private fun task(
-            upid: String? = "UPID:pve:task",
+            upid: String? = "UPID:fixture:task",
             id: String = "100",
             node: String = "pve",
             type: String = "qmstart",
@@ -242,7 +242,7 @@ class TaskRepositoryTest {
                 exitstatus = "OK",
                 starttime = starttime,
                 endtime = starttime + 5,
-                user = "root@pam",
+                user = "tester@pam",
                 saved = true
             )
         }

@@ -13,9 +13,9 @@ class UserRepositoryTest {
         val repository = UserRepository(
             FakeUserApi(
                 users = listOf(
-                    user(userid = "root@pam"),
+                    user(userid = "tester@pam"),
                     user(userid = ""),
-                    user(userid = "admin@pve"),
+                    user(userid = "admin-fixture@pve"),
                     user(userid = "backup@pbs")
                 )
             )
@@ -25,7 +25,7 @@ class UserRepositoryTest {
 
         assertTrue(result is UserResult.Success)
         val users = (result as UserResult.Success).data
-        assertEquals(listOf("admin@pve", "backup@pbs", "root@pam"), users.map { it.userid })
+        assertEquals(listOf("admin-fixture@pve", "backup@pbs", "tester@pam"), users.map { it.userid })
     }
 
     @Test
@@ -48,7 +48,7 @@ class UserRepositoryTest {
 
     companion object {
         private fun user(
-            userid: String = "root@pam",
+            userid: String = "tester@pam",
             enable: Boolean = true
         ): User {
             return User(

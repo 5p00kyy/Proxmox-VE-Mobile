@@ -79,12 +79,12 @@ class ScreenTest {
 
     @Test
     fun detailRoutes_encodeStorageUserAndTaskIdentifiers() {
-        val upid = "UPID:pve:0030B37E:070069EE:task:102:root@pam:"
+        val upid = "UPID:fixture:0030B37E:070069EE:task:102:tester@pam:"
 
         assertEquals("storage_detail/local-lvm%2Fvm-102", Screen.StorageDetail.createRoute("local-lvm/vm-102"))
-        assertEquals("user_detail/root%40pam", Screen.UserDetail.createRoute("root@pam"))
+        assertEquals("user_detail/tester%40pam", Screen.UserDetail.createRoute("tester@pam"))
         assertEquals(
-            "task_detail/pve%2Fnode/UPID%3Apve%3A0030B37E%3A070069EE%3Atask%3A102%3Aroot%40pam%3A",
+            "task_detail/pve%2Fnode/UPID%3Afixture%3A0030B37E%3A070069EE%3Atask%3A102%3Atester%40pam%3A",
             Screen.TaskDetail.createRoute("pve/node", upid)
         )
     }
@@ -92,15 +92,15 @@ class ScreenTest {
     @Test
     fun taskDetailRouteForNotice_returnsEncodedRouteWhenNodeAndTaskExist() {
         assertEquals(
-            "task_detail/lab%20node%2F1/UPID%3Apve%3Atask%3Aroot%40pam%3A",
-            taskDetailRouteForNotice(" lab node/1 ", " UPID:pve:task:root@pam: ")
+            "task_detail/lab%20node%2F1/UPID%3Afixture%3Atask%3Atester%40pam%3A",
+            taskDetailRouteForNotice(" lab node/1 ", " UPID:fixture:task:tester@pam: ")
         )
     }
 
     @Test
     fun taskDetailRouteForNotice_returnsNullForMissingNodeOrTask() {
-        assertEquals(null, taskDetailRouteForNotice(null, "UPID:pve:task"))
-        assertEquals(null, taskDetailRouteForNotice("   ", "UPID:pve:task"))
+        assertEquals(null, taskDetailRouteForNotice(null, "UPID:fixture:task"))
+        assertEquals(null, taskDetailRouteForNotice("   ", "UPID:fixture:task"))
         assertEquals(null, taskDetailRouteForNotice("pve", null))
         assertEquals(null, taskDetailRouteForNotice("pve", "   "))
     }

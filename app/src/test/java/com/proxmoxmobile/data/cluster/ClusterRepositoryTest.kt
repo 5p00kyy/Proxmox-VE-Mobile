@@ -15,9 +15,9 @@ class ClusterRepositoryTest {
             FakeClusterApi(
                 entries = listOf(
                     clusterEntry(name = "lab", quorate = 1, nodes = 2, votes = 2, expectedVotes = 2),
-                    nodeEntry(name = "pve-b", nodeId = 2, ip = "10.0.0.12", online = 0),
-                    nodeEntry(name = "pve-a", nodeId = 1, ip = "10.0.0.11", online = 1, local = 1),
-                    nodeEntry(name = "", nodeId = 3, ip = "10.0.0.13", online = 1)
+                    nodeEntry(name = "pve-b", nodeId = 2, ip = "192.0.2.12", online = 0),
+                    nodeEntry(name = "pve-a", nodeId = 1, ip = "192.0.2.11", online = 1, local = 1),
+                    nodeEntry(name = "", nodeId = 3, ip = "192.0.2.13", online = 1)
                 )
             )
         )
@@ -42,7 +42,7 @@ class ClusterRepositoryTest {
         val repository = ClusterRepository(
             FakeClusterApi(
                 entries = listOf(
-                    nodeEntry(name = "pve", nodeId = 1, ip = "10.0.0.10", online = 1)
+                    nodeEntry(name = "pve", nodeId = 1, ip = "192.0.2.10", online = 1)
                 )
             )
         )

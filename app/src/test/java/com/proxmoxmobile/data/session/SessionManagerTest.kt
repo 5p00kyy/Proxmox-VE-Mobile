@@ -34,7 +34,7 @@ class SessionManagerTest {
 
         assertTrue(result.isSuccess)
         val session = result.getOrThrow()
-        assertEquals("root@pam", session.username)
+        assertEquals("tester@pam", session.username)
         assertEquals("ticket-value", session.authToken)
         assertEquals("csrf-value", session.csrfToken)
         assertNull(session.serverConfig.password)
@@ -58,19 +58,19 @@ class SessionManagerTest {
         val result = manager.authenticate(
             serverConfig(
                 password = null,
-                apiToken = "root@pam!mobile=token-secret"
+                apiToken = "tester@pam!mobile=token-secret"
             )
         )
 
         assertTrue(result.isSuccess)
         val session = result.getOrThrow()
-        assertEquals("root", session.username)
+        assertEquals("tester", session.username)
         assertNull(session.authToken)
         assertNull(session.csrfToken)
         assertNull(session.serverConfig.password)
         assertNull(session.serverConfig.apiToken)
         assertTrue(session.auth is ProxmoxAuth.ApiToken)
-        assertEquals("root@pam!mobile=token-secret", (session.auth as ProxmoxAuth.ApiToken).value)
+        assertEquals("tester@pam!mobile=token-secret", (session.auth as ProxmoxAuth.ApiToken).value)
         assertEquals(1, factory.versionChecks)
 
         manager.createApiService()
@@ -86,7 +86,7 @@ class SessionManagerTest {
         )
 
         val result = manager.authenticate(
-            serverConfig(host = "", password = null, apiToken = "root@pam!mobile=token-secret")
+            serverConfig(host = "", password = null, apiToken = "tester@pam!mobile=token-secret")
         )
 
         assertTrue(result.isFailure)
@@ -127,7 +127,7 @@ class SessionManagerTest {
         val result = manager.authenticate(
             serverConfig(
                 password = null,
-                apiToken = "root@pam!mobile=bad-token-secret"
+                apiToken = "tester@pam!mobile=bad-token-secret"
             )
         )
 
@@ -150,7 +150,7 @@ class SessionManagerTest {
         val result = manager.authenticate(
             serverConfig(
                 password = null,
-                apiToken = "root@pam!mobile=token-secret"
+                apiToken = "tester@pam!mobile=token-secret"
             ).copy(verifySsl = false)
         )
 
@@ -235,13 +235,13 @@ class SessionManagerTest {
     }
 
     private fun serverConfig(
-        host: String = "pve.local",
+        host: String = "example.test",
         password: String? = "secret",
         apiToken: String? = null
     ): ServerConfig {
         return ServerConfig(
             host = host,
-            username = "root",
+            username = "tester",
             password = password,
             apiToken = apiToken,
             realm = "pam",

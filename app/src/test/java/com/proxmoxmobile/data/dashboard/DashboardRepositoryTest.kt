@@ -154,7 +154,7 @@ class DashboardRepositoryTest {
                 exitstatus = null,
                 starttime = 100,
                 endtime = null,
-                user = "root@pam",
+                user = "tester@pam",
                 saved = true
             )
         }
