@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,18 +32,19 @@ fun LoginScreen(
     viewModel: MainViewModel,
     onNavigateToDashboard: () -> Unit
 ) {
-    var host by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("8006") }
-    var username by remember { mutableStateOf("") }
+    var host by rememberSaveable { mutableStateOf("") }
+    var port by rememberSaveable { mutableStateOf("8006") }
+    var username by rememberSaveable { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var realm by remember { mutableStateOf("pam") }
-    var useHttps by remember { mutableStateOf(true) }
-    var verifySsl by remember { mutableStateOf(true) }
-    var certificateFingerprint by remember { mutableStateOf("") }
-    var saveCredentials by remember { mutableStateOf(false) }
-    var useApiToken by remember { mutableStateOf(false) }
-    var apiTokenId by remember { mutableStateOf("") }
+    var realm by rememberSaveable { mutableStateOf("pam") }
+    var useHttps by rememberSaveable { mutableStateOf(true) }
+    var verifySsl by rememberSaveable { mutableStateOf(true) }
+    var certificateFingerprint by rememberSaveable { mutableStateOf("") }
+    var saveCredentials by rememberSaveable { mutableStateOf(false) }
+    var useApiToken by rememberSaveable { mutableStateOf(false) }
+    var apiTokenId by rememberSaveable { mutableStateOf("") }
     var apiTokenSecret by remember { mutableStateOf("") }
+    var hasLoadedSavedCredentials by rememberSaveable { mutableStateOf(false) }
     
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -50,7 +52,11 @@ fun LoginScreen(
     val allowInsecureTls = BuildConfig.DEBUG
     
     // Load saved credentials on first load
-    LaunchedEffect(Unit) {
+    LaunchedEffect(hasLoadedSavedCredentials) {
+        if (hasLoadedSavedCredentials) {
+            return@LaunchedEffect
+        }
+        hasLoadedSavedCredentials = true
         val savedCredentials = viewModel.loadSavedCredentials()
         if (savedCredentials != null) {
             host = savedCredentials.host

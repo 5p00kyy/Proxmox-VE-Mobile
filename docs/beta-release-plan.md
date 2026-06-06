@@ -45,6 +45,7 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 | Navigation smoke | Yes | Dashboard, node detail, VM, LXC, storage, network, users, backups, tasks, cluster, settings do not crash during normal navigation |
 | Known limitations | Yes | README and release notes clearly identify read-only and planned areas |
 | Release notes | Yes | `CHANGELOG.md` has a `v0.1.0-beta.1` section before tagging |
+| Release media | Yes | Public-safe screenshots or short recordings are captured, sanitized, and referenced without private environment details |
 | Release artifact | Yes | Signed APK attached to GitHub release with release notes and install guidance |
 
 ## Release Packaging Workflow
@@ -172,6 +173,48 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 8. Configure release signing secrets and run the beta APK release workflow on the beta tag.
 9. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
 10. Keep a post-beta issue list for deferred parity work.
+
+## Release Notes And Media
+
+The beta release notes should be concise and honest about scope:
+
+- Lead with the app purpose: an Android Proxmox VE companion for login, mobile inspection, VM/LXC lifecycle actions, and task follow-up.
+- State that this is a beta for public testing, not full desktop web UI feature parity.
+- Link the signed APK attached to the GitHub Release and call out that debug/unsigned artifacts are not public beta downloads.
+- Summarize verified smoke coverage only after the smoke matrix is complete.
+- Keep unfinished areas in a known limitations section rather than implying they work.
+- Ask testers to report Proxmox version, Android version, auth method, TLS setup, and sanitized logs/screenshots.
+
+Before tagging, promote `CHANGELOG.md` from `Unreleased` to:
+
+```text
+## [v0.1.0-beta.1] - YYYY-MM-DD
+```
+
+Use the actual tag date, keep any unfinished future work under a new `Unreleased` section, and do not move pending smoke claims into the released section unless there is QA evidence.
+
+### Public Media Checklist
+
+Capture release media from a disposable lab, sanitized demo environment, or fully redacted screenshots. Do not reuse private emulator screenshots that show real hostnames, usernames, IP addresses, node names, backup comments, task logs, tokens, cookies, tickets, certificate fingerprints, or local desktop paths.
+
+Required release captures:
+
+| Capture | Purpose | Sanitization |
+| --- | --- | --- |
+| Login/TLS | Show password/API token mode and fingerprint support | Use placeholder host text or a disposable lab endpoint |
+| Dashboard | Show first-screen mobile layout and node/task summary | Use generic lab node and guest names |
+| VM list/detail | Show lifecycle controls and read-only detail/config/snapshot areas | Use disposable guest names and no production IDs |
+| LXC list/detail | Show container lifecycle controls and detail screen | Use disposable guest names and no production IDs |
+| Task detail/log | Show returned-task follow-up | Redact UPIDs, usernames, node names, IPs, and log values unless from a throwaway lab |
+| Read-only admin slice | Show storage, network, users, backups, or cluster status | Prefer storage/cluster; avoid exposing network addresses or real account names |
+
+Recommended media set:
+
+- 4-6 PNG screenshots for the GitHub Release body.
+- 1 short screen recording or GIF showing dashboard to guest action to task detail, only after disposable lifecycle smoke passes.
+- Alt text or captions that describe the workflow without environment identifiers.
+
+If public-safe media cannot be captured before the beta tag, ship the release notes without screenshots rather than publishing redacted private infrastructure accidentally.
 
 ## Estimated Timeline
 

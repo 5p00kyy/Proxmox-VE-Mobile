@@ -52,6 +52,35 @@ Observed pass:
 - Cluster screen opens from the dashboard and renders standalone-node cluster status.
 - Settings opens and shows the beta version plus disabled planned settings without implying runtime behavior.
 
+## 2026-06-06 Rotation/Resume Source Audit
+
+Source-level fixes:
+
+- App-level session state now uses the AndroidX ViewModel store instead of Compose-only `remember`, reducing rotation risk for the authenticated session, current server, and cached nodes.
+- Saved credential restore is initialized in an ordered Activity effect and skips rewriting the current server when the app session is already active.
+- Login form drafts use saveable state for non-secret fields so host, port, username, realm, TLS, fingerprint, save-credentials, and API-token ID survive rotation before submission. Passwords and API token secrets remain in in-memory state instead of Android saved-instance-state bundles.
+- Saved login prefill runs once per login composition so restored form drafts are not overwritten by saved credentials after rotation.
+- Task filter drafts for status, type, and VMID use saveable state so in-progress filter edits survive rotation before applying.
+
+Emulator smoke evidence:
+
+- Rebuilt debug APK installed over existing app data without clearing saved credentials.
+- Saved login form remained populated after an Activity relaunch triggered by an attempted rotation.
+- Saved login reached the dashboard after the Activity/ViewModel recreation fix.
+- Latest rebuilt debug APK also reached the dashboard from encrypted saved credentials after reinstall with app data preserved.
+- Dashboard remained visible and usable after Home/background plus launcher resume.
+- Post-resume logcat scan found no fatal app crash entries.
+- Forced landscape could not be counted as verified because the emulator returned to portrait after relaunch.
+- Login screen was manually forced into landscape during a later emulator pass; the form remained scrollable and the submit button was reachable. This is partial login-screen coverage only, not a full route-matrix landscape pass.
+
+Still requires emulator/manual smoke:
+
+- Rotate while logged in on dashboard and verify the app stays authenticated, the dashboard remains on screen, and refresh still works.
+- Rotate on VM, LXC, storage, network, users, backups, tasks, task detail, cluster, and settings screens and verify the route, top app bar padding, scrollability, and loaded data remain usable.
+- Rotate while typing an unsaved login form and task filter form and verify drafts survive.
+- Background and resume from dashboard, task detail, VM list, and LXC list and verify polling resumes without duplicated snackbar/task notices.
+- Test one narrow/small-phone viewport and landscape mode for clipped top bars, wrapped action labels, and inaccessible bottom content.
+
 Still pending:
 
 - API token login smoke.
@@ -59,4 +88,10 @@ Still pending:
 - Invalid credential and invalid TLS error-state smoke.
 - VM/LXC lifecycle smoke on disposable guests.
 - Task detail/log handoff smoke after lifecycle actions.
-- Small-screen/rotation/background-resume pass.
+- Full emulator small-screen/landscape/route-matrix rotation and background-resume smoke.
+
+Media readiness:
+
+- Private emulator screenshots from this pass must not be used as release media.
+- Public release screenshots remain pending until they can be captured from a disposable lab or fully sanitized sample environment.
+- Release media must avoid hostnames, IP addresses, usernames, backup notes, task log identifiers, tokens, tickets, cookies, certificate fingerprints tied to a private server, and local machine paths.

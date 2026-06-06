@@ -6,6 +6,8 @@ Describe what changed and why.
 
 Add screenshots or screen recordings for UI changes. Use "N/A" for non-UI changes.
 
+For release or README media, use a disposable lab or sanitize all hostnames, IP addresses, usernames, backup notes, task log identifiers, tokens, cookies, tickets, certificate fingerprints, and local machine paths.
+
 ## QA
 
 Commands run:
@@ -22,6 +24,7 @@ Beta release checks:
 - [ ] Known limitations updated.
 - [ ] Changelog/release notes updated.
 - [ ] Screenshots or release media updated, or intentionally deferred.
+- [ ] Release media is public-safe and does not expose private infrastructure details.
 - [ ] Beta smoke matrix updated when release behavior changes.
 
 Test environment:
@@ -30,6 +33,8 @@ Test environment:
 - Proxmox VE version:
 - Standalone or cluster:
 - Auth method:
+
+Avoid recording private hostnames, IP addresses, usernames, or tokens in the public PR body.
 
 ## Risk
 

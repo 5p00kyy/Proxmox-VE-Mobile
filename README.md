@@ -35,7 +35,15 @@ Only install APKs attached to this repository's GitHub Releases. Debug APKs and 
 
 ## Screenshots
 
-Screenshots and short screen recordings should be added before tagging `v0.1.0-beta.1`. At minimum, capture login/TLS, dashboard, VM list/detail, LXC list/detail, task detail/logs, and one read-only admin slice.
+Screenshots and short screen recordings should be added before tagging `v0.1.0-beta.1`. At minimum, capture:
+
+- Login with the TLS/fingerprint controls visible, using non-sensitive sample host text.
+- Dashboard with generic or disposable lab resources only.
+- VM list/detail and LXC list/detail with disposable guest names.
+- Task detail/logs with UPIDs, usernames, node names, IPs, and sensitive log values redacted or captured from a throwaway lab.
+- One read-only admin slice such as storage, network, users, backups, or cluster, using sanitized sample data.
+
+Do not publish screenshots that reveal private hostnames, public or private IP addresses, usernames, backup notes, task logs with environment details, API tokens, tickets, cookies, fingerprints tied to a private server, or desktop/user-specific paths. If sanitized real screenshots are not available, use a disposable Proxmox lab or omit screenshots until public-safe media can be captured.
 
 ## Localization
 

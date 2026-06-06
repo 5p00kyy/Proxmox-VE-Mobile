@@ -13,6 +13,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Known limitations for the beta include no guest console, no VM/LXC configuration editing, no snapshot mutation, no backup create/restore/download/delete, no user mutation flows, no node power actions, and no Proxmox Backup Server management.
 - Beta APK distribution is planned through GitHub Releases first. Play Store and F-Droid packaging are deferred.
 - Real Proxmox smoke QA is still required before tagging.
+- Before tagging, this section must be promoted to `## [v0.1.0-beta.1] - YYYY-MM-DD`, the smoke status must be updated from pending to verified or known limitation, and the release notes must reference only sanitized screenshots or media.
 
 ### Added
 
@@ -25,6 +26,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Beta APK release workflow for `v*-beta.*` tags, published releases, and manual dry runs.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
+- Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
 - Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
@@ -140,6 +142,8 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.
 - VM/LXC delete now has ViewModel-level stopped-state gating in addition to disabled UI controls.
 - Task detail loading now accepts valid Proxmox status payloads that omit embedded UPID, using the routed UPID for task handoff.
+- Activity recreation now retains the app-level session ViewModel instead of rebuilding it from Compose-only state.
+- Non-secret login form drafts and task filter drafts now survive rotation before submission.
 
 ### Security
 

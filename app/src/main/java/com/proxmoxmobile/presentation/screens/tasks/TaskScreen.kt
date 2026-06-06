@@ -61,6 +61,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -556,13 +557,15 @@ private fun TaskFilterCard(
     onApply: (TaskFilters) -> Unit,
     onClear: () -> Unit
 ) {
-    var selectedStatus by remember { mutableStateOf(filters.status) }
-    var typeText by remember { mutableStateOf(filters.typeFilter.orEmpty()) }
-    var vmidText by remember { mutableStateOf(filters.vmid?.toString().orEmpty()) }
+    var selectedStatusName by rememberSaveable { mutableStateOf(filters.status.name) }
+    var typeText by rememberSaveable { mutableStateOf(filters.typeFilter.orEmpty()) }
+    var vmidText by rememberSaveable { mutableStateOf(filters.vmid?.toString().orEmpty()) }
     var statusExpanded by remember { mutableStateOf(false) }
+    val selectedStatus = runCatching { TaskStatusFilter.valueOf(selectedStatusName) }
+        .getOrDefault(TaskStatusFilter.All)
 
     LaunchedEffect(filters) {
-        selectedStatus = filters.status
+        selectedStatusName = filters.status.name
         typeText = filters.typeFilter.orEmpty()
         vmidText = filters.vmid?.toString().orEmpty()
     }
@@ -630,7 +633,7 @@ private fun TaskFilterCard(
                         DropdownMenuItem(
                             text = { Text(status.toDisplayLabel()) },
                             onClick = {
-                                selectedStatus = status
+                                selectedStatusName = status.name
                                 statusExpanded = false
                             }
                         )
@@ -668,7 +671,7 @@ private fun TaskFilterCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(onClick = {
-                    selectedStatus = TaskStatusFilter.All
+                    selectedStatusName = TaskStatusFilter.All.name
                     typeText = ""
                     vmidText = ""
                     onClear()
