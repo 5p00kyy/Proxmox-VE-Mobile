@@ -556,9 +556,15 @@ fun VMCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+            val deleteEnabled = vm.status.equals("stopped", ignoreCase = true) && !hasActionInProgress
+            val deleteLabel = if (vm.status.equals("stopped", ignoreCase = true)) {
+                stringResource(R.string.vm_delete)
+            } else {
+                stringResource(R.string.vm_delete_requires_stopped)
+            }
             OutlinedButton(
                 onClick = onDelete,
-                enabled = !hasActionInProgress,
+                enabled = deleteEnabled,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
@@ -570,10 +576,10 @@ fun VMCard(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.vm_delete))
+                    Icon(Icons.Filled.Delete, contentDescription = deleteLabel)
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.vm_delete))
+                Text(deleteLabel)
             }
 
             Spacer(modifier = Modifier.height(8.dp))

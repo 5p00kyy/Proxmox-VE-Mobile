@@ -22,7 +22,7 @@ The beta should not claim full feature parity, Proxmox Backup Server parity, or 
 Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [################....] 80%
-Real Proxmox smoke QA        [....................] 0%
+Real Proxmox smoke QA        [###.................] 15%
 UX/copy release polish       [########............] 40%
 Release packaging            [##..................] 10%
 Official beta readiness      [##########..........] 50%
@@ -145,4 +145,3 @@ Careful beta     1-2 weeks  Multiple Proxmox versions, reverse proxy/TLS variant
 ```
 
 The recommended path is `3-5 days`: enough real validation to avoid a brittle public release while keeping the project moving.
-

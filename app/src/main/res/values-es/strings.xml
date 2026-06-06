@@ -127,6 +127,7 @@
     <string name="vm_reboot_dialog_message">¿Reiniciar la VM \'%1$s\' (ID: %2$d)? Las cargas en ejecución pueden interrumpirse.</string>
     <string name="vm_delete_dialog_title">Eliminar VM</string>
     <string name="vm_delete_dialog_message">¿Seguro que quieres eliminar la VM \'%1$s\' (ID: %2$d)? Esta acción no se puede deshacer.</string>
+    <string name="vm_delete_requires_stopped">Detén la VM antes de eliminarla</string>
     <string name="vm_id_status">ID: %1$d | Estado: %2$s</string>
     <string name="vm_cpu">CPU</string>
     <string name="vm_cpu_value">%1$.1f%%</string>
@@ -210,6 +211,7 @@
     <string name="container_reboot_message">¿Reiniciar el contenedor \'%1$s\' (ID: %2$d)? Las cargas en ejecución pueden interrumpirse.</string>
     <string name="container_delete_title">Eliminar contenedor</string>
     <string name="container_delete_message">¿Seguro que quieres eliminar el contenedor \'%1$s\' (ID: %2$d)? Esta acción no se puede deshacer.</string>
+    <string name="container_delete_requires_stopped">Detén el contenedor antes de eliminarlo</string>
     <string name="container_id_status">ID: %1$d | Estado: %2$s</string>
     <string name="container_cpu">CPU</string>
     <string name="container_cpu_value">%1$.1f%%</string>

@@ -571,9 +571,15 @@ fun ContainerCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+            val deleteEnabled = container.status.equals("stopped", ignoreCase = true) && !hasActionInProgress
+            val deleteLabel = if (container.status.equals("stopped", ignoreCase = true)) {
+                stringResource(R.string.container_delete)
+            } else {
+                stringResource(R.string.container_delete_requires_stopped)
+            }
             OutlinedButton(
                 onClick = onDelete,
-                enabled = !hasActionInProgress,
+                enabled = deleteEnabled,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
@@ -585,10 +591,10 @@ fun ContainerCard(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.container_delete))
+                    Icon(Icons.Filled.Delete, contentDescription = deleteLabel)
                 }
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.container_delete))
+                Text(deleteLabel)
             }
 
             Spacer(modifier = Modifier.height(8.dp))

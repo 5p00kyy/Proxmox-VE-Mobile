@@ -127,6 +127,7 @@
     <string name="vm_reboot_dialog_message">Reboot VM \'%1$s\' (ID: %2$d)? Running workloads may be interrupted.</string>
     <string name="vm_delete_dialog_title">Delete VM</string>
     <string name="vm_delete_dialog_message">Are you sure you want to delete VM \'%1$s\' (ID: %2$d)? This action cannot be undone.</string>
+    <string name="vm_delete_requires_stopped">Stop VM before deleting</string>
     <string name="vm_id_status">ID: %1$d | Status: %2$s</string>
     <string name="vm_cpu">CPU</string>
     <string name="vm_cpu_value">%1$.1f%%</string>
@@ -210,6 +211,7 @@
     <string name="container_reboot_message">Reboot container \'%1$s\' (ID: %2$d)? Running workloads may be interrupted.</string>
     <string name="container_delete_title">Delete Container</string>
     <string name="container_delete_message">Are you sure you want to delete container \'%1$s\' (ID: %2$d)? This action cannot be undone.</string>
+    <string name="container_delete_requires_stopped">Stop container before deleting</string>
     <string name="container_id_status">ID: %1$d | Status: %2$s</string>
     <string name="container_cpu">CPU</string>
     <string name="container_cpu_value">%1$.1f%%</string>

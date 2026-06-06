@@ -127,6 +127,7 @@
     <string name="vm_reboot_dialog_message">VM \'%1$s\' (ID: %2$d) neu starten? Laufende Workloads können unterbrochen werden.</string>
     <string name="vm_delete_dialog_title">VM löschen</string>
     <string name="vm_delete_dialog_message">Möchten Sie die VM \'%1$s\' (ID: %2$d) wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="vm_delete_requires_stopped">VM vor dem Löschen stoppen</string>
     <string name="vm_id_status">ID: %1$d | Status: %2$s</string>
     <string name="vm_cpu">CPU</string>
     <string name="vm_cpu_value">%1$.1f%%</string>
@@ -210,6 +211,7 @@
     <string name="container_reboot_message">Container \'%1$s\' (ID: %2$d) neu starten? Laufende Workloads können unterbrochen werden.</string>
     <string name="container_delete_title">Container löschen</string>
     <string name="container_delete_message">Möchten Sie den Container \'%1$s\' (ID: %2$d) wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.</string>
+    <string name="container_delete_requires_stopped">Container vor dem Löschen stoppen</string>
     <string name="container_id_status">ID: %1$d | Status: %2$s</string>
     <string name="container_cpu">CPU</string>
     <string name="container_cpu_value">%1$.1f%%</string>
