@@ -23,6 +23,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - GitHub issue templates for bug reports and feature requests.
 - Pull request template with QA, risk, and contributor checklists.
 - Beta APK release workflow for `v*-beta.*` tags, published releases, and manual dry runs.
+- GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.

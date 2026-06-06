@@ -51,6 +51,8 @@ All required gates must pass before tagging `v0.1.0-beta.1`.
 
 The beta APK release path is handled by `.github/workflows/beta-release.yml`.
 
+The Android CI and beta release workflows opt into Node 24 JavaScript action execution so hosted-runner behavior is tested before GitHub's Node 24 default takes effect.
+
 Triggers:
 
 - `push` tags matching `v*-beta.*`, including `v0.1.0-beta.1`.
