@@ -24,10 +24,14 @@ import com.proxmoxmobile.data.model.NodeStatus
 import com.proxmoxmobile.data.model.RootFS
 import com.proxmoxmobile.data.model.ServerConfig
 import com.proxmoxmobile.data.model.Swap
+import com.proxmoxmobile.data.model.Task
+import com.proxmoxmobile.data.model.TaskLogEntry
 import com.proxmoxmobile.data.model.VirtualMachine
 import com.proxmoxmobile.data.model.VmSnapshot
 import com.proxmoxmobile.data.node.NodeApi
 import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.task.TaskApi
+import com.proxmoxmobile.data.task.TaskRepository
 import com.proxmoxmobile.data.vm.VmApi
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.theme.ProxmoxTheme
@@ -80,11 +84,26 @@ class DetailRouteSmokeTest {
         composeRule.waitUntilAtLeastOneExists(hasText("Resource Management", substring = true))
     }
 
+    @Test
+    fun fakeTaskDetailRouteRendersPopulatedContent() {
+        startFakeAuthenticatedRoute(
+            route = Screen.TaskDetail.createRoute(LAB_NODE, TASK_UPID),
+            taskRepositoryOverride = TaskRepository(FakeTaskApi())
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("Task Details"))
+        composeRule.waitUntilAtLeastOneExists(hasText("QMSTART", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText(TASK_UPID, substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("TASK_OK", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("fixture task completed", substring = true))
+    }
+
     private fun startFakeAuthenticatedRoute(
         route: String,
         vmRepositoryOverride: VmRepository? = null,
         lxcRepositoryOverride: LxcRepository? = null,
-        nodeRepositoryOverride: NodeRepository? = null
+        nodeRepositoryOverride: NodeRepository? = null,
+        taskRepositoryOverride: TaskRepository? = null
     ) {
         composeRule.setContent {
             val navController = rememberNavController()
@@ -107,7 +126,8 @@ class DetailRouteSmokeTest {
                         startDestination = Screen.Settings.route,
                         vmRepositoryOverride = vmRepositoryOverride,
                         lxcRepositoryOverride = lxcRepositoryOverride,
-                        nodeRepositoryOverride = nodeRepositoryOverride
+                        nodeRepositoryOverride = nodeRepositoryOverride,
+                        taskRepositoryOverride = taskRepositoryOverride
                     )
                 }
             }
@@ -240,12 +260,48 @@ class DetailRouteSmokeTest {
         }
     }
 
+    private class FakeTaskApi : TaskApi {
+        override suspend fun getTasks(
+            nodeName: String,
+            limit: Int,
+            start: Int,
+            statusFilter: String?,
+            typeFilter: String?,
+            vmid: Int?
+        ): ApiResponse<List<Task>> {
+            return ApiResponse(listOf(fakeTask(nodeName)))
+        }
+
+        override suspend fun getTaskStatus(nodeName: String, upid: String): ApiResponse<Task> {
+            return ApiResponse(fakeTask(nodeName = nodeName, upid = upid))
+        }
+
+        override suspend fun getTaskLog(
+            nodeName: String,
+            upid: String,
+            start: Int,
+            limit: Int
+        ): ApiResponse<List<TaskLogEntry>> {
+            return ApiResponse(
+                listOf(
+                    TaskLogEntry(lineNumber = 1, text = "fixture task entered queue"),
+                    TaskLogEntry(lineNumber = 2, text = "fixture task completed")
+                )
+            )
+        }
+
+        override suspend fun abortTask(nodeName: String, upid: String): ApiResponse<Map<String, String>> {
+            return ApiResponse(mapOf("status" to "fixture-aborted"))
+        }
+    }
+
     private companion object {
         private const val LAB_NODE = "lab-node"
         private const val VM_ID = 102
         private const val VM_NAME = "beta-vm"
         private const val LXC_ID = 202
         private const val LXC_NAME = "beta-lxc"
+        private const val TASK_UPID = "UPID:fixture:0001:qmstart:102:tester@pam:"
 
         private fun fakeNodeStatus(nodeName: String): NodeStatus {
             return NodeStatus(
@@ -322,6 +378,26 @@ class DetailRouteSmokeTest {
                 netin = 1L * 1024L * 1024L,
                 netout = 2L * 1024L * 1024L,
                 tags = "beta"
+            )
+        }
+
+        private fun fakeTask(
+            nodeName: String = LAB_NODE,
+            upid: String = TASK_UPID
+        ): Task {
+            return Task(
+                upid = upid,
+                id = VM_ID.toString(),
+                node = nodeName,
+                pid = 2001,
+                pstart = 1_700_000_100,
+                type = "qmstart",
+                status = "stopped",
+                exitstatus = "TASK_OK",
+                starttime = 1_700_000_000,
+                endtime = 1_700_000_020,
+                user = "tester@pam",
+                saved = true
             )
         }
     }

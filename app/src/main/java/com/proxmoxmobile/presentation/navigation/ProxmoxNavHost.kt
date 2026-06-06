@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import com.proxmoxmobile.R
 import com.proxmoxmobile.data.lxc.LxcRepository
 import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.task.TaskRepository
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.screens.auth.LoginScreen
 import com.proxmoxmobile.presentation.screens.dashboard.DashboardScreen
@@ -39,7 +40,8 @@ fun ProxmoxNavHost(
     startDestination: String = Screen.Login.route,
     vmRepositoryOverride: VmRepository? = null,
     lxcRepositoryOverride: LxcRepository? = null,
-    nodeRepositoryOverride: NodeRepository? = null
+    nodeRepositoryOverride: NodeRepository? = null,
+    taskRepositoryOverride: TaskRepository? = null
 ) {
     val confirmationDialog by viewModel.showConfirmationDialog.collectAsState()
 
@@ -151,7 +153,8 @@ fun ProxmoxNavHost(
                 navController = navController,
                 viewModel = viewModel,
                 nodeName = node,
-                upid = upid
+                upid = upid,
+                repositoryOverride = taskRepositoryOverride
             )
         }
         

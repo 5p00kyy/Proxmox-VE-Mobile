@@ -297,7 +297,8 @@ fun TaskDetailScreen(
     navController: NavController,
     viewModel: MainViewModel,
     nodeName: String,
-    upid: String
+    upid: String,
+    repositoryOverride: TaskRepository? = null
 ) {
     val invalidTaskMessage = stringResource(R.string.task_error_invalid_task)
     val abortSuccessTemplate = stringResource(R.string.task_abort_success)
@@ -307,9 +308,10 @@ fun TaskDetailScreen(
     val taskRepository = remember(viewModel) {
         TaskRepository(ProxmoxTaskApi { viewModel.getApiService() })
     }
+    val activeTaskRepository = repositoryOverride ?: taskRepository
     val taskDetailViewModel: TaskDetailViewModel = composeViewModel(
         key = "task-detail-$nodeName-$upid",
-        factory = remember(nodeName, upid, taskRepository, invalidTaskMessage) {
+        factory = remember(nodeName, upid, activeTaskRepository, invalidTaskMessage) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -317,7 +319,7 @@ fun TaskDetailScreen(
                         return TaskDetailViewModel(
                             nodeName = nodeName,
                             upid = upid,
-                            repository = taskRepository,
+                            repository = activeTaskRepository,
                             invalidTaskMessage = invalidTaskMessage
                         ) as T
                     }
