@@ -11,85 +11,83 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import com.proxmoxmobile.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import androidx.navigation.NavController
+import com.proxmoxmobile.data.dashboard.DashboardRepository
+import com.proxmoxmobile.data.dashboard.ProxmoxDashboardApi
+import com.proxmoxmobile.data.dashboard.ProxmoxDashboardTaskSummarySource
 import com.proxmoxmobile.data.model.Node
+import com.proxmoxmobile.data.task.ProxmoxTaskApi
+import com.proxmoxmobile.data.task.TaskRepository
+import com.proxmoxmobile.data.task.TaskSummary
 import com.proxmoxmobile.presentation.navigation.Screen
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import android.util.Log
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import java.util.Locale
 import kotlinx.coroutines.delay
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 fun Double.format(digits: Int) = String.format(Locale.US, "%.${digits}f", this)
+
+const val DASHBOARD_RECENT_TASKS_METRIC_TAG = "dashboard_recent_tasks_metric"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    repositoryOverride: DashboardRepository? = null
 ) {
-    var nodes by remember { mutableStateOf<List<Node>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var lastRefreshTime by remember { mutableStateOf(System.currentTimeMillis()) }
-    val scope = rememberCoroutineScope()
-
-            // Real-time data refresh
-        LaunchedEffect(Unit) {
-            while (true) {
-                delay(30000) // Refresh every 30 seconds
-                if (viewModel.isAuthenticated.value) {
-                    scope.launch {
-                        refreshNodes(viewModel, { newNodes ->
-                            nodes = newNodes
-                            lastRefreshTime = System.currentTimeMillis()
-                        }, { error ->
-                            errorMessage = error
-                        })
+    val initialCachedNodes = remember(viewModel) {
+        viewModel.getCachedNodes().orEmpty()
+    }
+    val dashboardRepository = remember(viewModel) {
+        DashboardRepository(
+            api = ProxmoxDashboardApi { viewModel.getApiService() },
+            taskSummarySource = ProxmoxDashboardTaskSummarySource(
+                TaskRepository(ProxmoxTaskApi { viewModel.getApiService() })
+            )
+        )
+    }
+    val activeDashboardRepository = repositoryOverride ?: dashboardRepository
+    val dashboardViewModel: DashboardViewModel = composeViewModel(
+        key = "dashboard",
+        factory = remember(initialCachedNodes, activeDashboardRepository, viewModel) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                        return DashboardViewModel(
+                            initialCachedNodes = initialCachedNodes,
+                            repository = activeDashboardRepository,
+                            cacheNodes = viewModel::setCachedNodes
+                        ) as T
                     }
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
             }
         }
+    )
+    val uiState by dashboardViewModel.uiState.collectAsState()
+    val nodes = uiState.nodes
 
-    // Initial load and manual refresh function
-    fun loadNodes() {
-        scope.launch {
-            refreshNodes(viewModel, { newNodes ->
-                nodes = newNodes
-                lastRefreshTime = System.currentTimeMillis()
-                errorMessage = null
-            }, { error ->
-                errorMessage = error
-            })
-        }
-    }
-
-    // Fetch nodes when screen loads
-    LaunchedEffect(Unit) {
-        try {
-            val cached = viewModel.getCachedNodes()
-            if (cached != null && cached.isNotEmpty()) {
-                nodes = cached
-                lastRefreshTime = System.currentTimeMillis()
-                isLoading = false
-                errorMessage = null
-                Log.d("DashboardScreen", "Loaded nodes from cache: ${cached.size}")
-            } else {
-                loadNodes()
+    // Real-time data refresh
+    LaunchedEffect(dashboardViewModel) {
+        dashboardViewModel.loadDashboard()
+        while (true) {
+            delay(30000) // Refresh every 30 seconds
+            if (viewModel.isAuthenticated.value) {
+                dashboardViewModel.loadDashboard(showLoading = false)
             }
-        } catch (e: Exception) {
-            Log.e("DashboardScreen", "Critical error in LaunchedEffect", e)
-            errorMessage = "An unexpected error occurred"
-            isLoading = false
         }
     }
 
@@ -109,7 +107,13 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Settings */ }) {
+                    IconButton(
+                        onClick = { dashboardViewModel.loadDashboard(showLoading = false) },
+                        enabled = !uiState.isLoading && !uiState.isRefreshing
+                    ) {
+                        Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.dashboard_refresh))
+                    }
+                    IconButton(onClick = { navController.navigate(Screen.Settings.route) }) {
                         Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.dashboard_settings))
                     }
                     IconButton(onClick = {
@@ -145,7 +149,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.dashboard_last_updated, formatTimeAgo(lastRefreshTime)),
+                        text = stringResource(R.string.dashboard_last_updated, formatTimeAgo(uiState.lastRefreshTimeMillis)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -156,6 +160,16 @@ fun DashboardScreen(
             if (nodes.isNotEmpty()) {
                 item {
                     SystemStatusCard(nodes.first())
+                }
+                item {
+                    TaskActivityCard(
+                        summary = uiState.taskSummary,
+                        isLoading = uiState.isTaskSummaryLoading,
+                        errorMessage = uiState.taskSummaryError,
+                        onOpenTasks = {
+                            navController.navigate(Screen.Tasks.route)
+                        }
+                    )
                 }
             } else {
                 item {
@@ -225,7 +239,7 @@ fun DashboardScreen(
             }
 
             // Error message
-            errorMessage?.let { error ->
+            uiState.errorMessage?.let { error ->
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -243,7 +257,7 @@ fun DashboardScreen(
             }
 
             // Loading state
-            if (isLoading) {
+            if (uiState.isLoading) {
                 item {
                     Box(
                         modifier = Modifier.fillMaxWidth(),
@@ -270,7 +284,7 @@ fun DashboardScreen(
                         node = node,
                         onClick = {
                             try {
-                                navController.navigate("${Screen.VMList.route}/${node.node}")
+                                navController.navigate(Screen.NodeDetail.createRoute(node.node))
                             } catch (e: Exception) {
                                 Log.e("DashboardScreen", "Navigation error", e)
                             }
@@ -303,16 +317,13 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.ContainerList.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.ContainerList.route)
+                                navController.navigate(Screen.ContainerList.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to LXC", e)
                         }
                     }
-                    
+
                     // Virtual Machines
                     QuickActionCard(
                         title = stringResource(R.string.dashboard_vm),
@@ -322,10 +333,7 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.VMList.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.VMList.route)
+                                navController.navigate(Screen.VMList.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to VM", e)
@@ -348,16 +356,13 @@ fun DashboardScreen(
                     ) {
                         try {
                             if (nodes.isNotEmpty()) {
-                                navController.navigate("${Screen.Storage.route}/${nodes.first().node}")
-                            } else {
-                                // Fallback navigation
-                                navController.navigate(Screen.Storage.route)
+                                navController.navigate(Screen.Storage.createRoute(nodes.first().node))
                             }
                         } catch (e: Exception) {
                             Log.e("DashboardScreen", "Navigation error to Storage", e)
                         }
                     }
-                    
+
                     // Network
                     QuickActionCard(
                         title = stringResource(R.string.dashboard_network),
@@ -392,7 +397,7 @@ fun DashboardScreen(
                             Log.e("DashboardScreen", "Navigation error to Users", e)
                         }
                     }
-                    
+
                     // Tasks
                     QuickActionCard(
                         title = stringResource(R.string.dashboard_tasks),
@@ -408,15 +413,43 @@ fun DashboardScreen(
                     }
                 }
             }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Backups
+                    QuickActionCard(
+                        title = stringResource(R.string.dashboard_backups),
+                        subtitle = stringResource(R.string.dashboard_backup_history),
+                        icon = Icons.Default.Cloud,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        try {
+                            navController.navigate(Screen.Backups.route)
+                        } catch (e: Exception) {
+                            Log.e("DashboardScreen", "Navigation error to Backups", e)
+                        }
+                    }
+
+                    // Cluster
+                    QuickActionCard(
+                        title = stringResource(R.string.dashboard_cluster),
+                        subtitle = stringResource(R.string.dashboard_cluster_status),
+                        icon = Icons.Default.Share,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        try {
+                            navController.navigate(Screen.Cluster.route)
+                        } catch (e: Exception) {
+                            Log.e("DashboardScreen", "Navigation error to Cluster", e)
+                        }
+                    }
+                }
+            }
         }
     }
-}
-
-private fun isValidNode(node: Node): Boolean {
-    return node.node.isNotBlank() && 
-           node.cpu >= 0 && 
-           node.mem >= 0 && 
-           node.uptime >= 0
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -481,6 +514,148 @@ fun SystemStatusCard(node: Node) {
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TaskActivityCard(
+    summary: TaskSummary?,
+    isLoading: Boolean,
+    errorMessage: String?,
+    onOpenTasks: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onOpenTasks,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.List,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.dashboard_task_activity),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.dashboard_open_tasks),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            when {
+                isLoading -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.dashboard_task_activity_loading),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+                errorMessage != null -> {
+                    Text(
+                        text = stringResource(R.string.dashboard_task_activity_error, errorMessage),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+                summary != null -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TaskActivityMetric(
+                            label = stringResource(R.string.dashboard_running_tasks),
+                            value = summary.runningCount.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        TaskActivityMetric(
+                            label = stringResource(R.string.dashboard_recent_tasks),
+                            value = summary.recentCount.toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag(DASHBOARD_RECENT_TASKS_METRIC_TAG)
+                                .semantics(mergeDescendants = true) {}
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val latestTask = summary.latestTask
+                    Text(
+                        text = stringResource(R.string.dashboard_latest_task),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                    )
+                    Text(
+                        text = if (latestTask == null) {
+                            stringResource(R.string.dashboard_no_recent_tasks)
+                        } else {
+                            stringResource(
+                                R.string.dashboard_latest_task_value,
+                                latestTask.type.uppercase(Locale.getDefault()),
+                                latestTask.node,
+                                latestTask.status
+                            )
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TaskActivityMetric(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+        )
     }
 }
 
@@ -604,88 +779,15 @@ fun QuickActionCard(
     }
 }
 
-// Helper function to refresh nodes
-suspend fun refreshNodes(
-    viewModel: MainViewModel,
-    onSuccess: (List<Node>) -> Unit,
-    onError: (String) -> Unit
-) {
-    try {
-        Log.d("DashboardScreen", "Starting to refresh nodes")
-        
-        // Check if we have a valid API service
-        val apiService = try {
-            viewModel.getApiService()
-        } catch (e: Exception) {
-            Log.e("DashboardScreen", "Failed to get API service", e)
-            onError("Authentication failed - please login again")
-            return
-        }
-        
-        if (apiService == null) {
-            Log.e("DashboardScreen", "API service is null")
-            onError("Not authenticated - please login again")
-            return
-        }
-        
-        Log.d("DashboardScreen", "API service available, fetching nodes")
-        
-        // Wrap the API call in additional error handling
-        val response = try {
-            apiService.getNodes()
-        } catch (e: Exception) {
-            Log.e("DashboardScreen", "API call failed", e)
-            onError("Failed to connect to server: ${e.message}")
-            return
-        }
-        
-        Log.d("DashboardScreen", "Nodes response received: ${response.data?.size ?: 0} nodes")
-        
-        // Safely handle the response data
-        val nodeList = response.data ?: emptyList()
-        Log.d("DashboardScreen", "Processed ${nodeList.size} nodes")
-        
-        // Validate each node before adding to the list
-        val validNodes = nodeList.filter { node ->
-            try {
-                node.node.isNotBlank() && 
-                node.status.isNotBlank() &&
-                node.cpu >= 0 &&
-                node.mem >= 0 &&
-                node.uptime >= 0
-            } catch (e: Exception) {
-                Log.w("DashboardScreen", "Invalid node data: ${e.message}")
-                false
-            }
-        }
-        
-        viewModel.setCachedNodes(validNodes)
-        onSuccess(validNodes)
-        Log.d("DashboardScreen", "Successfully refreshed ${validNodes.size} valid nodes")
-        
-    } catch (e: retrofit2.HttpException) {
-        Log.e("DashboardScreen", "HTTP error refreshing nodes: ${e.code()}", e)
-        when (e.code()) {
-            401 -> onError("Authentication required - please login again")
-            403 -> onError("Access forbidden - check permissions")
-            500 -> onError("Server error - please try again")
-            else -> onError("Failed to refresh nodes: HTTP ${e.code()}")
-        }
-    } catch (e: Exception) {
-        Log.e("DashboardScreen", "Failed to refresh nodes", e)
-        onError("Failed to refresh nodes: ${e.message}")
-    }
-}
-
 // Helper function to format time ago
 fun formatTimeAgo(timestamp: Long): String {
     val now = System.currentTimeMillis()
     val diff = now - timestamp
-    
+
     return when {
         diff < 60000 -> "Just now"
         diff < 3600000 -> "${diff / 60000}m ago"
         diff < 86400000 -> "${diff / 3600000}h ago"
         else -> "${diff / 86400000}d ago"
     }
-} 
+}

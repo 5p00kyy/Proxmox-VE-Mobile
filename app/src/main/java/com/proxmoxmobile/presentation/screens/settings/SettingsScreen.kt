@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
+import com.proxmoxmobile.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +92,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = stringResource(R.string.settings_app_version),
+                            text = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
@@ -111,7 +113,8 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_dark_mode_title),
                         subtitle = stringResource(R.string.settings_dark_mode_subtitle),
                         checked = enableDarkMode,
-                        onCheckedChange = { enableDarkMode = it }
+                        onCheckedChange = { enableDarkMode = it },
+                        enabled = false
                     )
                 }
             }
@@ -126,7 +129,8 @@ fun SettingsScreen(
                         value = autoRefreshInterval.toFloat(),
                         onValueChange = { autoRefreshInterval = it.toInt() },
                         valueRange = 10f..60f,
-                        steps = 5
+                        steps = 5,
+                        enabled = false
                     )
                 }
             }
@@ -139,15 +143,17 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_biometric_title),
                         subtitle = stringResource(R.string.settings_biometric_subtitle),
                         checked = enableBiometric,
-                        onCheckedChange = { enableBiometric = it }
+                        onCheckedChange = { enableBiometric = it },
+                        enabled = false
                     )
 
                     SettingsSwitchItem(
-                        icon = Icons.Default.Login,
+                        icon = Icons.AutoMirrored.Filled.Login,
                         title = stringResource(R.string.settings_auto_login_title),
                         subtitle = stringResource(R.string.settings_auto_login_subtitle),
                         checked = enableAutoLogin,
-                        onCheckedChange = { enableAutoLogin = it }
+                        onCheckedChange = { enableAutoLogin = it },
+                        enabled = false
                     )
 
                     SettingsButtonItem(
@@ -167,7 +173,8 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_enable_notifications_title),
                         subtitle = stringResource(R.string.settings_enable_notifications_subtitle),
                         checked = enableNotifications,
-                        onCheckedChange = { enableNotifications = it }
+                        onCheckedChange = { enableNotifications = it },
+                        enabled = false
                     )
                 }
             }
@@ -186,7 +193,8 @@ fun SettingsScreen(
                         icon = Icons.Default.BugReport,
                         title = stringResource(R.string.settings_report_bug_title),
                         subtitle = stringResource(R.string.settings_report_bug_subtitle),
-                        onClick = { /* TODO: Implement bug reporting */ }
+                        onClick = {},
+                        enabled = false
                     )
                 }
             }
@@ -243,8 +251,8 @@ fun SettingsScreen(
             title = { Text(stringResource(R.string.settings_about_dialog_title)) },
             text = {
                 Column {
-                    Text(stringResource(R.string.settings_about_version))
-                    Text(stringResource(R.string.settings_about_build))
+                    Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME))
+                    Text(stringResource(R.string.settings_about_build, BuildConfig.VERSION_CODE))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(stringResource(R.string.settings_about_description))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -301,7 +309,8 @@ fun SettingsSwitchItem(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
 ) {
     ListItem(
         headlineContent = { Text(title) },
@@ -316,7 +325,8 @@ fun SettingsSwitchItem(
         trailingContent = {
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
             )
         }
     )
@@ -330,7 +340,8 @@ fun SettingsSliderItem(
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int
+    steps: Int,
+    enabled: Boolean = true
 ) {
     ListItem(
         headlineContent = { Text(title) },
@@ -342,6 +353,7 @@ fun SettingsSliderItem(
                     onValueChange = onValueChange,
                     valueRange = valueRange,
                     steps = steps,
+                    enabled = enabled,
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
@@ -362,35 +374,37 @@ fun SettingsButtonItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    textColor: Color = MaterialTheme.colorScheme.onSurface
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    enabled: Boolean = true
 ) {
+    val effectiveColor = if (enabled) textColor else MaterialTheme.colorScheme.onSurfaceVariant
     ListItem(
         headlineContent = { 
             Text(
                 text = title,
-                color = textColor
+                color = effectiveColor
             )
         },
         supportingContent = { 
             Text(
                 text = subtitle,
-                color = textColor.copy(alpha = 0.7f)
+                color = effectiveColor.copy(alpha = 0.7f)
             )
         },
         leadingContent = { 
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = textColor
+                tint = effectiveColor
             )
         },
         trailingContent = { 
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = textColor.copy(alpha = 0.6f)
+                tint = effectiveColor.copy(alpha = 0.6f)
             )
         },
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier.clickable(enabled = enabled) { onClick() }
     )
-} 
+}

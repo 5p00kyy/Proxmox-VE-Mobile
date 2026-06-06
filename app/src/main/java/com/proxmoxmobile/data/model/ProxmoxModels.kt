@@ -48,7 +48,19 @@ data class NodeStatus(
     val pveversion: String,
     val rootfs: RootFS,
     val swap: Swap,
-    val idle: Int
+    val idle: Int,
+    val cpuinfo: NodeCpuInfo? = null,
+    val memory: NodeMemory? = null
+)
+
+data class NodeCpuInfo(
+    val cpus: Int
+)
+
+data class NodeMemory(
+    val free: Long,
+    val total: Long,
+    val used: Long
 )
 
 data class RootFS(
@@ -101,6 +113,14 @@ data class VMActionRequest(
     val action: String // start, stop, shutdown, reset, resume, suspend
 )
 
+data class VmSnapshot(
+    val name: String,
+    val description: String?,
+    val snaptime: Long?,
+    val vmstate: Int?,
+    val parent: String?
+)
+
 // Container Models
 data class Container(
     val vmid: Int,
@@ -131,6 +151,14 @@ data class ContainerCreateRequest(
     val net0: String = "name=eth0,bridge=vmbr0,ip=dhcp"
 )
 
+data class LxcSnapshot(
+    val name: String,
+    val description: String?,
+    val snaptime: Long?,
+    val vmstate: Int?,
+    val parent: String?
+)
+
 // Storage Models
 data class Storage(
     val storage: String,
@@ -142,6 +170,20 @@ data class Storage(
     val available: Long,
     val used: Long,
     val total: Long
+)
+
+data class StorageContent(
+    val volid: String,
+    val content: String,
+    val size: Long?,
+    val format: String?,
+    val ctime: Long?,
+    val notes: String?,
+    val vmid: Int?,
+    val used: Long?,
+    val parent: String?,
+    @SerializedName("protected")
+    val protectedContent: Boolean?
 )
 
 // Network Models
@@ -181,6 +223,7 @@ data class UserCreateRequest(
 
 // Task Models
 data class Task(
+    val upid: String?,
     val id: String,
     val node: String,
     val pid: Int,
@@ -192,6 +235,13 @@ data class Task(
     val endtime: Long?,
     val user: String,
     val saved: Boolean
+)
+
+data class TaskLogEntry(
+    @SerializedName("n")
+    val lineNumber: Int,
+    @SerializedName("t")
+    val text: String
 )
 
 // Backup Models
@@ -235,6 +285,20 @@ data class ClusterStatus(
     val type: String
 )
 
+data class ClusterStatusEntry(
+    val type: String?,
+    val name: String?,
+    val nodeid: Int?,
+    val ip: String?,
+    val local: Int?,
+    val online: Int?,
+    val level: String?,
+    val quorate: Int?,
+    val nodes: Int?,
+    val votes: Int?,
+    val expected_votes: Int?
+)
+
 // API Response Models
 data class ApiResponse<T>(
     val data: T,
@@ -256,7 +320,8 @@ data class ServerConfig(
     val apiToken: String? = null,
     val realm: String = "pam",
     val useHttps: Boolean = true,
-    val verifySsl: Boolean = true
+    val verifySsl: Boolean = true,
+    val certificateFingerprint: String? = null
 )
 
 // Resource Usage Models
@@ -284,4 +349,4 @@ data class NetworkUsage(
     val bytesOut: Long,
     val packetsIn: Long,
     val packetsOut: Long
-) 
+)

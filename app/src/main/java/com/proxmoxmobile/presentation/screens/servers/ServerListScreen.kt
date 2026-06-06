@@ -15,6 +15,7 @@ import com.proxmoxmobile.R
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun ServerListScreen(
     navController: NavController,
@@ -61,4 +62,4 @@ fun ServerListScreen(
             }
         }
     }
-} 
+}

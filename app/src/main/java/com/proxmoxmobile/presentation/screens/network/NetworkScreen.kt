@@ -11,19 +11,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel as composeViewModel
 import androidx.navigation.NavController
 import com.proxmoxmobile.data.model.NetworkInterface
+import com.proxmoxmobile.data.network.NetworkRepository
+import com.proxmoxmobile.data.network.ProxmoxNetworkApi
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
-import android.util.Log
-import kotlinx.coroutines.launch
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.res.stringResource
 import com.proxmoxmobile.R
 
@@ -31,110 +32,49 @@ import com.proxmoxmobile.R
 @Composable
 fun NetworkScreen(
     navController: NavController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    initialNodeName: String? = null,
+    repositoryOverride: NetworkRepository? = null
 ) {
-    var networkInterfaces by remember { mutableStateOf<List<NetworkInterface>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var selectedNode by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
-
-    // Get cached nodes to determine which node to query
+    val normalizedInitialNodeName = initialNodeName?.trim()?.takeIf { it.isNotBlank() }
     val cachedNodes = viewModel.getCachedNodes()
-
-    val errAuthFailed = stringResource(R.string.network_error_auth_failed)
-    val errNotAuthenticated = stringResource(R.string.network_error_not_authenticated)
-    val errNoNodes = stringResource(R.string.network_error_no_nodes)
-    val errConnectPrefix = stringResource(R.string.network_error_connect_prefix)
-    val errAuthRequired = stringResource(R.string.network_error_auth_required)
-    val errAccessForbidden = stringResource(R.string.network_error_access_forbidden)
-    val errServerError = stringResource(R.string.network_error_server)
-    val errHttpPrefix = stringResource(R.string.network_error_http_prefix)
-    val errLoadFailedPrefix = stringResource(R.string.network_error_load_failed_prefix)
-    val errUnexpected = stringResource(R.string.network_error_unexpected)
-
-    // Fetch network interfaces when screen loads
-    LaunchedEffect(Unit) {
-        try {
-            scope.launch {
-                try {
-                    isLoading = true
-                    errorMessage = null
-                    
-                    Log.d("NetworkScreen", "Starting to load network interfaces")
-                    
-                    // Check if we have a valid API service
-                    val apiService = try {
-                        viewModel.getApiService()
-                    } catch (e: Exception) {
-                        Log.e("NetworkScreen", "Failed to get API service", e)
-                        errorMessage = errAuthFailed
-                        return@launch
+        ?.map { it.node }
+        ?.filter { it.isNotBlank() }
+        .orEmpty()
+    val availableNodes = if (normalizedInitialNodeName != null && !cachedNodes.contains(normalizedInitialNodeName)) {
+        listOf(normalizedInitialNodeName) + cachedNodes
+    } else {
+        cachedNodes
+    }
+    val noNodesMessage = stringResource(R.string.network_error_no_nodes)
+    val networkRepository = remember(viewModel) {
+        NetworkRepository(ProxmoxNetworkApi { viewModel.getApiService() })
+    }
+    val activeNetworkRepository = repositoryOverride ?: networkRepository
+    val networkViewModel: NetworkViewModel = composeViewModel(
+        key = "network-${normalizedInitialNodeName.orEmpty()}-${availableNodes.joinToString("|")}",
+        factory = remember(availableNodes, activeNetworkRepository, noNodesMessage, normalizedInitialNodeName) {
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(NetworkViewModel::class.java)) {
+                        return NetworkViewModel(
+                            availableNodes = availableNodes,
+                            repository = activeNetworkRepository,
+                            noNodesMessage = noNodesMessage,
+                            initialNodeName = normalizedInitialNodeName
+                        ) as T
                     }
-
-                    if (apiService == null) {
-                        Log.e("NetworkScreen", "API service is null")
-                        errorMessage = errNotAuthenticated
-                        return@launch
-                    }
-
-                    // Use the first available node, or show error if no nodes
-                    val nodes = cachedNodes ?: emptyList()
-                    if (nodes.isEmpty()) {
-                        errorMessage = errNoNodes
-                        return@launch
-                    }
-                    
-                    selectedNode = nodes.first().node
-                    Log.d("NetworkScreen", "Using node: $selectedNode")
-                    
-                    // Fetch network interfaces
-                    val response = try {
-                        apiService.getNetworkInterfaces(selectedNode!!)
-                    } catch (e: Exception) {
-                        Log.e("NetworkScreen", "API call failed", e)
-                        errorMessage = "$errConnectPrefix ${e.message}"
-                        return@launch
-                    }
-                    
-                    Log.d("NetworkScreen", "Network interfaces response received: ${response.data?.size ?: 0} interfaces")
-                    
-                    // Safely handle the response data
-                    val interfaceList = response.data ?: emptyList()
-                    Log.d("NetworkScreen", "Processed ${interfaceList.size} network interfaces")
-                    
-                    // Validate each interface before adding to the list
-                    val validInterfaces = interfaceList.filter { iface ->
-                        try {
-                            iface.iface.isNotBlank() && 
-                            iface.type.isNotBlank()
-                        } catch (e: Exception) {
-                            Log.w("NetworkScreen", "Invalid interface data: ${e.message}")
-                            false
-                        }
-                    }
-                    networkInterfaces = validInterfaces
-                    Log.d("NetworkScreen", "Successfully loaded ${networkInterfaces.size} valid network interfaces")
-                } catch (e: retrofit2.HttpException) {
-                    Log.e("NetworkScreen", "HTTP error loading network interfaces: ${e.code()}", e)
-                    when (e.code()) {
-                        401 -> errorMessage = errAuthRequired
-                        403 -> errorMessage = errAccessForbidden
-                        500 -> errorMessage = errServerError
-                        else -> errorMessage = "$errHttpPrefix ${e.code()}"
-                    }
-                } catch (e: Exception) {
-                    Log.e("NetworkScreen", "Failed to load network interfaces", e)
-                    errorMessage = "$errLoadFailedPrefix ${e.message}"
-                } finally {
-                    isLoading = false
+                    throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }
             }
-        } catch (e: Exception) {
-            Log.e("NetworkScreen", "Critical error in LaunchedEffect", e)
-            errorMessage = errUnexpected
-            isLoading = false
         }
+    )
+    val uiState by networkViewModel.uiState.collectAsState()
+    var nodeMenuExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(networkViewModel) {
+        networkViewModel.loadNetworkInterfaces()
     }
 
     Scaffold(
@@ -153,13 +93,42 @@ fun NetworkScreen(
                     }
                 },
                 actions = {
-                    if (selectedNode != null) {
-                        Text(
-                            text = stringResource(R.string.network_node_label, selectedNode ?: ""),
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(end = 16.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    uiState.selectedNodeName?.let { selectedNode ->
+                        Box {
+                            TextButton(
+                                onClick = { nodeMenuExpanded = true },
+                                enabled = uiState.availableNodes.size > 1
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.network_node_label, selectedNode),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1
+                                )
+                                if (uiState.availableNodes.size > 1) {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                                }
+                            }
+                            DropdownMenu(
+                                expanded = nodeMenuExpanded,
+                                onDismissRequest = { nodeMenuExpanded = false }
+                            ) {
+                                uiState.availableNodes.forEach { nodeName ->
+                                    DropdownMenuItem(
+                                        text = { Text(nodeName) },
+                                        onClick = {
+                                            nodeMenuExpanded = false
+                                            networkViewModel.selectNode(nodeName)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    IconButton(
+                        onClick = { networkViewModel.loadNetworkInterfaces(showLoading = false) },
+                        enabled = !uiState.isLoading && !uiState.isRefreshing
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.network_retry))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -172,7 +141,7 @@ fun NetworkScreen(
         }
     ) { paddingValues ->
         when {
-            isLoading -> {
+            uiState.isLoading -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -194,7 +163,7 @@ fun NetworkScreen(
                     }
                 }
             }
-            errorMessage != null -> {
+            uiState.errorMessage != null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -218,7 +187,7 @@ fun NetworkScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = errorMessage!!,
+                            text = uiState.errorMessage ?: "",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -226,16 +195,7 @@ fun NetworkScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
-                            onClick = {
-                                // Retry loading
-                                scope.launch {
-                                    // Reset state and retry
-                                    networkInterfaces = emptyList()
-                                    errorMessage = null
-                                    isLoading = true
-                                    // This will trigger LaunchedEffect again
-                                }
-                            }
+                            onClick = { networkViewModel.loadNetworkInterfaces() }
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -244,7 +204,7 @@ fun NetworkScreen(
                     }
                 }
             }
-            networkInterfaces.isEmpty() -> {
+            uiState.networkInterfaces.isEmpty() -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -279,19 +239,20 @@ fun NetworkScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(paddingValues)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     item {
                         Text(
-                            text = stringResource(R.string.network_interfaces_count, networkInterfaces.size),
+                            text = stringResource(R.string.network_interfaces_count, uiState.networkInterfaces.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                     }
-                    
-                    items(networkInterfaces) { iface ->
+
+                    items(uiState.networkInterfaces) { iface ->
                         NetworkInterfaceCard(iface = iface)
                     }
                 }
@@ -333,7 +294,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // Status indicator
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -354,9 +315,9 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Configuration details
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -378,7 +339,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         )
                     }
                 }
-                
+
                 if (!iface.address.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -396,7 +357,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         )
                     }
                 }
-                
+
                 if (!iface.netmask.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -414,7 +375,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         )
                     }
                 }
-                
+
                 if (!iface.gateway.isNullOrBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -432,7 +393,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         )
                     }
                 }
-                
+
                 if (iface.families.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -450,7 +411,7 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
                         )
                     }
                 }
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -470,4 +431,4 @@ fun NetworkInterfaceCard(iface: NetworkInterface) {
             }
         }
     }
-} 
+}

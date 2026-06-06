@@ -6,13 +6,14 @@ plugins {
 android {
     namespace = "com.proxmoxmobile"
     compileSdk = 34
+    testBuildType = providers.gradleProperty("android.testBuildType").orElse("debug").get()
 
     defaultConfig {
         applicationId = "com.proxmoxmobile"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1.0-beta.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -21,12 +22,26 @@ android {
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "true")
+        }
         release {
             isMinifyEnabled = false
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        create("qaRelease") {
+            initWith(getByName("release"))
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release", "debug")
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
+            buildConfigField("boolean", "ALLOW_INSECURE_TLS", "false")
         }
     }
     compileOptions {
@@ -38,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"
@@ -81,9 +97,11 @@ dependencies {
     
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.bundles.compose.test)
     debugImplementation(libs.bundles.compose.debug)
-} 
+    add("qaReleaseImplementation", libs.bundles.compose.debug)
+}

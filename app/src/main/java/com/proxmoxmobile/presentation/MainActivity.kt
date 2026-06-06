@@ -10,11 +10,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.proxmoxmobile.BuildConfig
 import com.proxmoxmobile.presentation.navigation.ProxmoxNavHost
 import com.proxmoxmobile.presentation.theme.ProxmoxTheme
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.security.CredentialAuthMethod
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,25 +26,34 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             val navController = rememberNavController()
-            val viewModel = remember { MainViewModel() }
+            val viewModel: MainViewModel = viewModel()
             
-            // Initialize ViewModel with context for SharedPreferences
-            LaunchedEffect(Unit) {
-                viewModel.initialize(this@MainActivity)
-            }
-            
-            // Check for saved credentials and auto-login
-            LaunchedEffect(Unit) {
-                val savedCredentials = viewModel.loadSavedCredentials()
-                if (savedCredentials != null) {
-                    // Convert SavedCredentials to ServerConfig for auto-login
+            LaunchedEffect(viewModel) {
+                viewModel.initialize(applicationContext)
+                if (viewModel.currentServer.value == null) {
+                    val savedCredentials = viewModel.loadSavedCredentials()
+                    if (savedCredentials == null) {
+                        return@LaunchedEffect
+                    }
+                    val verifySsl = savedCredentials.verifySsl || !BuildConfig.ALLOW_INSECURE_TLS
                     val serverConfig = ServerConfig(
                         host = savedCredentials.host,
                         port = savedCredentials.port,
                         username = savedCredentials.username,
-                        password = savedCredentials.password,
+                        password = if (savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN) {
+                            null
+                        } else {
+                            savedCredentials.password
+                        },
+                        apiToken = if (savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN) {
+                            "${savedCredentials.username}@${savedCredentials.realm}!${savedCredentials.apiTokenId}=${savedCredentials.apiTokenSecret}"
+                        } else {
+                            null
+                        },
                         realm = savedCredentials.realm,
-                        useHttps = savedCredentials.useHttps
+                        useHttps = savedCredentials.useHttps,
+                        verifySsl = verifySsl,
+                        certificateFingerprint = savedCredentials.certificateFingerprint.takeIf { it.isNotBlank() }
                     )
                     viewModel.setCurrentServer(serverConfig)
                 }
@@ -60,4 +72,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-} 
+}

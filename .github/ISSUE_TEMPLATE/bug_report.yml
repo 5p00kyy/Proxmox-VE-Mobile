@@ -1,0 +1,120 @@
+name: Bug report
+description: Report something that is broken or misleading in the Android app.
+title: "[Bug]: "
+labels:
+  - type:bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough environment detail to reproduce it without guessing.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: The VM list fails to refresh after login...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps, including screen names and actions.
+      placeholder: |
+        1. Open the app
+        2. Log in with...
+        3. Tap...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+  - type: input
+    id: app_version
+    attributes:
+      label: App version or commit
+      placeholder: v0.1.0-beta.1, debug build, or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: android_version
+    attributes:
+      label: Android version
+      placeholder: Android 14
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: Pixel 8, Galaxy Tab S9, emulator, etc.
+    validations:
+      required: true
+  - type: input
+    id: pve_version
+    attributes:
+      label: Proxmox VE version
+      placeholder: 8.2.7, 8.3.x, 9.x, etc.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Proxmox environment
+      options:
+        - Standalone node
+        - Multi-node cluster
+        - Proxmox Backup Server involved
+        - Unsure
+    validations:
+      required: true
+  - type: dropdown
+    id: auth_method
+    attributes:
+      label: Authentication method
+      options:
+        - Password
+        - Password with TFA
+        - API token
+        - Saved credentials
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: connection_mode
+    attributes:
+      label: Connection mode
+      options:
+        - Direct LAN/VPN
+        - Reverse proxy
+        - Custom port
+        - Self-signed certificate
+        - Plain HTTP
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Attach sanitized logs, screenshots, or screen recordings. Do not paste passwords, API tokens, tickets, cookies, private keys, private hostnames, private IPs, or usernames.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed passwords, API tokens, cookies, tickets, private keys, private hostnames, private IPs, usernames, and public IP details that should not be shared.
+          required: true
