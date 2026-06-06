@@ -27,6 +27,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Consolidated beta gate script for version matching, public hygiene checks, tests, lint, debug build, and release build.
 - Navigation route registry tests for registered beta destinations, planned detail helpers, and duplicate route patterns.
 - Beta-safe Settings About copy that avoids implying full administrative coverage.
+- VM/LXC lifecycle ViewModel coverage for shutdown, force stop, reboot, blank task IDs, failed action cleanup, and task-detail route handoff.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
 - Public-safe screenshot/media checklist and release-note readiness guidance for the first beta.
@@ -143,6 +144,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Signed beta release workflow artifacts no longer include the staged unsigned APK copy.
 - Signed beta release workflow refuses to mutate an existing release unless it is still a draft prerelease.
 - Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
+- Failed VM/LXC lifecycle actions now clear stale last-task notices instead of leaving an old task handoff card visible.
 - Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.
 - VM/LXC delete now has ViewModel-level stopped-state gating in addition to disabled UI controls.
 - Task detail loading now accepts valid Proxmox status payloads that omit embedded UPID, using the routed UPID for task handoff.

@@ -152,6 +152,7 @@ class LxcListViewModel(
                         it.copy(
                             actionInProgress = null,
                             errorMessage = result.message,
+                            lastTaskNotice = null,
                             pendingActionNotice = LxcActionNotice(
                                 vmid = container.vmid,
                                 containerName = container.name,

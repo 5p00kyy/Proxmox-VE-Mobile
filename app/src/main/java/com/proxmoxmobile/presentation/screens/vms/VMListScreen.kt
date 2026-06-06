@@ -25,6 +25,7 @@ import com.proxmoxmobile.data.vm.VmPowerAction
 import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.data.model.VirtualMachine
 import com.proxmoxmobile.presentation.navigation.Screen
+import com.proxmoxmobile.presentation.navigation.taskDetailRouteForNotice
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Color
@@ -112,14 +113,13 @@ fun VMListScreen(
             deleteFailedTemplate = deleteFailedTemplate,
             taskIdLabel = taskIdLabel
         )
-        val taskId = notice.taskId
-        val taskNode = nodeName?.takeIf { it.isNotBlank() }
+        val taskRoute = taskDetailRouteForNotice(nodeName, notice.taskId)
         val result = snackbarHostState.showSnackbar(
             message = message,
-            actionLabel = viewTaskLabel.takeIf { taskId != null && taskNode != null }
+            actionLabel = viewTaskLabel.takeIf { taskRoute != null }
         )
-        if (result == SnackbarResult.ActionPerformed && taskId != null && taskNode != null) {
-            navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+        if (result == SnackbarResult.ActionPerformed && taskRoute != null) {
+            navController.navigate(taskRoute)
         }
         vmListViewModel.consumeActionNotice()
     }
@@ -289,11 +289,11 @@ fun VMListScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
-                            nodeName?.takeIf { it.isNotBlank() }?.let { taskNode ->
+                            taskDetailRouteForNotice(nodeName, taskId)?.let { taskRoute ->
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(
                                     onClick = {
-                                        navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+                                        navController.navigate(taskRoute)
                                     }
                                 ) {
                                     Icon(Icons.Default.Info, contentDescription = stringResource(R.string.vm_view_task))

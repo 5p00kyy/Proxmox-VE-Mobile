@@ -153,6 +153,7 @@ class VmListViewModel(
                         it.copy(
                             actionInProgress = null,
                             errorMessage = result.message,
+                            lastTaskNotice = null,
                             pendingActionNotice = VmActionNotice(
                                 vmid = vm.vmid,
                                 vmName = vm.name,

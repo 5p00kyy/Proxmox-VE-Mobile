@@ -25,7 +25,7 @@ Automated release gate       [#################...] 85%
 Real Proxmox smoke QA        [#############.......] 65%
 UX/copy release polish       [#############.......] 65%
 Release packaging            [###############.....] 75%
-Official beta readiness      [###############.....] 75%
+Official beta readiness      [###############.....] 76%
 ```
 
 ## Release Gates
@@ -190,6 +190,8 @@ These route helpers exist but are not registered beta destinations and should no
 - User detail.
 
 The source route registry and unit tests keep registered beta route patterns, planned route helpers, and duplicate route patterns explicit while the app moves toward broader navigation coverage.
+
+VM and LXC lifecycle ViewModel tests now cover start, shutdown, force stop, reboot, delete guard behavior, blank returned task IDs, failed action cleanup, and task-detail route generation. This does not replace disposable guest smoke, but it reduces the chance of shipping a broken task handoff path into manual QA.
 
 ## Development Work Remaining
 

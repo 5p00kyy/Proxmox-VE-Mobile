@@ -88,4 +88,20 @@ class ScreenTest {
             Screen.TaskDetail.createRoute("pve/node", upid)
         )
     }
+
+    @Test
+    fun taskDetailRouteForNotice_returnsEncodedRouteWhenNodeAndTaskExist() {
+        assertEquals(
+            "task_detail/lab%20node%2F1/UPID%3Apve%3Atask%3Aroot%40pam%3A",
+            taskDetailRouteForNotice(" lab node/1 ", " UPID:pve:task:root@pam: ")
+        )
+    }
+
+    @Test
+    fun taskDetailRouteForNotice_returnsNullForMissingNodeOrTask() {
+        assertEquals(null, taskDetailRouteForNotice(null, "UPID:pve:task"))
+        assertEquals(null, taskDetailRouteForNotice("   ", "UPID:pve:task"))
+        assertEquals(null, taskDetailRouteForNotice("pve", null))
+        assertEquals(null, taskDetailRouteForNotice("pve", "   "))
+    }
 }

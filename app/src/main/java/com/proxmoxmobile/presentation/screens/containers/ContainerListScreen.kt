@@ -41,6 +41,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.proxmoxmobile.presentation.navigation.Screen
+import com.proxmoxmobile.presentation.navigation.taskDetailRouteForNotice
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
@@ -129,14 +130,13 @@ fun ContainerListScreen(
             deleteErrorTemplate = deleteErrorTemplate,
             taskIdLabel = taskIdLabel
         )
-        val taskId = notice.taskId
-        val taskNode = nodeName?.takeIf { it.isNotBlank() }
+        val taskRoute = taskDetailRouteForNotice(nodeName, notice.taskId)
         val result = snackbarHostState.showSnackbar(
             message = message,
-            actionLabel = viewTaskLabel.takeIf { taskId != null && taskNode != null }
+            actionLabel = viewTaskLabel.takeIf { taskRoute != null }
         )
-        if (result == SnackbarResult.ActionPerformed && taskId != null && taskNode != null) {
-            navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+        if (result == SnackbarResult.ActionPerformed && taskRoute != null) {
+            navController.navigate(taskRoute)
         }
         lxcListViewModel.consumeActionNotice()
     }
@@ -300,11 +300,11 @@ fun ContainerListScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
-                            nodeName?.takeIf { it.isNotBlank() }?.let { taskNode ->
+                            taskDetailRouteForNotice(nodeName, taskId)?.let { taskRoute ->
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(
                                     onClick = {
-                                        navController.navigate(Screen.TaskDetail.createRoute(taskNode, taskId))
+                                        navController.navigate(taskRoute)
                                     }
                                 ) {
                                     Icon(Icons.Default.Info, contentDescription = stringResource(R.string.container_view_task))
