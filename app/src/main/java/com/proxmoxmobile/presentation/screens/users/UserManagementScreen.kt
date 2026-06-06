@@ -212,6 +212,7 @@ fun UserManagementScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(paddingValues)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {

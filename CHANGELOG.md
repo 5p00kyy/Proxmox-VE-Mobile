@@ -25,6 +25,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Beta APK release workflow for `v*-beta.*` tags, published releases, and manual dry runs.
 - GitHub Actions workflows opt into Node 24 action execution ahead of the hosted runner default change.
 - README beta APK install instructions for the first GitHub Releases distribution path.
+- Dashboard quick actions for Backups and Cluster so read-only beta routes are discoverable during smoke QA.
 - Contributing and security policy documentation.
 - Self-signed TLS guidance covering Android trusted/imported CAs, SHA-256 certificate fingerprints, and trust-on-first-use requirements.
 - CODEOWNERS file for default review ownership.
@@ -128,6 +129,11 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Dead LXC screen metrics collection code and its direct `ProxmoxApiService` dependency were removed.
 - `MainViewModel` now delegates authentication state/API-service access to `AuthSessionController` and saved credential persistence to `CredentialStore`.
 - TLS authentication failures now point users toward Android trusted CAs, SHA-256 fingerprint pinning, or debug-only insecure lab mode.
+- Network parsing now accepts Proxmox interface flags as booleans, numbers, or strings.
+- User parsing now accepts numeric/string enabled flags and nullable profile fields.
+- User and network populated lists now respect top app bar padding on Pixel-sized screens.
+- Backup planned-action labels now stay readable on Pixel-sized screens.
+- Settings version and build labels now use Gradle build metadata.
 
 ### Security
 

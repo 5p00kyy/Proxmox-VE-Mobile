@@ -407,6 +407,41 @@ fun DashboardScreen(
                     }
                 }
             }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Backups
+                    QuickActionCard(
+                        title = stringResource(R.string.dashboard_backups),
+                        subtitle = stringResource(R.string.dashboard_backup_history),
+                        icon = Icons.Default.Cloud,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        try {
+                            navController.navigate(Screen.Backups.route)
+                        } catch (e: Exception) {
+                            Log.e("DashboardScreen", "Navigation error to Backups", e)
+                        }
+                    }
+
+                    // Cluster
+                    QuickActionCard(
+                        title = stringResource(R.string.dashboard_cluster),
+                        subtitle = stringResource(R.string.dashboard_cluster_status),
+                        icon = Icons.Default.Share,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        try {
+                            navController.navigate(Screen.Cluster.route)
+                        } catch (e: Exception) {
+                            Log.e("DashboardScreen", "Navigation error to Cluster", e)
+                        }
+                    }
+                }
+            }
         }
     }
 }

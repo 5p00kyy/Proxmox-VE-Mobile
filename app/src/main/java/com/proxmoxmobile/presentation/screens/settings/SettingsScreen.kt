@@ -20,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
+import com.proxmoxmobile.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +92,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Text(
-                            text = stringResource(R.string.settings_app_version),
+                            text = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
@@ -250,8 +251,8 @@ fun SettingsScreen(
             title = { Text(stringResource(R.string.settings_about_dialog_title)) },
             text = {
                 Column {
-                    Text(stringResource(R.string.settings_about_version))
-                    Text(stringResource(R.string.settings_about_build))
+                    Text(stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME))
+                    Text(stringResource(R.string.settings_about_build, BuildConfig.VERSION_CODE))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(stringResource(R.string.settings_about_description))
                     Spacer(modifier = Modifier.height(8.dp))

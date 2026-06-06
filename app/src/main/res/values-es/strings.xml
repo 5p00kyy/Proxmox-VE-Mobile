@@ -55,6 +55,10 @@
     <string name="dashboard_management">Administración</string>
     <string name="dashboard_tasks">Tareas</string>
     <string name="dashboard_monitoring">Monitoreo</string>
+    <string name="dashboard_backups">Respaldos</string>
+    <string name="dashboard_backup_history">Historial</string>
+    <string name="dashboard_cluster">Clúster</string>
+    <string name="dashboard_cluster_status">Estado</string>
     <string name="dashboard_system_status">Estado del sistema</string>
     <string name="dashboard_cpu">CPU</string>
     <string name="dashboard_memory">Memoria</string>
@@ -465,7 +469,7 @@
     <string name="settings_title">Ajustes</string>
     <string name="settings_back">Atrás</string>
     <string name="settings_app_name">Proxmox VE Mobile</string>
-    <string name="settings_app_version">Versión 1.0.0</string>
+    <string name="settings_app_version">Versión %1$s</string>
     <string name="settings_app_tagline">Cliente Android moderno para Proxmox VE</string>
     <string name="settings_section_display">Pantalla</string>
     <string name="settings_dark_mode_title">Modo oscuro</string>
@@ -496,8 +500,8 @@
     <string name="settings_clear_button">Borrar</string>
     <string name="settings_cancel_button">Cancelar</string>
     <string name="settings_about_dialog_title">Acerca de Proxmox VE Mobile</string>
-    <string name="settings_about_version">Versión: 1.0.0</string>
-    <string name="settings_about_build">Build: 2024.1.0</string>
+    <string name="settings_about_version">Versión: %1$s</string>
+    <string name="settings_about_build">Build: %1$d</string>
     <string name="settings_about_description">Un cliente Android moderno para administrar servidores Proxmox Virtual Environment.</string>
     <string name="settings_about_features_header">Características:</string>
     <string name="settings_about_feature_auth">\u2022 Autenticación segura con almacenamiento cifrado</string>

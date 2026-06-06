@@ -43,6 +43,14 @@ Observed pass:
 - Storage list opens from the dashboard and renders real storage rows on a Pixel-sized viewport.
 - Storage card capacity fields remain readable when storage content lists are long.
 - Storage content browser opens read-only content for a selected storage.
+- Network initially exposed a live Proxmox payload compatibility issue where network boolean fields arrived as numeric flags.
+- Rebuilt app parses numeric/string/boolean network flags and renders the network interface list.
+- User list opens from the dashboard and renders read-only user rows with disabled planned mutation actions.
+- Dashboard quick actions now expose Backups and Cluster routes for beta smoke coverage.
+- Backup list opens from the dashboard and renders read-only backup rows plus storage filtering.
+- Backup disabled action labels remain readable on a Pixel-sized viewport.
+- Cluster screen opens from the dashboard and renders standalone-node cluster status.
+- Settings opens and shows the beta version plus disabled planned settings without implying runtime behavior.
 
 Still pending:
 
@@ -51,5 +59,4 @@ Still pending:
 - Invalid credential and invalid TLS error-state smoke.
 - VM/LXC lifecycle smoke on disposable guests.
 - Task detail/log handoff smoke after lifecycle actions.
-- Network, users, backups, and cluster read-only navigation smoke.
 - Small-screen/rotation/background-resume pass.
