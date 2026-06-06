@@ -137,6 +137,21 @@ class DetailRouteSmokeTest {
     }
 
     @Test
+    fun fakeStorageRouteRendersEmptyContentState() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Storage.createRoute(LAB_NODE),
+            storageRepositoryOverride = StorageRepository(
+                FakeStorageApi(storageContentForName = { emptyList() })
+            )
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("local-fixture", substring = true))
+        composeRule.onNodeWithText("Browse content").performClick()
+        composeRule.waitUntilAtLeastOneExists(hasText("Content on local-fixture", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("No content found on this storage.", substring = true))
+    }
+
+    @Test
     fun fakeNetworkRouteRendersPopulatedContent() {
         startFakeAuthenticatedRoute(
             route = Screen.NodeNetwork.createRoute(LAB_NODE),
@@ -147,6 +162,17 @@ class DetailRouteSmokeTest {
         composeRule.waitUntilAtLeastOneExists(hasText("vmbr-fixture", substring = true))
         composeRule.waitUntilAtLeastOneExists(hasText("bridge", substring = true))
         composeRule.waitUntilAtLeastOneExists(hasText("eth-fixture", substring = true))
+    }
+
+    @Test
+    fun fakeNetworkRouteRendersEmptyState() {
+        startFakeAuthenticatedRoute(
+            route = Screen.NodeNetwork.createRoute(LAB_NODE),
+            networkRepositoryOverride = NetworkRepository(FakeNetworkApi(interfaces = emptyList()))
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("No Network Interfaces", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("No network interfaces found on this node", substring = true))
     }
 
     @Test
@@ -165,6 +191,22 @@ class DetailRouteSmokeTest {
     }
 
     @Test
+    fun fakeUsersRouteRendersEmptyState() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Users.route,
+            userRepositoryOverride = UserRepository(FakeUserApi(users = emptyList()))
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("No Users Found", substring = true))
+        composeRule.waitUntilAtLeastOneExists(
+            hasText("No users are currently configured on this system", substring = true)
+        )
+        composeRule.waitUntilAtLeastOneExists(
+            hasText("User management actions are read-only in this beta.", substring = true)
+        )
+    }
+
+    @Test
     fun fakeBackupsRouteRendersPopulatedContent() {
         startFakeAuthenticatedRoute(
             route = Screen.Backups.route,
@@ -177,6 +219,25 @@ class DetailRouteSmokeTest {
         )
         composeRule.waitUntilAtLeastOneExists(hasText("Public fixture VM backup", substring = true))
         composeRule.waitUntilAtLeastOneExists(hasText("VMA.ZST", substring = true))
+    }
+
+    @Test
+    fun fakeBackupsRouteRendersEmptyStateWithStorageFilter() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Backups.route,
+            backupRepositoryOverride = BackupRepository(
+                FakeBackupApi(storageContentForName = { emptyList() })
+            )
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("No Backups Found", substring = true))
+        composeRule.waitUntilAtLeastOneExists(
+            hasText("No backups are currently available on this system", substring = true)
+        )
+        composeRule.waitUntilAtLeastOneExists(hasText("Storage: All storage", substring = true))
+        composeRule.waitUntilAtLeastOneExists(
+            hasText("Backup actions are read-only in this beta.", substring = true)
+        )
     }
 
     @Test
@@ -197,6 +258,18 @@ class DetailRouteSmokeTest {
     }
 
     @Test
+    fun fakeClusterRouteRendersErrorState() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Cluster.route,
+            clusterRepositoryOverride = ClusterRepository(FailingClusterApi())
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("Cluster status unavailable", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("Cluster fixture unavailable", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("Retry", substring = true))
+    }
+
+    @Test
     fun fakeDashboardRouteRendersPopulatedContent() {
         startFakeAuthenticatedRoute(
             route = Screen.Dashboard.route,
@@ -213,6 +286,27 @@ class DetailRouteSmokeTest {
             hasTestTag(DASHBOARD_RECENT_TASKS_METRIC_TAG) and hasText("2")
         )
         composeRule.waitUntilAtLeastOneExists(hasText("APTUPDATE on lab-node (OK)", substring = true))
+    }
+
+    @Test
+    fun fakeDashboardRouteRendersTaskSummaryErrorState() {
+        startFakeAuthenticatedRoute(
+            route = Screen.Dashboard.route,
+            dashboardRepositoryOverride = DashboardRepository(
+                api = FakeDashboardApi(),
+                taskSummarySource = FakeDashboardTaskSummarySource(
+                    result = TaskResult.Error("Task monitor unavailable in QA fixture")
+                )
+            )
+        )
+
+        composeRule.waitUntilAtLeastOneExists(hasText("System Status", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("Task Activity", substring = true))
+        composeRule.waitUntilAtLeastOneExists(
+            hasText("Task activity unavailable: Task monitor unavailable in QA fixture", substring = true)
+        )
+        composeRule.waitUntilAtLeastOneExists(hasText("Nodes (1)", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText(LAB_NODE, substring = true))
     }
 
     private fun startFakeAuthenticatedRoute(
@@ -390,147 +484,99 @@ class DetailRouteSmokeTest {
         }
     }
 
-    private class FakeStorageApi : StorageApi {
+    private class FakeStorageApi(
+        private val storages: List<Storage> = listOf(fakeStorage()),
+        private val storageContentForName: (String) -> List<StorageContent> = { storageName ->
+            listOf(fakeStorageContent(storageName))
+        }
+    ) : StorageApi {
         override suspend fun getStorages(nodeName: String): ApiResponse<List<Storage>> {
-            return ApiResponse(
-                listOf(
-                    Storage(
-                        storage = "local-fixture",
-                        type = "dir",
-                        content = listOf("iso", "backup"),
-                        nodes = listOf(nodeName),
-                        shared = false,
-                        active = true,
-                        available = 80L * 1024L * 1024L * 1024L,
-                        used = 20L * 1024L * 1024L * 1024L,
-                        total = 100L * 1024L * 1024L * 1024L
-                    )
-                )
-            )
+            return ApiResponse(storages)
         }
 
         override suspend fun getStorageContent(
             nodeName: String,
             storageName: String
         ): ApiResponse<List<StorageContent>> {
-            return ApiResponse(
-                listOf(
-                    StorageContent(
-                        volid = "$storageName:iso/proxmox-mobile-fixture.iso",
-                        content = "iso",
-                        size = 512L * 1024L * 1024L,
-                        format = "iso",
-                        ctime = 1_700_000_000,
-                        notes = "Public fixture ISO",
-                        vmid = null,
-                        used = null,
-                        parent = null,
-                        protectedContent = null
-                    )
-                )
-            )
+            return ApiResponse(storageContentForName(storageName))
         }
     }
 
-    private class FakeNetworkApi : NetworkApi {
+    private class FakeNetworkApi(
+        private val interfaces: List<NetworkInterface> = listOf(
+            NetworkInterface(
+                iface = "vmbr-fixture",
+                type = "bridge",
+                method = "manual",
+                address = null,
+                netmask = null,
+                gateway = null,
+                active = true,
+                autostart = true,
+                exists = true,
+                families = listOf("inet")
+            ),
+            NetworkInterface(
+                iface = "eth-fixture",
+                type = "eth",
+                method = "manual",
+                address = null,
+                netmask = null,
+                gateway = null,
+                active = false,
+                autostart = false,
+                exists = true,
+                families = emptyList()
+            )
+        )
+    ) : NetworkApi {
         override suspend fun getNetworkInterfaces(nodeName: String): ApiResponse<List<NetworkInterface>> {
-            return ApiResponse(
-                listOf(
-                    NetworkInterface(
-                        iface = "vmbr-fixture",
-                        type = "bridge",
-                        method = "manual",
-                        address = null,
-                        netmask = null,
-                        gateway = null,
-                        active = true,
-                        autostart = true,
-                        exists = true,
-                        families = listOf("inet")
-                    ),
-                    NetworkInterface(
-                        iface = "eth-fixture",
-                        type = "eth",
-                        method = "manual",
-                        address = null,
-                        netmask = null,
-                        gateway = null,
-                        active = false,
-                        autostart = false,
-                        exists = true,
-                        families = emptyList()
-                    )
-                )
-            )
+            return ApiResponse(interfaces)
         }
     }
 
-    private class FakeUserApi : UserApi {
+    private class FakeUserApi(
+        private val users: List<User> = listOf(
+            User(
+                userid = "alpha-fixture@pam",
+                enable = true,
+                expire = null,
+                firstname = "Ada",
+                lastname = "Fixture",
+                email = "ada.fixture@example.test",
+                comment = "Public QA fixture user"
+            ),
+            User(
+                userid = "disabled-fixture@pve",
+                enable = false,
+                expire = null,
+                firstname = null,
+                lastname = null,
+                email = null,
+                comment = "Disabled fixture user"
+            )
+        )
+    ) : UserApi {
         override suspend fun getUsers(): ApiResponse<List<User>> {
-            return ApiResponse(
-                listOf(
-                    User(
-                        userid = "alpha-fixture@pam",
-                        enable = true,
-                        expire = null,
-                        firstname = "Ada",
-                        lastname = "Fixture",
-                        email = "ada.fixture@example.test",
-                        comment = "Public QA fixture user"
-                    ),
-                    User(
-                        userid = "disabled-fixture@pve",
-                        enable = false,
-                        expire = null,
-                        firstname = null,
-                        lastname = null,
-                        email = null,
-                        comment = "Disabled fixture user"
-                    )
-                )
-            )
+            return ApiResponse(users)
         }
     }
 
-    private class FakeBackupApi : BackupApi {
+    private class FakeBackupApi(
+        private val storages: List<Storage> = listOf(fakeBackupStorage()),
+        private val storageContentForName: (String) -> List<StorageContent> = { storageName ->
+            listOf(fakeBackupContent(storageName))
+        }
+    ) : BackupApi {
         override suspend fun getStorages(nodeName: String): ApiResponse<List<Storage>> {
-            return ApiResponse(
-                listOf(
-                    Storage(
-                        storage = "backup-fixture",
-                        type = "dir",
-                        content = listOf("backup"),
-                        nodes = listOf(nodeName),
-                        shared = false,
-                        active = true,
-                        available = 64L * 1024L * 1024L * 1024L,
-                        used = 16L * 1024L * 1024L * 1024L,
-                        total = 80L * 1024L * 1024L * 1024L
-                    )
-                )
-            )
+            return ApiResponse(storages)
         }
 
         override suspend fun getStorageContent(
             nodeName: String,
             storageName: String
         ): ApiResponse<List<StorageContent>> {
-            return ApiResponse(
-                listOf(
-                    StorageContent(
-                        volid = "$storageName:backup/vzdump-qemu-102-fixture.vma.zst",
-                        content = "backup",
-                        size = 2L * 1024L * 1024L * 1024L,
-                        format = "vma.zst",
-                        ctime = 1_700_000_000,
-                        notes = "Public fixture VM backup",
-                        vmid = VM_ID,
-                        used = null,
-                        parent = null,
-                        protectedContent = false
-                    )
-                )
-            )
+            return ApiResponse(storageContentForName(storageName))
         }
     }
 
@@ -582,23 +628,33 @@ class DetailRouteSmokeTest {
         }
     }
 
-    private class FakeDashboardApi : DashboardApi {
-        override suspend fun getNodes(): ApiResponse<List<Node>> {
-            return ApiResponse(listOf(fakeNode()))
+    private class FailingClusterApi : ClusterApi {
+        override suspend fun getClusterStatus(): ApiResponse<List<ClusterStatusEntry>> {
+            throw IllegalStateException("Cluster fixture unavailable")
         }
     }
 
-    private class FakeDashboardTaskSummarySource : DashboardTaskSummarySource {
-        override suspend fun getTaskSummary(nodeNames: List<String>): TaskResult<TaskSummary> {
-            return TaskResult.Success(
-                TaskSummary(
-                    nodesChecked = 1,
-                    runningCount = 0,
-                    recentCount = 2,
-                    latestTask = fakeTask(nodeName = LAB_NODE, upid = "UPID:fixture:0002:aptupdate")
-                        .copy(type = "aptupdate", status = "OK")
-                )
+    private class FakeDashboardApi(
+        private val nodes: List<Node> = listOf(fakeNode())
+    ) : DashboardApi {
+        override suspend fun getNodes(): ApiResponse<List<Node>> {
+            return ApiResponse(nodes)
+        }
+    }
+
+    private class FakeDashboardTaskSummarySource(
+        private val result: TaskResult<TaskSummary> = TaskResult.Success(
+            TaskSummary(
+                nodesChecked = 1,
+                runningCount = 0,
+                recentCount = 2,
+                latestTask = fakeTask(nodeName = LAB_NODE, upid = "UPID:fixture:0002:aptupdate")
+                    .copy(type = "aptupdate", status = "OK")
             )
+        )
+    ) : DashboardTaskSummarySource {
+        override suspend fun getTaskSummary(nodeNames: List<String>): TaskResult<TaskSummary> {
+            return result
         }
     }
 
@@ -734,6 +790,64 @@ class DetailRouteSmokeTest {
                 netin = 1L * 1024L * 1024L,
                 netout = 2L * 1024L * 1024L,
                 tags = "beta"
+            )
+        }
+
+        private fun fakeStorage(): Storage {
+            return Storage(
+                storage = "local-fixture",
+                type = "dir",
+                content = listOf("iso", "backup"),
+                nodes = listOf(LAB_NODE),
+                shared = false,
+                active = true,
+                available = 80L * 1024L * 1024L * 1024L,
+                used = 20L * 1024L * 1024L * 1024L,
+                total = 100L * 1024L * 1024L * 1024L
+            )
+        }
+
+        private fun fakeStorageContent(storageName: String): StorageContent {
+            return StorageContent(
+                volid = "$storageName:iso/proxmox-mobile-fixture.iso",
+                content = "iso",
+                size = 512L * 1024L * 1024L,
+                format = "iso",
+                ctime = 1_700_000_000,
+                notes = "Public fixture ISO",
+                vmid = null,
+                used = null,
+                parent = null,
+                protectedContent = null
+            )
+        }
+
+        private fun fakeBackupStorage(): Storage {
+            return Storage(
+                storage = "backup-fixture",
+                type = "dir",
+                content = listOf("backup"),
+                nodes = listOf(LAB_NODE),
+                shared = false,
+                active = true,
+                available = 64L * 1024L * 1024L * 1024L,
+                used = 16L * 1024L * 1024L * 1024L,
+                total = 80L * 1024L * 1024L * 1024L
+            )
+        }
+
+        private fun fakeBackupContent(storageName: String): StorageContent {
+            return StorageContent(
+                volid = "$storageName:backup/vzdump-qemu-102-fixture.vma.zst",
+                content = "backup",
+                size = 2L * 1024L * 1024L * 1024L,
+                format = "vma.zst",
+                ctime = 1_700_000_000,
+                notes = "Public fixture VM backup",
+                vmid = VM_ID,
+                used = null,
+                parent = null,
+                protectedContent = false
             )
         }
 

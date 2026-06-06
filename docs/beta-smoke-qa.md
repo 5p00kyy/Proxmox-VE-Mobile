@@ -106,7 +106,7 @@ Automated checks:
 ./gradlew compileDebugAndroidTestKotlin connectedDebugAndroidTest
 ```
 
-Result: passed with 38 instrumentation tests after VM/LXC guarded-action UI smoke was added.
+Result: passed with 44 instrumentation tests after fake-backed admin route empty/error UI smoke was added.
 
 Observed pass:
 
@@ -223,7 +223,7 @@ For every route, verify portrait, forced landscape where possible, Home/backgrou
 
 ## Automation Candidates
 
-The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation for node/resource task, task detail, network, and storage routes, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail/storage/network/users/backups/cluster/dashboard route rendering, fake VM/LXC returned-task handoff to task-detail routes, fake lifecycle task-handoff card persistence across Activity recreation, and fake VM/LXC guarded-action UI states. The narrowest next automatable steps are:
+The current beta blocker evidence is still mostly manual, but checked-in instrumentation smoke now covers local login rendering, API-token mode controls, fingerprint validation, Activity recreation for non-secret login and task-filter draft state, fake authenticated post-login route recreation for node/resource task, task detail, network, and storage routes, fake authenticated route-host entry points, fake-backed node/VM/LXC/task detail/storage/network/users/backups/cluster/dashboard route rendering, fake-backed storage-content empty state, network empty state, users empty state, backups empty state, cluster error state, dashboard task-summary error state, fake VM/LXC returned-task handoff to task-detail routes, fake lifecycle task-handoff card persistence across Activity recreation, and fake VM/LXC guarded-action UI states. The narrowest next automatable steps are:
 
 - Add additional instrumentation rotation/resume coverage for other post-login routes, preserving only non-secret fields across Activity recreation.
 - Expand fake-backed route tests for empty, error, partial-data, and guarded-action states where those states materially affect beta confidence.

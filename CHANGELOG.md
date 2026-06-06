@@ -43,6 +43,7 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - Compose instrumentation smoke for populated fake-backed task detail summary and log rendering through the real navigation host.
 - Compose instrumentation smoke for populated fake-backed storage content and node-scoped network route rendering through the real navigation host.
 - Compose instrumentation smoke for populated fake-backed users, backups, cluster, and dashboard routes through the real navigation host.
+- Compose instrumentation smoke for fake-backed storage-content empty state, network empty state, users empty state, backups empty state, cluster error state, and dashboard task-summary error state through the real navigation host.
 - Compose instrumentation smoke for post-login node-scoped task route state across Activity recreation.
 - Compose instrumentation smoke for post-login resource-filtered task, task detail, node-scoped network, and storage route state across Activity recreation.
 - Compose instrumentation smoke for fake VM/LXC returned-task handoff from lifecycle action to task-detail route.
