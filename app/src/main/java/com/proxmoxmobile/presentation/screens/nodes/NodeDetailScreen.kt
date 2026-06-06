@@ -64,11 +64,13 @@ import java.util.Locale
 fun NodeDetailScreen(
     nodeName: String,
     viewModel: MainViewModel,
-    navController: NavController
+    navController: NavController,
+    repositoryOverride: NodeRepository? = null
 ) {
-    val nodeRepository = remember(viewModel) {
+    val defaultNodeRepository = remember(viewModel) {
         NodeRepository(ProxmoxNodeApi { viewModel.getApiService() })
     }
+    val nodeRepository = repositoryOverride ?: defaultNodeRepository
     val nodeDetailViewModel: NodeDetailViewModel = composeViewModel(
         key = "node-detail-$nodeName",
         factory = remember(nodeName, nodeRepository) {

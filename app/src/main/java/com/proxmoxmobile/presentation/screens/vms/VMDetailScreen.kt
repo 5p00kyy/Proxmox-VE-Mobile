@@ -67,7 +67,8 @@ fun VMDetailScreen(
     vmid: Int,
     nodeName: String? = null,
     viewModel: MainViewModel,
-    navController: NavController
+    navController: NavController,
+    repositoryOverride: VmRepository? = null
 ) {
     val candidateNodeNames = remember(viewModel, nodeName) {
         (
@@ -76,9 +77,10 @@ fun VMDetailScreen(
             )
             .distinct()
     }
-    val vmRepository = remember(viewModel) {
+    val defaultVmRepository = remember(viewModel) {
         VmRepository(ProxmoxVmApi { viewModel.getApiService() })
     }
+    val vmRepository = repositoryOverride ?: defaultVmRepository
     val vmDetailViewModel: VmDetailViewModel = composeViewModel(
         key = "vm-detail-${nodeName.orEmpty()}-$vmid",
         factory = remember(vmid, candidateNodeNames, nodeName, vmRepository) {

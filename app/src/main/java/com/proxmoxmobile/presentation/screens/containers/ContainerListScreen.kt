@@ -711,7 +711,8 @@ fun ContainerDetailScreen(
     vmid: Int,
     nodeName: String? = null,
     viewModel: MainViewModel,
-    navController: NavController
+    navController: NavController,
+    repositoryOverride: LxcRepository? = null
 ) {
     val candidateNodeNames = remember(viewModel, nodeName) {
         (
@@ -720,9 +721,10 @@ fun ContainerDetailScreen(
             )
             .distinct()
     }
-    val lxcRepository = remember(viewModel) {
+    val defaultLxcRepository = remember(viewModel) {
         LxcRepository(ProxmoxLxcApi { viewModel.getApiService() })
     }
+    val lxcRepository = repositoryOverride ?: defaultLxcRepository
     val lxcDetailViewModel: LxcDetailViewModel = composeViewModel(
         key = "lxc-detail-${nodeName.orEmpty()}-$vmid",
         factory = remember(vmid, candidateNodeNames, nodeName, lxcRepository) {

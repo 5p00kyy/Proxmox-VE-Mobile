@@ -12,6 +12,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.proxmoxmobile.R
+import com.proxmoxmobile.data.lxc.LxcRepository
+import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.screens.auth.LoginScreen
 import com.proxmoxmobile.presentation.screens.dashboard.DashboardScreen
 import com.proxmoxmobile.presentation.screens.nodes.NodeDetailScreen
@@ -33,7 +36,10 @@ import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 fun ProxmoxNavHost(
     navController: NavHostController,
     viewModel: MainViewModel,
-    startDestination: String = Screen.Login.route
+    startDestination: String = Screen.Login.route,
+    vmRepositoryOverride: VmRepository? = null,
+    lxcRepositoryOverride: LxcRepository? = null,
+    nodeRepositoryOverride: NodeRepository? = null
 ) {
     val confirmationDialog by viewModel.showConfirmationDialog.collectAsState()
 
@@ -64,7 +70,8 @@ fun ProxmoxNavHost(
             ContainerListScreen(
                 navController = navController,
                 viewModel = viewModel,
-                nodeName = nodeName
+                nodeName = nodeName,
+                repositoryOverride = lxcRepositoryOverride
             )
         }
         
@@ -73,7 +80,8 @@ fun ProxmoxNavHost(
             VMListScreen(
                 navController = navController,
                 viewModel = viewModel,
-                nodeName = nodeName
+                nodeName = nodeName,
+                repositoryOverride = vmRepositoryOverride
             )
         }
         
@@ -181,7 +189,8 @@ fun ProxmoxNavHost(
                 NodeDetailScreen(
                     nodeName = node,
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    repositoryOverride = nodeRepositoryOverride
                 )
             }
         }
@@ -193,7 +202,8 @@ fun ProxmoxNavHost(
                     vmid = vmid,
                     nodeName = null,
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    repositoryOverride = lxcRepositoryOverride
                 )
             }
         }
@@ -206,7 +216,8 @@ fun ProxmoxNavHost(
                     vmid = vmid,
                     nodeName = node,
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    repositoryOverride = lxcRepositoryOverride
                 )
             }
         }
@@ -218,7 +229,8 @@ fun ProxmoxNavHost(
                     vmid = vmid,
                     nodeName = null,
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    repositoryOverride = vmRepositoryOverride
                 )
             }
         }
@@ -231,7 +243,8 @@ fun ProxmoxNavHost(
                     vmid = vmid,
                     nodeName = node,
                     viewModel = viewModel,
-                    navController = navController
+                    navController = navController,
+                    repositoryOverride = vmRepositoryOverride
                 )
             }
         }
