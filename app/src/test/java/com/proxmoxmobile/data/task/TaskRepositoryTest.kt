@@ -53,6 +53,22 @@ class TaskRepositoryTest {
     }
 
     @Test
+    fun getTaskDetail_usesRouteUpidWhenStatusPayloadDoesNotIncludeUpid() = runBlocking {
+        val repository = TaskRepository(
+            FakeTaskApi(
+                taskStatus = task(upid = null, id = "100", status = "running")
+            )
+        )
+
+        val result = repository.getTaskDetail("pve", "UPID:pve:qmstart:100")
+
+        assertTrue(result is TaskResult.Success)
+        val detail = (result as TaskResult.Success).data
+        assertEquals("UPID:pve:qmstart:100", detail.upid)
+        assertEquals("100", detail.task.id)
+    }
+
+    @Test
     fun getTasks_forwardsTaskFiltersToApi() = runBlocking {
         val api = FakeTaskApi()
         val repository = TaskRepository(api)

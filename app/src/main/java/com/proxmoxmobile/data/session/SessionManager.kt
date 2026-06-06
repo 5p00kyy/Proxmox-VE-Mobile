@@ -28,8 +28,14 @@ class SessionManager(
         return if (apiToken != null) {
             authenticateWithApiToken(serverConfig, apiToken)
         } else {
-            authenticationService.authenticate(serverConfig).map { loginResponse ->
-                loginResponse.toSession(serverConfig)
+            try {
+                authenticationService.authenticate(serverConfig).map { loginResponse ->
+                    loginResponse.toSession(serverConfig)
+                }
+            } catch (e: Exception) {
+                Result.failure(authenticationService.toUserFacingException(e))
+            }.onFailure {
+                activeSession = null
             }.onSuccess { session ->
                 activeSession = session
             }
@@ -66,6 +72,7 @@ class SessionManager(
             activeSession = session
             Result.success(session)
         } catch (e: Exception) {
+            activeSession = null
             Result.failure(authenticationService.toUserFacingException(e))
         }
     }

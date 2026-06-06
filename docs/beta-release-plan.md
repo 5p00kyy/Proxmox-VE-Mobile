@@ -23,9 +23,9 @@ Revival baseline pushed      [##################..] 90%
 Beta scope frozen            [############........] 60%
 Automated release gate       [################....] 80%
 Real Proxmox smoke QA        [#############.......] 65%
-UX/copy release polish       [###########.........] 55%
-Release packaging            [############........] 60%
-Official beta readiness      [#############.......] 65%
+UX/copy release polish       [############........] 60%
+Release packaging            [#############.......] 65%
+Official beta readiness      [##############......] 70%
 ```
 
 ## Release Gates
@@ -67,6 +67,8 @@ The workflow runs the beta gate with:
 ./gradlew assembleRelease --stacktrace --no-daemon
 ```
 
+Before building, the workflow verifies that the beta tag matches the Gradle `versionName` with a leading `v`. For `v0.1.0-beta.1`, `app/build.gradle.kts` must report `versionName = "0.1.0-beta.1"`. This prevents a release filename from advertising a different version than the installed APK metadata.
+
 Manual dry runs upload the produced release APK as a GitHub Actions artifact. Tag and release events must also provide signing material through repository secrets before a signed APK can be attached to a GitHub Release:
 
 - `ANDROID_RELEASE_KEYSTORE_BASE64`
@@ -76,7 +78,9 @@ Manual dry runs upload the produced release APK as a GitHub Actions artifact. Ta
 
 `ANDROID_RELEASE_KEYSTORE_BASE64` should contain the base64-encoded Android signing keystore. The workflow decodes it into the GitHub runner's temporary directory, signs the release APK with Android build tools, verifies it with `apksigner`, and attaches only the signed APK to the release. It does not depend on machine-specific SDK paths, local keystore files, or local `local.properties` content.
 
-Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads.
+Manual `workflow_dispatch` runs can be used to confirm the release build and artifact packaging before signing secrets are configured. Unsigned release APKs from dry runs are for inspection only and should not be published as beta downloads. Signed tag or release runs remove the unsigned APK copy from the uploaded workflow artifact after signing, so the release run's downloadable artifacts and GitHub Release attachment stay aligned around the signed APK.
+
+GitHub only accepts `workflow_dispatch` triggers for workflows that exist on the repository default branch. While the beta baseline is still only on the draft PR branch, the release workflow can be linted and reviewed, but the manual dry run cannot be triggered from GitHub until the workflow is merged or otherwise present on the default branch.
 
 ## Beta Scope
 
@@ -164,9 +168,10 @@ Run this matrix against a disposable or non-production Proxmox VE environment be
 4. Fix only beta blockers on the baseline branch.
 5. Add release screenshots or short screen recordings to the README/release notes.
 6. Promote `CHANGELOG.md` from `Unreleased` to `v0.1.0-beta.1`.
-7. Configure release signing secrets and run the beta APK release workflow on the beta tag.
-8. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
-9. Keep a post-beta issue list for deferred parity work.
+7. Merge or otherwise land the beta release workflow on the repository default branch so `workflow_dispatch` can run.
+8. Configure release signing secrets and run the beta APK release workflow on the beta tag.
+9. Confirm the signed APK is attached to the GitHub release and the README install steps match the published artifact name.
+10. Keep a post-beta issue list for deferred parity work.
 
 ## Estimated Timeline
 

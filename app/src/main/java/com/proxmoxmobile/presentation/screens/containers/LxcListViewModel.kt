@@ -16,6 +16,7 @@ class LxcListViewModel(
     private val nodeName: String?,
     private val repository: LxcRepository,
     private val invalidNodeMessage: String,
+    private val deleteRequiresStoppedMessage: String,
     private val clock: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LxcListUiState(nodeName = nodeName))
@@ -94,6 +95,22 @@ class LxcListViewModel(
         val node = nodeName
         if (node.isNullOrBlank()) {
             _uiState.update { it.copy(errorMessage = invalidNodeMessage) }
+            return
+        }
+
+        if (action == LxcPowerAction.Delete && !container.status.equals("stopped", ignoreCase = true)) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = deleteRequiresStoppedMessage,
+                    pendingActionNotice = LxcActionNotice(
+                        vmid = container.vmid,
+                        containerName = container.name,
+                        action = action,
+                        taskId = null,
+                        errorMessage = deleteRequiresStoppedMessage
+                    )
+                )
+            }
             return
         }
 

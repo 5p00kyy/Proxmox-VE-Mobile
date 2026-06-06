@@ -69,7 +69,7 @@ class TaskRepository(
             require(upid.isNotBlank()) { "Task UPID is required" }
 
             val status = api.getTaskStatus(nodeName, upid).data
-            require(status.isValidForTaskOperations()) { "Task status payload is invalid" }
+            require(status.isValidTaskStatusPayload()) { "Task status payload is invalid" }
             val logEntries = api.getTaskLog(nodeName, upid)
                 .data
                 .filter { it.isValidLogEntry() }
@@ -105,6 +105,15 @@ class TaskRepository(
         return runCatching {
             taskUpid() != null &&
                 node.isNotBlank() &&
+                type.isNotBlank() &&
+                status.isNotBlank() &&
+                starttime >= 0
+        }.getOrDefault(false)
+    }
+
+    private fun Task.isValidTaskStatusPayload(): Boolean {
+        return runCatching {
+            node.isNotBlank() &&
                 type.isNotBlank() &&
                 status.isNotBlank() &&
                 starttime >= 0

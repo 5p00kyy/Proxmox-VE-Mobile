@@ -49,6 +49,18 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}
 
+      - name: Validate APK version matches beta tag
+        run: |
+          gradle_version="$(sed -n 's/^[[:space:]]*versionName[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          if [ -z "$gradle_version" ]; then
+            echo "Could not read versionName from app/build.gradle.kts."
+            exit 1
+          fi
+          if [ "$BETA_TAG" != "v$gradle_version" ]; then
+            echo "Beta tag $BETA_TAG does not match app versionName $gradle_version."
+            exit 1
+          fi
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -144,6 +156,10 @@ jobs:
             "$aligned_apk"
           "$apksigner" verify --verbose "$signed_apk"
           echo "signed_apk=$signed_apk" >> "$GITHUB_OUTPUT"
+
+      - name: Remove unsigned APK from signed release artifacts
+        if: ${{ steps.sign.outputs.signed_apk != '' }}
+        run: rm -f release-artifacts/*-release-unsigned.apk
 
       - name: Upload beta APK workflow artifact
         uses: actions/upload-artifact@v4

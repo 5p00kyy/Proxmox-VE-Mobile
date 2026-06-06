@@ -77,6 +77,7 @@ fun ContainerListScreen(
     val rebootMessageTemplate = stringResource(R.string.container_reboot_message)
     val deleteTitle = stringResource(R.string.container_delete_title)
     val deleteMessageTemplate = stringResource(R.string.container_delete_message)
+    val deleteRequiresStoppedMessage = stringResource(R.string.container_delete_requires_stopped)
     val taskIdLabel = stringResource(R.string.container_task_id_label)
     val viewTaskLabel = stringResource(R.string.container_view_task)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,12 +86,17 @@ fun ContainerListScreen(
     }
     val lxcListViewModel: LxcListViewModel = composeViewModel(
         key = "lxc-list-${nodeName.orEmpty()}",
-        factory = remember(nodeName, lxcRepository, invalidNodeMsg) {
+        factory = remember(nodeName, lxcRepository, invalidNodeMsg, deleteRequiresStoppedMessage) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(LxcListViewModel::class.java)) {
-                        return LxcListViewModel(nodeName, lxcRepository, invalidNodeMsg) as T
+                        return LxcListViewModel(
+                            nodeName = nodeName,
+                            repository = lxcRepository,
+                            invalidNodeMessage = invalidNodeMsg,
+                            deleteRequiresStoppedMessage = deleteRequiresStoppedMessage
+                        ) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }

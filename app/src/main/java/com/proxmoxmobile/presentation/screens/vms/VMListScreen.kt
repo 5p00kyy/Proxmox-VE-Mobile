@@ -60,6 +60,7 @@ fun VMListScreen(
     val rebootDialogMessageTemplate = stringResource(R.string.vm_reboot_dialog_message)
     val deleteDialogTitle = stringResource(R.string.vm_delete_dialog_title)
     val deleteDialogMessageTemplate = stringResource(R.string.vm_delete_dialog_message)
+    val deleteRequiresStoppedMessage = stringResource(R.string.vm_delete_requires_stopped)
     val taskIdLabel = stringResource(R.string.vm_task_id_label)
     val viewTaskLabel = stringResource(R.string.vm_view_task)
     val vmRepository = remember(viewModel) {
@@ -67,12 +68,16 @@ fun VMListScreen(
     }
     val vmListViewModel: VmListViewModel = composeViewModel(
         key = "vm-list-${nodeName.orEmpty()}",
-        factory = remember(nodeName, vmRepository) {
+        factory = remember(nodeName, vmRepository, deleteRequiresStoppedMessage) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     if (modelClass.isAssignableFrom(VmListViewModel::class.java)) {
-                        return VmListViewModel(nodeName, vmRepository) as T
+                        return VmListViewModel(
+                            nodeName = nodeName,
+                            repository = vmRepository,
+                            deleteRequiresStoppedMessage = deleteRequiresStoppedMessage
+                        ) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
                 }

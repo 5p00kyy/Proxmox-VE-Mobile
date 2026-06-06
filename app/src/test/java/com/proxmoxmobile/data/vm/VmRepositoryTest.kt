@@ -74,6 +74,22 @@ class VmRepositoryTest {
     }
 
     @Test
+    fun deleteVirtualMachine_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
+        val api = FakeVmApi(deleteTaskId = "UPID:pve:123:qmdestroy:100")
+        val repository = VmRepository(api)
+
+        val result = repository.deleteVirtualMachine("pve", 100)
+
+        assertTrue(result is VmResult.Success)
+        val action = (result as VmResult.Success).data
+        assertEquals(VmPowerAction.Delete, action.action)
+        assertEquals(100, action.vmid)
+        assertEquals("UPID:pve:123:qmdestroy:100", action.taskId)
+        assertEquals(listOf(100), api.deleteRequests)
+        assertEquals(emptyList<String>(), api.actionRequests)
+    }
+
+    @Test
     fun getVirtualMachineDetail_usesPreferredNodeFirst() = runBlocking {
         val api = FakeVmApi(
             vmsByNode = mapOf(
@@ -288,6 +304,7 @@ class VmRepositoryTest {
     ) : VmApi {
         val statusRequests = mutableListOf<String>()
         val actionRequests = mutableListOf<String>()
+        val deleteRequests = mutableListOf<Int>()
 
         override suspend fun getVirtualMachines(nodeName: String): ApiResponse<List<VirtualMachine>> {
             return ApiResponse(vmsByNode[nodeName] ?: vms)
@@ -320,6 +337,7 @@ class VmRepositoryTest {
         }
 
         override suspend fun deleteVM(nodeName: String, vmid: Int): ApiResponse<String> {
+            deleteRequests += vmid
             return ApiResponse(deleteTaskId)
         }
 

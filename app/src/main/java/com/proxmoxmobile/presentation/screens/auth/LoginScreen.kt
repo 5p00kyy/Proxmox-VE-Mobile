@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.proxmoxmobile.BuildConfig
 import com.proxmoxmobile.R
 import com.proxmoxmobile.data.model.ServerConfig
 import com.proxmoxmobile.data.security.CertificateFingerprint
@@ -46,6 +47,7 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val allowInsecureTls = BuildConfig.DEBUG
     
     // Load saved credentials on first load
     LaunchedEffect(Unit) {
@@ -57,7 +59,7 @@ fun LoginScreen(
             password = savedCredentials.password
             realm = savedCredentials.realm
             useHttps = savedCredentials.useHttps
-            verifySsl = savedCredentials.verifySsl
+            verifySsl = savedCredentials.verifySsl || !allowInsecureTls
             certificateFingerprint = savedCredentials.certificateFingerprint
             saveCredentials = true
             useApiToken = savedCredentials.authMethod == CredentialAuthMethod.API_TOKEN
@@ -253,6 +255,7 @@ fun LoginScreen(
                     }
 
                     if (useHttps) {
+                        val displayedVerifySsl = verifySsl || !allowInsecureTls
                         OutlinedTextField(
                             value = certificateFingerprint,
                             onValueChange = { certificateFingerprint = it },
@@ -297,7 +300,7 @@ fun LoginScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                if (!verifySsl) {
+                                if (allowInsecureTls && !verifySsl) {
                                     Text(
                                         text = stringResource(R.string.login_verify_ssl_warning),
                                         style = MaterialTheme.typography.bodySmall,
@@ -306,9 +309,9 @@ fun LoginScreen(
                                 }
                             }
                             Switch(
-                                checked = verifySsl,
+                                checked = displayedVerifySsl,
                                 onCheckedChange = { verifySsl = it },
-                                enabled = !isLoading
+                                enabled = !isLoading && allowInsecureTls
                             )
                         }
                     }
@@ -455,7 +458,7 @@ fun LoginScreen(
                                     apiToken = apiToken,
                                     realm = realm,
                                     useHttps = useHttps,
-                                    verifySsl = if (useHttps) verifySsl else false,
+                                    verifySsl = if (useHttps) verifySsl || !allowInsecureTls else false,
                                     certificateFingerprint = if (useHttps) normalizedCertificateFingerprint else null
                                 )
                                 

@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 class VmListViewModel(
     private val nodeName: String?,
     private val repository: VmRepository,
+    private val deleteRequiresStoppedMessage: String,
     private val clock: () -> Long = System::currentTimeMillis
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VmListUiState(nodeName = nodeName))
@@ -94,6 +95,22 @@ class VmListViewModel(
         if (node.isNullOrBlank()) {
             _uiState.update {
                 it.copy(errorMessage = "Invalid node name or API service not available")
+            }
+            return
+        }
+
+        if (action == VmPowerAction.Delete && !vm.status.equals("stopped", ignoreCase = true)) {
+            _uiState.update {
+                it.copy(
+                    errorMessage = deleteRequiresStoppedMessage,
+                    pendingActionNotice = VmActionNotice(
+                        vmid = vm.vmid,
+                        vmName = vm.name,
+                        action = action,
+                        taskId = null,
+                        errorMessage = deleteRequiresStoppedMessage
+                    )
+                )
             }
             return
         }

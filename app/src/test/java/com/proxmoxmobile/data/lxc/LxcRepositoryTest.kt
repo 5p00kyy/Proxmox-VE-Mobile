@@ -74,6 +74,22 @@ class LxcRepositoryTest {
     }
 
     @Test
+    fun deleteContainer_returnsTaskIdAndUsesDeleteEndpoint() = runBlocking {
+        val api = FakeLxcApi(deleteTaskId = "UPID:pve:123:vzdestroy:100")
+        val repository = LxcRepository(api)
+
+        val result = repository.deleteContainer("pve", 100)
+
+        assertTrue(result is LxcResult.Success)
+        val action = (result as LxcResult.Success).data
+        assertEquals(LxcPowerAction.Delete, action.action)
+        assertEquals(100, action.vmid)
+        assertEquals("UPID:pve:123:vzdestroy:100", action.taskId)
+        assertEquals(listOf(100), api.deleteRequests)
+        assertEquals(emptyList<String>(), api.actionRequests)
+    }
+
+    @Test
     fun getContainerDetail_usesPreferredNodeFirst() = runBlocking {
         val api = FakeLxcApi(
             containersByNode = mapOf(
@@ -232,6 +248,7 @@ class LxcRepositoryTest {
     ) : LxcApi {
         val statusRequests = mutableListOf<String>()
         val actionRequests = mutableListOf<String>()
+        val deleteRequests = mutableListOf<Int>()
 
         override suspend fun getContainers(nodeName: String): ApiResponse<List<Container>> {
             return ApiResponse(containersByNode[nodeName] ?: containers)
@@ -257,6 +274,7 @@ class LxcRepositoryTest {
         }
 
         override suspend fun deleteContainer(nodeName: String, vmid: Int): ApiResponse<String> {
+            deleteRequests += vmid
             return ApiResponse(deleteTaskId)
         }
 

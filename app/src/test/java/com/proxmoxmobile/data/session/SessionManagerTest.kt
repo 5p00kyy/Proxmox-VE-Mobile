@@ -8,6 +8,7 @@ import com.proxmoxmobile.data.model.ApiResponse
 import com.proxmoxmobile.data.model.LoginData
 import com.proxmoxmobile.data.model.LoginResponse
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.security.TlsPolicy
 import java.lang.reflect.Proxy
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -95,6 +96,70 @@ class SessionManagerTest {
     }
 
     @Test
+    fun authenticate_withFailedPasswordLoginClearsPreviousSession() = runBlocking {
+        val manager = SessionManager(
+            apiFactory = FakeApiServiceFactory(),
+            authenticationService = FakeAuthenticationService()
+        )
+
+        manager.authenticate(serverConfig(password = "secret")).getOrThrow()
+
+        val result = manager.authenticate(serverConfig(host = "", password = "secret"))
+
+        assertTrue(result.isFailure)
+        assertEquals("Host cannot be empty", result.exceptionOrNull()?.message)
+        assertNull(manager.currentSession())
+        assertNull(manager.createApiService())
+    }
+
+    @Test
+    fun authenticate_withFailedApiTokenPingClearsPreviousSessionAndMapsMessage() = runBlocking {
+        val factory = FakeApiServiceFactory(
+            versionException = RuntimeException("Invalid username, password, API token, or TFA challenge")
+        )
+        val manager = SessionManager(
+            apiFactory = factory,
+            authenticationService = FakeAuthenticationService()
+        )
+
+        manager.authenticate(serverConfig(password = "secret")).getOrThrow()
+
+        val result = manager.authenticate(
+            serverConfig(
+                password = null,
+                apiToken = "root@pam!mobile=bad-token-secret"
+            )
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals("Invalid username, password, API token, or TFA challenge", result.exceptionOrNull()?.message)
+        assertNull(manager.currentSession())
+        assertNull(manager.createApiService())
+    }
+
+    @Test
+    fun authenticate_withApiTokenRejectsReleaseInsecureTlsPolicyFailure() = runBlocking {
+        val factory = FakeApiServiceFactory(
+            createException = IllegalArgumentException(TlsPolicy.RELEASE_INSECURE_TLS_MESSAGE)
+        )
+        val manager = SessionManager(
+            apiFactory = factory,
+            authenticationService = FakeAuthenticationService()
+        )
+
+        val result = manager.authenticate(
+            serverConfig(
+                password = null,
+                apiToken = "root@pam!mobile=token-secret"
+            ).copy(verifySsl = false)
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals(TlsPolicy.RELEASE_INSECURE_TLS_MESSAGE, result.exceptionOrNull()?.message)
+        assertNull(manager.currentSession())
+    }
+
+    @Test
     fun logoutClearsActiveSession() = runBlocking {
         val manager = SessionManager(
             apiFactory = FakeApiServiceFactory(),
@@ -108,7 +173,10 @@ class SessionManagerTest {
         assertNull(manager.createApiService())
     }
 
-    private class FakeApiServiceFactory : ProxmoxApiServiceFactory {
+    private class FakeApiServiceFactory(
+        private val createException: RuntimeException? = null,
+        private val versionException: RuntimeException? = null
+    ) : ProxmoxApiServiceFactory {
         val authRequests = mutableListOf<ProxmoxAuth>()
         var versionChecks = 0
             private set
@@ -117,6 +185,7 @@ class SessionManagerTest {
             serverConfig: ServerConfig,
             auth: ProxmoxAuth
         ): ProxmoxApiService {
+            createException?.let { throw it }
             authRequests += auth
             return Proxy.newProxyInstance(
                 ProxmoxApiService::class.java.classLoader,
@@ -132,6 +201,7 @@ class SessionManagerTest {
                     )
                     "getVersion" -> {
                         versionChecks += 1
+                        versionException?.let { throw it }
                         ApiResponse(mapOf("version" to "8.2.0"))
                     }
                     "toString" -> "FakeProxmoxApiService"

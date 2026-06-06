@@ -134,6 +134,12 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 - User and network populated lists now respect top app bar padding on Pixel-sized screens.
 - Backup planned-action labels now stay readable on Pixel-sized screens.
 - Settings version and build labels now use Gradle build metadata.
+- Beta release workflow now blocks tag/APK version metadata mismatches before packaging.
+- Signed beta release workflow artifacts no longer include the staged unsigned APK copy.
+- Failed password/API-token authentication now clears any previous active session instead of leaving stale API access alive.
+- Release builds now force SSL verification in login and saved-credential restore while preserving certificate fingerprint pinning.
+- VM/LXC delete now has ViewModel-level stopped-state gating in addition to disabled UI controls.
+- Task detail loading now accepts valid Proxmox status payloads that omit embedded UPID, using the routed UPID for task handoff.
 
 ### Security
 

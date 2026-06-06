@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
+import com.proxmoxmobile.BuildConfig
 import com.proxmoxmobile.presentation.navigation.ProxmoxNavHost
 import com.proxmoxmobile.presentation.theme.ProxmoxTheme
 import com.proxmoxmobile.presentation.viewmodel.MainViewModel
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(Unit) {
                 val savedCredentials = viewModel.loadSavedCredentials()
                 if (savedCredentials != null) {
+                    val verifySsl = savedCredentials.verifySsl || !BuildConfig.DEBUG
                     // Convert SavedCredentials to ServerConfig for auto-login
                     val serverConfig = ServerConfig(
                         host = savedCredentials.host,
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
                         },
                         realm = savedCredentials.realm,
                         useHttps = savedCredentials.useHttps,
-                        verifySsl = savedCredentials.verifySsl,
+                        verifySsl = verifySsl,
                         certificateFingerprint = savedCredentials.certificateFingerprint.takeIf { it.isNotBlank() }
                     )
                     viewModel.setCurrentServer(serverConfig)
