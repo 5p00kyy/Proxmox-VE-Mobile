@@ -100,7 +100,8 @@ fun TaskScreen(
     navController: NavController,
     viewModel: MainViewModel,
     initialNodeName: String? = null,
-    initialVmid: Int? = null
+    initialVmid: Int? = null,
+    repositoryOverride: TaskRepository? = null
 ) {
     val availableNodes = remember(viewModel, initialNodeName) {
         (viewModel.getCachedNodes()
@@ -118,9 +119,10 @@ fun TaskScreen(
     val taskRepository = remember(viewModel) {
         TaskRepository(ProxmoxTaskApi { viewModel.getApiService() })
     }
+    val activeTaskRepository = repositoryOverride ?: taskRepository
     val taskListViewModel: TaskListViewModel = composeViewModel(
         key = "task-list-${availableNodes.joinToString("|")}-${initialNodeName.orEmpty()}-${initialVmid ?: 0}",
-        factory = remember(availableNodes, initialNodeName, initialVmid, taskRepository, noNodesMessage, invalidTaskMessage) {
+        factory = remember(availableNodes, initialNodeName, initialVmid, activeTaskRepository, noNodesMessage, invalidTaskMessage) {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -129,7 +131,7 @@ fun TaskScreen(
                             availableNodes = availableNodes,
                             initialNodeName = initialNodeName,
                             initialFilters = TaskFilters(vmid = initialVmid?.takeIf { it > 0 }),
-                            repository = taskRepository,
+                            repository = activeTaskRepository,
                             noNodesMessage = noNodesMessage,
                             invalidTaskMessage = invalidTaskMessage
                         ) as T

@@ -7,29 +7,36 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.navigation.NavHostController
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.proxmoxmobile.R
-import com.proxmoxmobile.data.model.ApiResponse
-import com.proxmoxmobile.data.model.ServerConfig
-import com.proxmoxmobile.data.model.Task
-import com.proxmoxmobile.data.model.TaskLogEntry
-import com.proxmoxmobile.data.task.TaskApi
+import com.proxmoxmobile.data.backup.BackupRepository
+import com.proxmoxmobile.data.cluster.ClusterRepository
+import com.proxmoxmobile.data.dashboard.DashboardRepository
+import com.proxmoxmobile.data.lxc.LxcRepository
+import com.proxmoxmobile.data.network.NetworkRepository
+import com.proxmoxmobile.data.node.NodeRepository
+import com.proxmoxmobile.data.storage.StorageRepository
 import com.proxmoxmobile.data.task.TaskRepository
+import com.proxmoxmobile.data.user.UserRepository
+import com.proxmoxmobile.data.vm.VmRepository
 import com.proxmoxmobile.presentation.theme.ProxmoxTheme
-import com.proxmoxmobile.presentation.viewmodel.MainViewModel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalTestApi::class)
 class ProxmoxNavHostRecreationSmokeTest {
     @get:Rule
     val composeRule = createEmptyComposeRule()
@@ -38,76 +45,226 @@ class ProxmoxNavHostRecreationSmokeTest {
         get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun postLoginNodeScopedTaskRouteSurvivesActivityRecreation() {
-        assertRouteSurvivesActivityRecreation(
-            route = Screen.NodeTasks.createRoute(POST_LOGIN_NODE),
+    fun postLoginNodeScopedTaskRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.NodeTasks.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                taskRepositoryOverride = NavigationSmokeFixtures.fakeTaskRepository()
+            ),
             assertRouteVisible = ::assertNodeScopedTaskRouteVisible
         )
     }
 
     @Test
-    fun postLoginResourceTaskRouteSurvivesActivityRecreation() {
-        assertRouteSurvivesActivityRecreation(
-            route = Screen.ResourceTasks.createRoute(POST_LOGIN_NODE, POST_LOGIN_VMID),
+    fun postLoginTaskRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Tasks.route,
+            overrides = NavigationRepositoryOverrides(
+                taskRepositoryOverride = NavigationSmokeFixtures.fakeTaskRepository()
+            ),
+            assertRouteVisible = ::assertTaskRouteVisible
+        )
+    }
+
+    @Test
+    fun postLoginResourceTaskRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.ResourceTasks.createRoute(
+                NavigationSmokeFixtures.LAB_NODE,
+                NavigationSmokeFixtures.VM_ID
+            ),
+            overrides = NavigationRepositoryOverrides(
+                taskRepositoryOverride = NavigationSmokeFixtures.fakeTaskRepository()
+            ),
             assertRouteVisible = ::assertResourceTaskRouteVisible
         )
     }
 
     @Test
-    fun postLoginTaskDetailRouteSurvivesActivityRecreation() {
-        assertRouteSurvivesActivityRecreation(
-            route = Screen.TaskDetail.createRoute(POST_LOGIN_NODE, POST_LOGIN_UPID),
-            taskRepositoryOverride = TaskRepository(FakeTaskApi()),
+    fun postLoginTaskDetailRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.TaskDetail.createRoute(
+                NavigationSmokeFixtures.LAB_NODE,
+                NavigationSmokeFixtures.TASK_UPID
+            ),
+            overrides = NavigationRepositoryOverrides(
+                taskRepositoryOverride = NavigationSmokeFixtures.fakeTaskRepository()
+            ),
             assertRouteVisible = ::assertTaskDetailRouteVisible
         )
     }
 
     @Test
-    fun postLoginNodeNetworkRouteSurvivesActivityRecreation() {
-        assertRouteSurvivesActivityRecreation(
-            route = Screen.NodeNetwork.createRoute(POST_LOGIN_NODE),
+    fun postLoginNodeNetworkRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.NodeNetwork.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                networkRepositoryOverride = NavigationSmokeFixtures.fakeNetworkRepository()
+            ),
             assertRouteVisible = ::assertNodeNetworkRouteVisible
         )
     }
 
     @Test
-    fun postLoginStorageRouteSurvivesActivityRecreation() {
-        assertRouteSurvivesActivityRecreation(
-            route = Screen.Storage.createRoute(POST_LOGIN_NODE),
+    fun postLoginStorageRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Storage.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                storageRepositoryOverride = NavigationSmokeFixtures.fakeStorageRepository()
+            ),
             assertRouteVisible = ::assertStorageRouteVisible
         )
     }
 
-    private fun assertRouteSurvivesActivityRecreation(
+    @Test
+    fun dashboardRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Dashboard.route,
+            overrides = NavigationRepositoryOverrides(
+                dashboardRepositoryOverride = NavigationSmokeFixtures.fakeDashboardRepository()
+            ),
+            assertRouteVisible = ::assertDashboardRouteVisible
+        )
+    }
+
+    @Test
+    fun nodeDetailRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.NodeDetail.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                nodeRepositoryOverride = NavigationSmokeFixtures.fakeNodeRepository()
+            ),
+            assertRouteVisible = ::assertNodeDetailRouteVisible
+        )
+    }
+
+    @Test
+    fun vmListRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.VMList.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                vmRepositoryOverride = NavigationSmokeFixtures.fakeVmRepository()
+            ),
+            assertRouteVisible = ::assertVmListRouteVisible
+        )
+    }
+
+    @Test
+    fun vmDetailRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.VMDetailWithNode.createRoute(
+                NavigationSmokeFixtures.LAB_NODE,
+                NavigationSmokeFixtures.VM_ID
+            ),
+            overrides = NavigationRepositoryOverrides(
+                vmRepositoryOverride = NavigationSmokeFixtures.fakeVmRepository()
+            ),
+            assertRouteVisible = ::assertVmDetailRouteVisible
+        )
+    }
+
+    @Test
+    fun lxcListRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.ContainerList.createRoute(NavigationSmokeFixtures.LAB_NODE),
+            overrides = NavigationRepositoryOverrides(
+                lxcRepositoryOverride = NavigationSmokeFixtures.fakeLxcRepository()
+            ),
+            assertRouteVisible = ::assertLxcListRouteVisible
+        )
+    }
+
+    @Test
+    fun lxcDetailRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.ContainerDetailWithNode.createRoute(
+                NavigationSmokeFixtures.LAB_NODE,
+                NavigationSmokeFixtures.LXC_ID
+            ),
+            overrides = NavigationRepositoryOverrides(
+                lxcRepositoryOverride = NavigationSmokeFixtures.fakeLxcRepository()
+            ),
+            assertRouteVisible = ::assertLxcDetailRouteVisible
+        )
+    }
+
+    @Test
+    fun usersRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Users.route,
+            overrides = NavigationRepositoryOverrides(
+                userRepositoryOverride = NavigationSmokeFixtures.fakeUserRepository()
+            ),
+            assertRouteVisible = ::assertUsersRouteVisible
+        )
+    }
+
+    @Test
+    fun backupsRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Backups.route,
+            overrides = NavigationRepositoryOverrides(
+                backupRepositoryOverride = NavigationSmokeFixtures.fakeBackupRepository()
+            ),
+            assertRouteVisible = ::assertBackupsRouteVisible
+        )
+    }
+
+    @Test
+    fun clusterRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Cluster.route,
+            overrides = NavigationRepositoryOverrides(
+                clusterRepositoryOverride = NavigationSmokeFixtures.fakeClusterRepository()
+            ),
+            assertRouteVisible = ::assertClusterRouteVisible
+        )
+    }
+
+    @Test
+    fun settingsRouteSurvivesRecreationAndBackgroundResume() {
+        assertRouteSurvivesRecreationAndBackgroundResume(
+            route = Screen.Settings.route,
+            assertRouteVisible = ::assertSettingsRouteVisible
+        )
+    }
+
+    private fun assertRouteSurvivesRecreationAndBackgroundResume(
         route: String,
-        taskRepositoryOverride: TaskRepository? = null,
+        overrides: NavigationRepositoryOverrides = NavigationRepositoryOverrides(),
         assertRouteVisible: () -> Unit
     ) {
-        lateinit var navController: NavHostController
-
         ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
-            scenario.setProxmoxNavContent(taskRepositoryOverride) { navController = it }
+            scenario.setProxmoxNavContent(route, overrides)
+            assertRouteVisible()
 
-            composeRule.runOnIdle {
-                navController.navigate(route)
-            }
+            scenario.moveToState(Lifecycle.State.CREATED)
+            scenario.moveToState(Lifecycle.State.RESUMED)
+            composeRule.waitForIdle()
             assertRouteVisible()
 
             scenario.recreate()
-            scenario.setProxmoxNavContent(taskRepositoryOverride) { navController = it }
+            scenario.setProxmoxNavContent(route, overrides)
 
             assertRouteVisible()
         }
     }
 
     private fun ActivityScenario<ComponentActivity>.setProxmoxNavContent(
-        taskRepositoryOverride: TaskRepository? = null,
-        onNavControllerReady: (NavHostController) -> Unit
+        route: String,
+        overrides: NavigationRepositoryOverrides = NavigationRepositoryOverrides()
     ) {
         onActivity { activity ->
             activity.setContent {
                 val navController = rememberNavController()
-                onNavControllerReady(navController)
+
+                LaunchedEffect(route) {
+                    if (route != Screen.Dashboard.route) {
+                        navController.navigate(route) {
+                            popUpTo(Screen.Dashboard.route) { inclusive = false }
+                        }
+                    }
+                }
 
                 ProxmoxTheme {
                     Surface(
@@ -116,9 +273,19 @@ class ProxmoxNavHostRecreationSmokeTest {
                     ) {
                         ProxmoxNavHost(
                             navController = navController,
-                            viewModel = fakeAuthenticatedViewModel(),
+                            viewModel = NavigationSmokeFixtures.fakeAuthenticatedViewModel(),
                             startDestination = Screen.Dashboard.route,
-                            taskRepositoryOverride = taskRepositoryOverride
+                            vmRepositoryOverride = overrides.vmRepositoryOverride,
+                            lxcRepositoryOverride = overrides.lxcRepositoryOverride,
+                            nodeRepositoryOverride = overrides.nodeRepositoryOverride,
+                            taskRepositoryOverride = overrides.taskRepositoryOverride,
+                            storageRepositoryOverride = overrides.storageRepositoryOverride,
+                            networkRepositoryOverride = overrides.networkRepositoryOverride,
+                            userRepositoryOverride = overrides.userRepositoryOverride,
+                            backupRepositoryOverride = overrides.backupRepositoryOverride,
+                            clusterRepositoryOverride = overrides.clusterRepositoryOverride,
+                            dashboardRepositoryOverride = overrides.dashboardRepositoryOverride
+                                ?: NavigationSmokeFixtures.fakeDashboardRepository()
                         )
                     }
                 }
@@ -129,54 +296,94 @@ class ProxmoxNavHostRecreationSmokeTest {
     private fun assertNodeScopedTaskRouteVisible() {
         composeRule.onNodeWithText(text(R.string.task_title)).assertIsDisplayed()
         composeRule
-            .onNodeWithText(text(R.string.task_selected_node, POST_LOGIN_NODE))
+            .onNodeWithText(text(R.string.task_selected_node, NavigationSmokeFixtures.LAB_NODE))
             .assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText("QMSTART", substring = true))
+    }
+
+    private fun assertTaskRouteVisible() {
+        composeRule.onNodeWithText(text(R.string.task_title)).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(text(R.string.task_selected_node, NavigationSmokeFixtures.LAB_NODE))
+            .assertIsDisplayed()
+        composeRule.waitUntilAtLeastOneExists(hasText("QMSTART", substring = true))
     }
 
     private fun assertResourceTaskRouteVisible() {
         composeRule.onNodeWithText(text(R.string.task_title)).assertIsDisplayed()
         composeRule
-            .onNodeWithText(text(R.string.task_selected_node, POST_LOGIN_NODE))
+            .onNodeWithText(text(R.string.task_selected_node, NavigationSmokeFixtures.LAB_NODE))
             .assertIsDisplayed()
         composeRule
-            .onNodeWithText(POST_LOGIN_VMID.toString())
-            .assertIsDisplayed()
+            .waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.VM_ID.toString()))
+        composeRule.waitUntilAtLeastOneExists(hasText("QMSTART", substring = true))
     }
 
     private fun assertTaskDetailRouteVisible() {
         composeRule.onNodeWithText(text(R.string.task_detail_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(POST_LOGIN_UPID).assertIsDisplayed()
+        composeRule.onNodeWithText(NavigationSmokeFixtures.TASK_UPID).assertIsDisplayed()
         composeRule.onNodeWithText("fixture task completed").assertIsDisplayed()
     }
 
     private fun assertNodeNetworkRouteVisible() {
         composeRule.onNodeWithText(text(R.string.network_title)).assertIsDisplayed()
         composeRule
-            .onNodeWithText(text(R.string.network_node_label, POST_LOGIN_NODE))
+            .onNodeWithText(text(R.string.network_node_label, NavigationSmokeFixtures.LAB_NODE))
             .assertIsDisplayed()
     }
 
     private fun assertStorageRouteVisible() {
         composeRule
-            .onNodeWithText(text(R.string.storage_title, POST_LOGIN_NODE))
+            .onNodeWithText(text(R.string.storage_title, NavigationSmokeFixtures.LAB_NODE))
             .assertIsDisplayed()
     }
 
-    private fun fakeAuthenticatedViewModel(): MainViewModel {
-        return MainViewModel().apply {
-            setCurrentServer(
-                ServerConfig(
-                    host = "example.test",
-                    port = 8006,
-                    username = "tester",
-                    password = null,
-                    realm = "pam",
-                    useHttps = true,
-                    verifySsl = true
-                )
-            )
-            setAuthenticated(true)
-        }
+    private fun assertDashboardRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(text(R.string.dashboard_system_status), substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.LAB_NODE, substring = true))
+    }
+
+    private fun assertNodeDetailRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.LAB_NODE, substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("8.2.0", substring = true))
+    }
+
+    private fun assertVmListRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.VM_NAME, substring = true))
+    }
+
+    private fun assertVmDetailRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.VM_NAME, substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("snap-before-upgrade", substring = true))
+    }
+
+    private fun assertLxcListRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.LXC_NAME, substring = true))
+    }
+
+    private fun assertLxcDetailRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.LXC_NAME, substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("snap-clean-install", substring = true))
+    }
+
+    private fun assertUsersRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText("Users (2)", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("alpha-fixture@pam", substring = true))
+    }
+
+    private fun assertBackupsRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText("Backups (1)", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText("Public fixture VM backup", substring = true))
+    }
+
+    private fun assertClusterRouteVisible() {
+        composeRule.waitUntilAtLeastOneExists(hasText("fixture-cluster", substring = true))
+        composeRule.waitUntilAtLeastOneExists(hasText(NavigationSmokeFixtures.QA_NODE, substring = true))
+    }
+
+    private fun assertSettingsRouteVisible() {
+        composeRule.onNodeWithText(text(R.string.settings_title)).assertIsDisplayed()
+        composeRule.onNodeWithText(text(R.string.settings_app_name)).assertIsDisplayed()
     }
 
     private fun text(@StringRes id: Int): String {
@@ -187,61 +394,16 @@ class ProxmoxNavHostRecreationSmokeTest {
         return targetContext.getString(id, *args)
     }
 
-    private class FakeTaskApi : TaskApi {
-        override suspend fun getTasks(
-            nodeName: String,
-            limit: Int,
-            start: Int,
-            statusFilter: String?,
-            typeFilter: String?,
-            vmid: Int?
-        ): ApiResponse<List<Task>> {
-            return ApiResponse(listOf(fakeTask(nodeName = nodeName, upid = POST_LOGIN_UPID)))
-        }
-
-        override suspend fun getTaskStatus(nodeName: String, upid: String): ApiResponse<Task> {
-            return ApiResponse(fakeTask(nodeName = nodeName, upid = upid))
-        }
-
-        override suspend fun getTaskLog(
-            nodeName: String,
-            upid: String,
-            start: Int,
-            limit: Int
-        ): ApiResponse<List<TaskLogEntry>> {
-            return ApiResponse(
-                listOf(
-                    TaskLogEntry(lineNumber = 1, text = "fixture task entered queue"),
-                    TaskLogEntry(lineNumber = 2, text = "fixture task completed")
-                )
-            )
-        }
-
-        override suspend fun abortTask(nodeName: String, upid: String): ApiResponse<Map<String, String>> {
-            return ApiResponse(mapOf("status" to "fixture-aborted"))
-        }
-    }
-
-    private companion object {
-        private const val POST_LOGIN_NODE = "lab-node"
-        private const val POST_LOGIN_VMID = 102
-        private const val POST_LOGIN_UPID = "UPID:fixture:0001:task:102:tester@pam:"
-
-        private fun fakeTask(nodeName: String, upid: String): Task {
-            return Task(
-                upid = upid,
-                id = POST_LOGIN_VMID.toString(),
-                node = nodeName,
-                pid = 4242,
-                pstart = 1_700_000_000,
-                type = "qmstart",
-                status = "OK",
-                exitstatus = "OK",
-                starttime = 1_700_000_000,
-                endtime = 1_700_000_030,
-                user = "tester@pam",
-                saved = true
-            )
-        }
-    }
+    private data class NavigationRepositoryOverrides(
+        val vmRepositoryOverride: VmRepository? = null,
+        val lxcRepositoryOverride: LxcRepository? = null,
+        val nodeRepositoryOverride: NodeRepository? = null,
+        val taskRepositoryOverride: TaskRepository? = null,
+        val storageRepositoryOverride: StorageRepository? = null,
+        val networkRepositoryOverride: NetworkRepository? = null,
+        val userRepositoryOverride: UserRepository? = null,
+        val backupRepositoryOverride: BackupRepository? = null,
+        val clusterRepositoryOverride: ClusterRepository? = null,
+        val dashboardRepositoryOverride: DashboardRepository? = null
+    )
 }

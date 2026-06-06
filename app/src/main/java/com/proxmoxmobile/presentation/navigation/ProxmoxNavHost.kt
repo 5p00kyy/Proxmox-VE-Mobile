@@ -139,7 +139,8 @@ fun ProxmoxNavHost(
         composable(Screen.Tasks.route) {
             TaskScreen(
                 navController = navController,
-                viewModel = viewModel
+                viewModel = viewModel,
+                repositoryOverride = taskRepositoryOverride
             )
         }
 
@@ -148,7 +149,8 @@ fun ProxmoxNavHost(
             TaskScreen(
                 navController = navController,
                 viewModel = viewModel,
-                initialNodeName = node
+                initialNodeName = node,
+                repositoryOverride = taskRepositoryOverride
             )
         }
 
@@ -159,7 +161,8 @@ fun ProxmoxNavHost(
                 navController = navController,
                 viewModel = viewModel,
                 initialNodeName = node,
-                initialVmid = vmid
+                initialVmid = vmid,
+                repositoryOverride = taskRepositoryOverride
             )
         }
 
