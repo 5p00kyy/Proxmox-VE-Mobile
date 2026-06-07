@@ -51,12 +51,12 @@ class ServerConnectionConfigTest {
     }
 
     @Test
-    fun normalizedForConnection_allowsCleartextEmulatorLoopback() {
-        val config = serverConfig(host = "http://10.0.2.2:8006", useHttps = false)
+    fun normalizedForConnection_allowsCleartextLocalhost() {
+        val config = serverConfig(host = "http://localhost:8006", useHttps = false)
 
         val normalized = config.normalizedForConnection()
 
-        assertEquals("10.0.2.2", normalized.host)
+        assertEquals("localhost", normalized.host)
         assertEquals(8006, normalized.port)
         assertEquals(false, normalized.useHttps)
     }
