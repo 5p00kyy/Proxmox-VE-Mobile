@@ -3,6 +3,8 @@ package com.proxmoxmobile.presentation.auth
 import com.proxmoxmobile.data.api.ProxmoxApiService
 import com.proxmoxmobile.data.api.ProxmoxAuth
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.security.ServerCertificateInfo
+import com.proxmoxmobile.data.security.UntrustedServerCertificateException
 import com.proxmoxmobile.data.session.AuthSessionService
 import com.proxmoxmobile.data.session.AuthenticatedSession
 import java.lang.reflect.Proxy
@@ -50,6 +52,30 @@ class AuthSessionControllerTest {
         assertEquals("\u274c Invalid credentials", controller.errorMessage.value)
         assertFalse(controller.isLoading.value)
         assertEquals(1, service.logoutCalls)
+    }
+
+    @Test
+    fun authenticate_untrustedCertificateExposesTrustDecisionAndLogsOut() = runBlocking {
+        val certificateInfo = certificateInfo()
+        val service = FakeAuthSessionService(
+            result = Result.failure(UntrustedServerCertificateException(certificateInfo))
+        )
+        val controller = AuthSessionController(service)
+        controller.setAuthenticated(true)
+
+        controller.authenticate(serverConfig(password = "secret"))
+
+        assertFalse(controller.isAuthenticated.value)
+        assertEquals(certificateInfo, controller.untrustedServerCertificate.value)
+        assertEquals(
+            "\u274c TLS certificate is not trusted. Review and trust this certificate fingerprint to continue.",
+            controller.errorMessage.value
+        )
+        assertEquals(1, service.logoutCalls)
+
+        controller.clearUntrustedServerCertificate()
+
+        assertNull(controller.untrustedServerCertificate.value)
     }
 
     @Test
@@ -137,6 +163,18 @@ class AuthSessionControllerTest {
                 realm = "pam",
                 useHttps = true,
                 verifySsl = true
+            )
+        }
+
+        private fun certificateInfo(): ServerCertificateInfo {
+            return ServerCertificateInfo(
+                host = "example.test",
+                port = 8006,
+                sha256Fingerprint = "00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF",
+                subject = "CN=example.test",
+                issuer = "CN=example.test",
+                notBefore = "Sun Jun 07 00:00:00 UTC 2026",
+                notAfter = "Mon Jun 07 00:00:00 UTC 2027"
             )
         }
 

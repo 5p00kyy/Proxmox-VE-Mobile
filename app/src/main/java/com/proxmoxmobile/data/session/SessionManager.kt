@@ -8,6 +8,8 @@ import com.proxmoxmobile.data.api.ProxmoxAuthenticationService
 import com.proxmoxmobile.data.api.ProxmoxAuth
 import com.proxmoxmobile.data.model.LoginResponse
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.model.normalizedForConnection
+import com.proxmoxmobile.data.security.ServerCertificateProbe
 
 interface AuthSessionService {
     suspend fun authenticate(serverConfig: ServerConfig): Result<AuthenticatedSession>
@@ -23,14 +25,20 @@ class SessionManager(
     private var activeSession: AuthenticatedSession? = null
 
     override suspend fun authenticate(serverConfig: ServerConfig): Result<AuthenticatedSession> {
-        val apiToken = serverConfig.apiToken?.takeIf { it.isNotBlank() }
+        val normalizedServerConfig = try {
+            serverConfig.normalizedForConnection()
+        } catch (e: Exception) {
+            activeSession = null
+            return Result.failure(authenticationService.toUserFacingException(e))
+        }
+        val apiToken = normalizedServerConfig.apiToken?.takeIf { it.isNotBlank() }
 
         return if (apiToken != null) {
-            authenticateWithApiToken(serverConfig, apiToken)
+            authenticateWithApiToken(normalizedServerConfig, apiToken)
         } else {
             try {
-                authenticationService.authenticate(serverConfig).map { loginResponse ->
-                    loginResponse.toSession(serverConfig)
+                authenticationService.authenticate(normalizedServerConfig).map { loginResponse ->
+                    loginResponse.toSession(normalizedServerConfig)
                 }
             } catch (e: Exception) {
                 Result.failure(authenticationService.toUserFacingException(e))
@@ -73,7 +81,14 @@ class SessionManager(
             Result.success(session)
         } catch (e: Exception) {
             activeSession = null
-            Result.failure(authenticationService.toUserFacingException(e))
+            val fallback = authenticationService.toUserFacingException(e)
+            Result.failure(
+                ServerCertificateProbe.toTrustPromptException(
+                    exception = e,
+                    serverConfig = serverConfig,
+                    fallback = fallback
+                )
+            )
         }
     }
 

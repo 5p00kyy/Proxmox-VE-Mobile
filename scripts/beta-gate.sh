@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-BETA_TAG="${1:-${BETA_TAG:-v0.1.0-beta.1}}"
+BETA_TAG="${1:-${BETA_TAG:-v0.1.0-beta.2}}"
 GRADLE_ARGS="${GRADLE_ARGS:---stacktrace --no-daemon}"
 REQUIRE_BETA_QA_COMPLETE="${REQUIRE_BETA_QA_COMPLETE:-false}"
 

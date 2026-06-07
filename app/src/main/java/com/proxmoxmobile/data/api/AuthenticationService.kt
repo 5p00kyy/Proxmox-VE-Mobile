@@ -4,8 +4,11 @@ import android.util.Log
 import com.proxmoxmobile.data.model.LoginRequest
 import com.proxmoxmobile.data.model.LoginResponse
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.model.normalizedForConnection
+import com.proxmoxmobile.data.security.ServerCertificateProbe
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+import java.net.UnknownServiceException
 import javax.net.ssl.SSLHandshakeException
 
 interface ProxmoxAuthenticationService {
@@ -28,18 +31,24 @@ class AuthenticationService(
     }
     
     override suspend fun authenticate(serverConfig: ServerConfig): Result<LoginResponse> {
+        val normalizedServerConfig = try {
+            serverConfig.normalizedForConnection()
+        } catch (e: Exception) {
+            return Result.failure(toUserFacingException(e))
+        }
+
         return try {
             Log.d(TAG, "Starting authentication request")
             
-            validatePasswordConfig(serverConfig)
+            validatePasswordConfig(normalizedServerConfig)
             
             Log.d(TAG, "Creating API service and attempting login")
             
-            val apiService = createApiService(serverConfig)
+            val apiService = createApiService(normalizedServerConfig)
             val loginRequest = LoginRequest(
-                username = serverConfig.username,
-                password = serverConfig.password.orEmpty(),
-                realm = serverConfig.realm
+                username = normalizedServerConfig.username,
+                password = normalizedServerConfig.password.orEmpty(),
+                realm = normalizedServerConfig.realm
             )
             
             Log.d(TAG, "Sending login request")
@@ -54,7 +63,14 @@ class AuthenticationService(
             Result.success(response)
         } catch (e: Exception) {
             Log.e(TAG, "Authentication failed with exception", e)
-            Result.failure(toUserFacingException(e))
+            val fallback = toUserFacingException(e)
+            Result.failure(
+                ServerCertificateProbe.toTrustPromptException(
+                    exception = e,
+                    serverConfig = normalizedServerConfig,
+                    fallback = fallback
+                )
+            )
         }
     }
 
@@ -69,6 +85,13 @@ class AuthenticationService(
             is IllegalArgumentException -> e
             is IllegalStateException -> e
             is SSLHandshakeException -> Exception(TLS_CERTIFICATE_FAILURE_MESSAGE)
+            is UnknownServiceException -> {
+                if (e.message?.contains("CLEARTEXT", ignoreCase = true) == true) {
+                    Exception("HTTP is only supported for localhost or Android emulator test endpoints. Use HTTPS with port 8006 for Proxmox hosts.")
+                } else {
+                    Exception(e.message ?: "Connection failed")
+                }
+            }
             is UnknownHostException -> Exception("Host not found")
             is SocketTimeoutException -> Exception("Connection timed out")
             else -> Exception(e.message ?: "Authentication failed")

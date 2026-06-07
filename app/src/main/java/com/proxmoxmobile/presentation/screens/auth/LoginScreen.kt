@@ -3,6 +3,7 @@ package com.proxmoxmobile.presentation.screens.auth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -60,6 +61,7 @@ fun LoginScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
+    val untrustedServerCertificate by viewModel.untrustedServerCertificate.collectAsState()
     // Load saved credentials on first load
     LaunchedEffect(Unit) {
         if (hasLoadedSavedCredentials) {
@@ -124,12 +126,95 @@ fun LoginScreen(
         } else {
             password.isNotBlank()
         }
+
+    fun submitLogin(trustedFingerprint: String? = null) {
+        if (!canSubmit) return
+
+        val apiToken = if (useApiToken) {
+            "$username@$realm!$apiTokenId=$apiTokenSecret"
+        } else {
+            null
+        }
+        val selectedFingerprint = trustedFingerprint ?: normalizedCertificateFingerprint
+        val serverConfig = ServerConfig(
+            host = host,
+            port = port.toIntOrNull() ?: 8006,
+            username = username,
+            password = if (useApiToken) null else password,
+            apiToken = apiToken,
+            realm = realm,
+            useHttps = useHttps,
+            verifySsl = if (useHttps) verifySsl || !allowInsecureTls else false,
+            certificateFingerprint = if (useHttps) selectedFingerprint else null
+        )
+
+        viewModel.authenticate(serverConfig) {
+            if (saveCredentials) {
+                viewModel.saveCredentials(
+                    serverConfig = serverConfig,
+                    password = if (useApiToken) null else password,
+                    saveCredentials = true,
+                    authMethod = if (useApiToken) {
+                        CredentialAuthMethod.API_TOKEN
+                    } else {
+                        CredentialAuthMethod.PASSWORD
+                    },
+                    apiTokenId = if (useApiToken) apiTokenId else null,
+                    apiTokenSecret = if (useApiToken) apiTokenSecret else null
+                )
+            }
+        }
+    }
     
     // Navigate to dashboard when authenticated
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
             onNavigateToDashboard()
         }
+    }
+
+    untrustedServerCertificate?.let { certificate ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearUntrustedServerCertificate() },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.VerifiedUser,
+                    contentDescription = null
+                )
+            },
+            title = { Text(stringResource(R.string.login_trust_certificate_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.login_trust_certificate_message))
+                    SelectionContainer {
+                        Text(stringResource(
+                            R.string.login_trust_certificate_fingerprint,
+                            certificate.sha256Fingerprint.asColonSeparatedFingerprint()
+                        ))
+                    }
+                    Text(stringResource(R.string.login_trust_certificate_subject, certificate.subject))
+                    Text(stringResource(R.string.login_trust_certificate_issuer, certificate.issuer))
+                    Text(stringResource(R.string.login_trust_certificate_expires, certificate.notAfter))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        certificateFingerprint = certificate.sha256Fingerprint
+                        verifySsl = true
+                        viewModel.clearUntrustedServerCertificate()
+                        submitLogin(trustedFingerprint = certificate.sha256Fingerprint)
+                    }
+                ) {
+                    Text(stringResource(R.string.login_trust_certificate_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.clearUntrustedServerCertificate() }) {
+                    Text(stringResource(R.string.login_trust_certificate_cancel))
+                }
+            }
+        )
     }
     
     Box(
@@ -494,43 +579,7 @@ fun LoginScreen(
                     
                     // Login Button
                     Button(
-                        onClick = {
-                            if (canSubmit) {
-                                val apiToken = if (useApiToken) {
-                                    "$username@$realm!$apiTokenId=$apiTokenSecret"
-                                } else {
-                                    null
-                                }
-                                val serverConfig = ServerConfig(
-                                    host = host,
-                                    port = port.toIntOrNull() ?: 8006,
-                                    username = username,
-                                    password = if (useApiToken) null else password,
-                                    apiToken = apiToken,
-                                    realm = realm,
-                                    useHttps = useHttps,
-                                    verifySsl = if (useHttps) verifySsl || !allowInsecureTls else false,
-                                    certificateFingerprint = if (useHttps) normalizedCertificateFingerprint else null
-                                )
-                                
-                                viewModel.authenticate(serverConfig) {
-                                    if (saveCredentials) {
-                                        viewModel.saveCredentials(
-                                            serverConfig = serverConfig,
-                                            password = if (useApiToken) null else password,
-                                            saveCredentials = true,
-                                            authMethod = if (useApiToken) {
-                                                CredentialAuthMethod.API_TOKEN
-                                            } else {
-                                                CredentialAuthMethod.PASSWORD
-                                            },
-                                            apiTokenId = if (useApiToken) apiTokenId else null,
-                                            apiTokenSecret = if (useApiToken) apiTokenSecret else null
-                                        )
-                                    }
-                                }
-                            }
-                        },
+                        onClick = { submitLogin() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
@@ -563,6 +612,10 @@ fun LoginScreen(
             )
         }
     }
+}
+
+private fun String.asColonSeparatedFingerprint(): String {
+    return chunked(2).joinToString(":")
 }
 
 internal fun savedCredentialsMatchNonSecretLoginDraft(

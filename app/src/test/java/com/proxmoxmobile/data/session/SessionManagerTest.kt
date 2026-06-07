@@ -160,6 +160,52 @@ class SessionManagerTest {
     }
 
     @Test
+    fun authenticate_withApiTokenRejectsCleartextLanBeforeNetworkRequest() = runBlocking {
+        val factory = FakeApiServiceFactory()
+        val manager = SessionManager(
+            apiFactory = factory,
+            authenticationService = FakeAuthenticationService()
+        )
+
+        val result = manager.authenticate(
+            serverConfig(
+                host = "http://192.0.2.10:8006",
+                password = null,
+                apiToken = "tester@pam!mobile=token-secret"
+            ).copy(useHttps = false)
+        )
+
+        assertTrue(result.isFailure)
+        assertEquals(
+            "HTTP is only supported for localhost or Android emulator test endpoints. Use HTTPS with port 8006 for Proxmox hosts.",
+            result.exceptionOrNull()?.message
+        )
+        assertEquals(0, factory.authRequests.size)
+        assertNull(manager.currentSession())
+    }
+
+    @Test
+    fun authenticate_withPasswordNormalizesPastedHttpsUrl() = runBlocking {
+        val manager = SessionManager(
+            apiFactory = FakeApiServiceFactory(),
+            authenticationService = FakeAuthenticationService()
+        )
+
+        val result = manager.authenticate(
+            serverConfig(
+                host = "https://192.0.2.10:8006/api2/json",
+                password = "secret"
+            ).copy(useHttps = false)
+        )
+
+        assertTrue(result.isSuccess)
+        val session = result.getOrThrow()
+        assertEquals("192.0.2.10", session.serverConfig.host)
+        assertEquals(8006, session.serverConfig.port)
+        assertTrue(session.serverConfig.useHttps)
+    }
+
+    @Test
     fun logoutClearsActiveSession() = runBlocking {
         val manager = SessionManager(
             apiFactory = FakeApiServiceFactory(),

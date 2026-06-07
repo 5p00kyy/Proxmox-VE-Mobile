@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import android.util.Log
 import android.content.Context
 import com.proxmoxmobile.data.model.Node
+import com.proxmoxmobile.data.security.ServerCertificateInfo
 import com.proxmoxmobile.presentation.auth.AuthSessionController
 
 class MainViewModel(
@@ -36,6 +37,7 @@ class MainViewModel(
     val csrfToken: StateFlow<String?> = authSessionController.csrfToken
     val isLoading: StateFlow<Boolean> = authSessionController.isLoading
     val errorMessage: StateFlow<String?> = authSessionController.errorMessage
+    val untrustedServerCertificate: StateFlow<ServerCertificateInfo?> = authSessionController.untrustedServerCertificate
 
     private val _showConfirmationDialog = MutableStateFlow<ConfirmationDialog?>(null)
     val showConfirmationDialog: StateFlow<ConfirmationDialog?> = _showConfirmationDialog.asStateFlow()
@@ -124,6 +126,10 @@ class MainViewModel(
 
     fun clearError() {
         authSessionController.clearError()
+    }
+
+    fun clearUntrustedServerCertificate() {
+        authSessionController.clearUntrustedServerCertificate()
     }
 
     fun logout() {

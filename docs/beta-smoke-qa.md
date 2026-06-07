@@ -1,6 +1,6 @@
 # Beta Smoke QA
 
-This document records manual validation evidence for the `v0.1.0-beta.1` track. Do not record private hostnames, public IPs, usernames, tokens, screenshots with sensitive data, or other environment details that should not be public.
+This document records manual validation evidence for the `v0.1.0-beta.*` track. Do not record private hostnames, public IPs, usernames, tokens, screenshots with sensitive data, or other environment details that should not be public.
 
 ## Public-Safe Evidence Template
 
@@ -31,6 +31,7 @@ This table is the readiness source used by `scripts/beta-qa-status.sh` and the f
 | Real password login and dashboard smoke | Pass | User-supplied Proxmox VE environment reached dashboard; private connection details intentionally not recorded. | Required before tag |
 | Core read-only route smoke | Pass | Dashboard, node detail, VM/LXC lists and details, task detail, storage/content, network, users, backups, cluster, and settings rendered through live smoke, fake-backed instrumentation, or both. | Required before tag |
 | Release-like TLS UI guardrails | Pass | `qaRelease` login instrumentation verifies insecure TLS controls are not exposed when insecure TLS is unavailable. | Required before tag |
+| Self-signed TLS trust-on-first-use smoke | Pass | Pixel-class emulator with dummy credentials verified HTTPS connection, untrusted-certificate prompt, explicit certificate trust, pinned retry, and normal authentication failure without disabling SSL verification. Private connection details intentionally not recorded. | Required for `v0.1.0-beta.2` |
 | Known limitations documented | Pass | README, changelog, and release plan identify read-only scope, incomplete mutation areas, no guest console, and no full desktop Web UI parity claim. | Required before tag |
 | Public-safe release notes | Pass | `CHANGELOG.md` contains a dated `v0.1.0-beta.1` section with scoped beta claims and known limitations. | Required before publishing release |
 | Signed APK workflow result | External | Tag workflow must produce and attach a signed APK after the pre-tag readiness gate passes. | Required before publishing release; not counted by QA status script |

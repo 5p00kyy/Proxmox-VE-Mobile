@@ -2,6 +2,8 @@ package com.proxmoxmobile.presentation.auth
 
 import com.proxmoxmobile.data.api.ProxmoxApiService
 import com.proxmoxmobile.data.model.ServerConfig
+import com.proxmoxmobile.data.security.ServerCertificateInfo
+import com.proxmoxmobile.data.security.UntrustedServerCertificateException
 import com.proxmoxmobile.data.session.AuthSessionService
 import com.proxmoxmobile.data.session.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,9 +31,13 @@ class AuthSessionController(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    private val _untrustedServerCertificate = MutableStateFlow<ServerCertificateInfo?>(null)
+    val untrustedServerCertificate: StateFlow<ServerCertificateInfo?> = _untrustedServerCertificate.asStateFlow()
+
     suspend fun authenticate(serverConfig: ServerConfig): Boolean {
         _isLoading.value = true
         _errorMessage.value = null
+        _untrustedServerCertificate.value = null
 
         try {
             val result = sessionManager.authenticate(serverConfig)
@@ -46,6 +52,9 @@ class AuthSessionController(
                 },
                 onFailure = { exception ->
                     clearSessionState()
+                    if (exception is UntrustedServerCertificateException) {
+                        _untrustedServerCertificate.value = exception.certificateInfo
+                    }
                     _errorMessage.value = "❌ ${exception.message}"
                     sessionManager.logout()
                     false
@@ -54,6 +63,7 @@ class AuthSessionController(
         } catch (e: Exception) {
             clearSessionState()
             _errorMessage.value = "❌ Network error: ${e.message}"
+            _untrustedServerCertificate.value = null
             sessionManager.logout()
             return false
         } finally {
@@ -92,10 +102,15 @@ class AuthSessionController(
         _errorMessage.value = null
     }
 
+    fun clearUntrustedServerCertificate() {
+        _untrustedServerCertificate.value = null
+    }
+
     fun logout() {
         clearSessionState()
         _currentServer.value = null
         _errorMessage.value = null
+        _untrustedServerCertificate.value = null
         sessionManager.logout()
     }
 

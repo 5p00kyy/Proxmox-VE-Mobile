@@ -9,7 +9,7 @@ on:
       beta_tag:
         description: "Beta tag name used for artifact naming"
         required: true
-        default: "v0.1.0-beta.1"
+        default: "v0.1.0-beta.2"
       require_smoke_qa:
         description: "Require completed beta smoke QA evidence before building"
         required: false

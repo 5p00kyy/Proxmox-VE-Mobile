@@ -8,6 +8,16 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 
 No changes yet.
 
+## [v0.1.0-beta.2] - 2026-06-07
+
+### Fixed
+
+- Bare Proxmox host/IP login input now stays on HTTPS with the Proxmox default port instead of accidentally reaching Android's cleartext HTTP policy.
+- Pasted HTTPS server URLs are normalized before authentication and saved credential use.
+- Self-signed Proxmox certificates can now be reviewed and trusted on first use; the app pins the accepted SHA-256 fingerprint for future logins.
+- Non-local HTTP login attempts now fail before network access with guidance to use HTTPS on port 8006, while localhost and Android emulator loopback HTTP remain available for development smoke tests.
+- Pre-network server validation failures now clear any previous authenticated session state.
+
 ## [v0.1.0-beta.1] - 2026-06-07
 
 ### Beta Release

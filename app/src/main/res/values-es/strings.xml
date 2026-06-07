@@ -22,6 +22,14 @@
     <string name="login_certificate_fingerprint">Huella SHA-256 del certificado</string>
     <string name="login_certificate_fingerprint_help">Opcional para servidores autofirmados. Coincide con el certificado exacto en lugar de confiar en todos.</string>
     <string name="login_certificate_fingerprint_invalid">Introduce una huella SHA-256 de 64 caracteres.</string>
+    <string name="login_trust_certificate_title">¿Confiar en el certificado del servidor?</string>
+    <string name="login_trust_certificate_message">Android aún no confía en este certificado del servidor. Confía en él solo si es el host Proxmox esperado en tu LAN, VPN o red de confianza. La app fijará este certificado exacto para futuros inicios de sesión.</string>
+    <string name="login_trust_certificate_fingerprint">Huella SHA-256: %1$s</string>
+    <string name="login_trust_certificate_subject">Sujeto: %1$s</string>
+    <string name="login_trust_certificate_issuer">Emisor: %1$s</string>
+    <string name="login_trust_certificate_expires">Caduca: %1$s</string>
+    <string name="login_trust_certificate_confirm">Confiar y conectar</string>
+    <string name="login_trust_certificate_cancel">Cancelar</string>
     <string name="login_use_api_token">Usar token de API</string>
     <string name="login_api_token_id">ID del token</string>
     <string name="login_api_token_secret">Secreto del token</string>

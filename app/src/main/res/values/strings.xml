@@ -22,6 +22,14 @@
     <string name="login_certificate_fingerprint">Certificate SHA-256 fingerprint</string>
     <string name="login_certificate_fingerprint_help">Optional for self-signed servers. Matches the exact certificate instead of trusting every certificate.</string>
     <string name="login_certificate_fingerprint_invalid">Enter a 64-character SHA-256 fingerprint.</string>
+    <string name="login_trust_certificate_title">Trust server certificate?</string>
+    <string name="login_trust_certificate_message">Android does not trust this server certificate yet. Only trust it if this is the expected Proxmox host on your LAN, VPN, or trusted network. The app will pin this exact certificate for future logins.</string>
+    <string name="login_trust_certificate_fingerprint">SHA-256 fingerprint: %1$s</string>
+    <string name="login_trust_certificate_subject">Subject: %1$s</string>
+    <string name="login_trust_certificate_issuer">Issuer: %1$s</string>
+    <string name="login_trust_certificate_expires">Expires: %1$s</string>
+    <string name="login_trust_certificate_confirm">Trust and connect</string>
+    <string name="login_trust_certificate_cancel">Cancel</string>
     <string name="login_use_api_token">Use API token</string>
     <string name="login_api_token_id">Token ID</string>
     <string name="login_api_token_secret">Token secret</string>
