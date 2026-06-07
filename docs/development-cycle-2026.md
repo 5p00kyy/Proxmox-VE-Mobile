@@ -82,7 +82,7 @@ Android's testing guidance also matches the project's biggest risk. Tests should
 For a public repository, the workflow should be explicit:
 
 - GitHub Actions should build and test pull requests.
-- Branch protection should require CI before merging to `main`.
+- Branch protection should require CI before merging to `main` and the active integration branch.
 - Issue templates should capture Proxmox version, Android version, device, connection mode, auth method, and logs.
 - Pull request templates should require screenshots for UI changes, QA commands, risk notes, and linked issues.
 - CODEOWNERS can be added once there are regular maintainers or area owners.
@@ -500,6 +500,17 @@ Each PR should state:
 - Security impact.
 - Localization impact.
 - Follow-up issues.
+
+### Branch Strategy
+
+Use a small branch model that keeps public releases clean while giving the next beta cycle room to integrate work:
+
+- `main`: release-ready public branch for beta tags and hotfixes.
+- `dev`: integration branch for the next beta cycle and default target for feature/fix PRs.
+- `feature/*`: short-lived feature branches merged into `dev`.
+- `fix/*`: targeted bugfix branches merged into `dev`, or into `main` first for release hotfixes.
+
+Promote `dev` to `main` only when the next beta scope is frozen, CI is green, smoke QA is recorded, release notes are prepared, and the beta gate passes. Cut public beta tags only from `main`. After a `main` hotfix, merge the same fix back into `dev` so the integration branch does not drift.
 
 ### Versioning And Releases
 

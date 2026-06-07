@@ -6,7 +6,13 @@ The project follows the spirit of Keep a Changelog and will use Semantic Version
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- `dev` integration branch workflow for next-beta development, with normal feature/fix work targeting `dev` and public beta tags cut from `main`.
+
+### Changed
+
+- Android CI now runs on pushes to both `main` and `dev`.
 
 ## [v0.1.0-beta.2] - 2026-06-07
 

@@ -34,12 +34,23 @@ If your shell default Java is not JDK 17, set `JAVA_HOME` before running Gradle.
 
 ## Pull Request Workflow
 
-1. Keep PRs focused on one feature, fix, or refactor.
-2. Link the issue when one exists.
-3. Run the relevant Gradle checks before opening the PR.
-4. Include screenshots or screen recordings for UI changes.
-5. State the Proxmox version and Android device/emulator used for manual QA.
-6. Call out security, auth, TLS, destructive action, and localization impact.
+Branch model:
+
+- `main` is reserved for public release readiness, beta tags, and release hotfixes.
+- `dev` is the normal integration target for the next beta cycle.
+- Use short-lived `feature/*` and `fix/*` branches for focused work.
+- Merge `dev` into `main` only when the next beta is ready to gate, tag, and publish.
+- Branch hotfixes from `main`, then merge the fix back into both `main` and `dev`.
+
+PR expectations:
+
+1. Target `dev` unless the change is a release hotfix.
+2. Keep PRs focused on one feature, fix, or refactor.
+3. Link the issue when one exists.
+4. Run the relevant Gradle checks before opening the PR.
+5. Include screenshots or screen recordings for UI changes.
+6. State the Proxmox version and Android device/emulator used for manual QA.
+7. Call out security, auth, TLS, destructive action, and localization impact.
 
 ## Engineering Standards
 

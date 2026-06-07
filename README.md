@@ -217,7 +217,14 @@ The 2026-06-06 audit verified `test`, `lint`, and `assembleDebug` locally with J
 - Security policy: [`SECURITY.md`](SECURITY.md)
 - Changelog: [`CHANGELOG.md`](CHANGELOG.md)
 
-Pull requests are expected to run `./gradlew test`, `./gradlew lint`, `./gradlew assembleDebug`, and `./gradlew assembleRelease`. The GitHub Actions workflow in `.github/workflows/android.yml` enforces the same baseline for pull requests and pushes to `main`.
+Branch policy:
+
+- `main` is the release branch for public beta tags and release-ready hotfixes.
+- `dev` is the integration branch for the next beta cycle.
+- Feature and fix branches should be short-lived and target `dev` unless they are release hotfixes.
+- Public beta tags are cut from `main` after `dev` is promoted and the beta gate passes.
+
+Pull requests are expected to run `./gradlew test`, `./gradlew lint`, `./gradlew assembleDebug`, and `./gradlew assembleRelease`. The GitHub Actions workflow in `.github/workflows/android.yml` enforces the same baseline for pull requests and pushes to `main` and `dev`.
 
 ## Security Notes
 
